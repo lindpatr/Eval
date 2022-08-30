@@ -132,8 +132,26 @@
 // [MODEM]$
 
 // $[CUSTOM_PIN_NAME]
-#define DEBUG_PORT                               gpioPortA
-#define DEBUG_PIN                                0
+#define BTN_1_PORT                               gpioPortA
+#define BTN_1_PIN                                0
+
+#define DEBUG_1_PORT                             gpioPortB
+#define DEBUG_1_PIN                              0
+
+#define DEBUG_2_PORT                             gpioPortB
+#define DEBUG_2_PIN                              1
+
+#define BTN_0_PORT                               gpioPortC
+#define BTN_0_PIN                                6
+
+#define EN_DISPL_PORT                            gpioPortC
+#define EN_DISPL_PIN                             7
+
+#define LED_0_PORT                               gpioPortD
+#define LED_0_PIN                                2
+
+#define LED_1_PORT                               gpioPortD
+#define LED_1_PIN                                3
 
 // [CUSTOM_PIN_NAME]$
 

@@ -31,4 +31,5 @@ extern const sl_button_t *sl_simple_button_array[];
 void sl_simple_button_init_instances(void);
 void sl_simple_button_poll_instances(void);
 
+
 #endif // SL_SIMPLE_BUTTON_INSTANCES_H

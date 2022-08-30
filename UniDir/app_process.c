@@ -170,12 +170,13 @@ void app_process_action(RAIL_Handle_t rail_handle)
 
   if (packet_recieved) {
     packet_recieved = false;
+    GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
     if (!rx_first)
       rx_first = true;
     state = S_PACKET_RECEIVED;
   } else if (packet_sent) {
     packet_sent = false;
-    GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN);
+    GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_TX);
     TX_tab[0]++;
     state = S_PACKET_SENT;
   } else if (rx_error) {
@@ -217,6 +218,7 @@ void app_process_action(RAIL_Handle_t rail_handle)
         sl_led_toggle(&sl_led_led0);
         rx_packet_handle = RAIL_GetRxPacketInfo(rail_handle, RAIL_RX_PACKET_HANDLE_OLDEST_COMPLETE, &packet_info);
       }
+      GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_RX);
       state = S_IDLE;
       break;
     case S_PACKET_SENT:
@@ -255,7 +257,7 @@ void app_process_action(RAIL_Handle_t rail_handle)
         out_packet[5] =(TX_counter & 0xFF000000) >>24;
         prepare_package(rail_handle, out_packet, sizeof(out_packet));
 
-        GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN);
+        GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
         rail_status = RAIL_StartTx(rail_handle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, NULL);
         if (rail_status != RAIL_STATUS_NO_ERROR) {
           app_log_warning("RAIL_StartTx() result:%d ", rail_status);

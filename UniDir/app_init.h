@@ -39,15 +39,16 @@
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
 // Compile directives
-#define qMaster     0
-#define qPrintTX    0
-#define qPrintRX    0
+#define qMaster         1
+#define qPrintTX        0
+#define qPrintRX        0
 
 // GPIO debug
-#define DEBUG_PIN   0
-#define DEBUG_PORT  gpioPortA
-#define SET         1
-#define RESET       0
+#define DEBUG_PIN_TX    0         // PB00 --> Exp Header 7
+#define DEBUG_PIN_RX    1         // PB01 --> Exp Header 9
+#define DEBUG_PORT      gpioPortB
+#define SET             1
+#define RESET           0
 
 // -----------------------------------------------------------------------------
 //                                Global Variables

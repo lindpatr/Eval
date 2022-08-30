@@ -102,7 +102,8 @@ RAIL_Handle_t app_init(void)
   sl_led_turn_off(&sl_led_led1);
 #endif
 
-  GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN, gpioModePushPull, RESET);
+  GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_TX, gpioModePushPull, RESET);
+  GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_RX, gpioModePushPull, RESET);
 
   // Start reception
   RAIL_Status_t status = RAIL_StartRx(rail_handle, CHANNEL, NULL);
@@ -110,7 +111,7 @@ RAIL_Handle_t app_init(void)
     app_log_warning("After initialization RAIL_StartRx() result:%d ", status);
   }
 
-  // Print EM Microelectronic
+  // Print Id software
   const char string[] = "\nTest EFR32xG32 - ";
   printf("%s", string);
 
@@ -120,7 +121,6 @@ RAIL_Handle_t app_init(void)
 #else
   const char string2[] = "Slave";
 #endif
-
   const char string3[] = "OneWay";
 
   // CLI info message
