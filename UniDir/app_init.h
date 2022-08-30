@@ -44,8 +44,8 @@
 #define qPrintRX        0
 
 // GPIO debug
-#define DEBUG_PIN_TX    0         // PB00 --> Exp Header 7
-#define DEBUG_PIN_RX    1         // PB01 --> Exp Header 9
+#define DEBUG_PIN_TX    1         // PB00 --> Exp Header 9
+#define DEBUG_PIN_RX    2         // PB01 --> Exp Header 15
 #define DEBUG_PORT      gpioPortB
 #define SET             1
 #define RESET           0

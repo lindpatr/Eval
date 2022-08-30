@@ -32,9 +32,9 @@ toolchain_settings:
 component:
 - {id: app_log}
 - {id: radio_config_simple_rail_singlephy}
-- {id: sl_system}
 - {id: iostream_retarget_stdio}
-- instance: [btn0, btn1]
+- {id: sl_system}
+- instance: [btn0]
   id: simple_button
 - {id: restrictions_profile_wisun_fan_1_0}
 - instance: [example]

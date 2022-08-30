@@ -206,7 +206,7 @@ void app_process_action(RAIL_Handle_t rail_handle)
         uint16_t packet_size = unpack_packet(rx_fifo, &packet_info, &start_of_packet);
         rail_status = RAIL_ReleaseRxPacket(rail_handle, rx_packet_handle);
         if (rail_status != RAIL_STATUS_NO_ERROR) {
-          app_log_warning("RAIL_ReleaseRxPacket() result:%d", rail_status);
+          app_log_warning("Error ReleaseRxPacket (%d)\n", rail_status);
         }
         if (rx_requested) {
           printf_rx_packet(start_of_packet, packet_size);
@@ -260,7 +260,7 @@ void app_process_action(RAIL_Handle_t rail_handle)
         GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
         rail_status = RAIL_StartTx(rail_handle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, NULL);
         if (rail_status != RAIL_STATUS_NO_ERROR) {
-          app_log_warning("RAIL_StartTx() result:%d ", rail_status);
+          app_log_warning("Error RAIL_StartTx (%d)\n", rail_status);
         }
         //timeout = RAIL_GetTime() + 200;
         //tx_requested = false;
@@ -314,14 +314,14 @@ void app_process_action(RAIL_Handle_t rail_handle)
       break;
     case S_CALIBRATION_ERROR:
       calibration_status_buff = calibration_status;
-      app_log_error("Radio Calibration Error occurred\nEvents: %llX\nRAIL_Calibrate() result:%d\n",
+      app_log_error("CAL Error (%llX / %d)\n",
                     error_code,
                     calibration_status_buff);
       state = S_IDLE;
       break;
     default:
       // Unexpected state
-      app_log_error("Unexpected Simple TRX state occurred:%d\n", state);
+      app_log_error("Unknown state (%d)\n", state);
       break;
   }
 }
@@ -373,6 +373,10 @@ void sl_button_on_change(const sl_button_t *handle)
   if (sl_button_get_state(handle) == SL_SIMPLE_BUTTON_PRESSED) {
     tx_requested = !tx_requested;
     //tx_requested = true;
+    if (tx_requested)
+      app_log_info("> Start TX\n");
+    else
+      app_log_info("> Stop TX\n");
   }
 #if defined(SL_CATALOG_KERNEL_PRESENT)
   app_task_notify();

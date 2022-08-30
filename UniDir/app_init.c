@@ -113,7 +113,7 @@ RAIL_Handle_t app_init(void)
 
   // Print Id software
   const char string[] = "\nTest EFR32xG32 - ";
-  printf("%s", string);
+  app_log_info("%s", string);
 
   // Print EM9305
 #if (qMaster)
@@ -125,7 +125,7 @@ RAIL_Handle_t app_init(void)
 
   // CLI info message
   app_log_info("%s (%s)\n", string2, string3);
-  app_log_info("------------------------------\n");
+  app_log_info("--------------------------------\n");
 
   return rail_handle;
 }
