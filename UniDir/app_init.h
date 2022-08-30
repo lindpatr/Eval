@@ -42,6 +42,7 @@
 #define qMaster         1
 #define qPrintTX        0
 #define qPrintRX        0
+#define qUseDisplay     1
 
 // GPIO debug
 #define DEBUG_PIN_TX    1         // PB00 --> Exp Header 9

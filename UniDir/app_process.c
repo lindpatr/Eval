@@ -44,10 +44,18 @@
 
 #if defined(SL_CATALOG_KERNEL_PRESENT)
 #include "app_task_init.h"
-#endif
+#endif  // SL_CATALOG_KERNEL_PRESENT
+
+#include "app_init.h"
+
+#if (qUseDisplay)
+#include "dmd.h"
+#include "glib.h"
+#include "printf.h"
+#endif  // qUseDisplay
 
 #include "em_gpio.h"
-#include "app_init.h"
+
 
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
@@ -90,6 +98,7 @@ static void printf_rx_packet(const uint8_t * const rx_buffer, uint16_t length);
  *****************************************************************************/
 static uint16_t unpack_packet(uint8_t *rx_destination, const RAIL_RxPacketInfo_t *packet_information, uint8_t **start_of_payload);
 
+#if (qMaster)
 /******************************************************************************
  * The API prepares the packet for sending and load it in the RAIL TX FIFO
  *
@@ -98,6 +107,7 @@ static uint16_t unpack_packet(uint8_t *rx_destination, const RAIL_RxPacketInfo_t
  * @param length The length of the payload
  *****************************************************************************/
 static void prepare_package(RAIL_Handle_t rail_handle, uint8_t *out_data, uint16_t length);
+#endif  // qMaster
 
 // -----------------------------------------------------------------------------
 //                                Global Variables
@@ -131,10 +141,12 @@ static union {
   uint8_t fifo[RAIL_FIFO_SIZE];
 } tx_fifo;
 
+#if (qMaster)
 /// Transmit packet
 static uint8_t out_packet[TX_PAYLOAD_LENGTH] = {
   0x0F, 0x16, 0x11, 0x22, 0x33, 0x44
 };
+#endif  // qMaster
 
 /// Flags to update state machine from interrupt
 static volatile bool packet_recieved = false;
@@ -143,15 +155,76 @@ static volatile bool rx_error = false;
 static volatile bool tx_error = false;
 static volatile bool cal_error = false;
 
+/// TX and RX counters
+static uint32_t RX_counter = 0UL;
+#if (qMaster)
 static uint32_t TX_counter = 0UL;
 static uint32_t old_TX_counter = 0UL;
-static uint32_t RX_counter = 0UL;
+#else // !qMaster
 static uint32_t old_RX_counter = 0UL;
+#endif  // qMaster
 static uint32_t prev_RX_counter = 0UL;
 
+/// Tables for error statistics
 static uint32_t TX_tab[3] = {0};    // 0 = TX_OK, 1 = TX_Err, 2 = ND
 static uint32_t RX_tab[3] = {0};    // 0 = RX_OK, 1 = RX_Err, 2 = RX_TimeOut
 static uint32_t CAL_tab[3] = {0};   // 0 = ND,    1 = CAL_Err, 2 = ND
+
+/// LCD variables
+/// Context used all over the graphics
+static GLIB_Context_t glib_context;
+// -----------------------------------------------------------------------------
+//                          Private Function Definitions
+// -----------------------------------------------------------------------------
+/*******************************************************************************
+ * @brief Initializes the graphics stack.
+ * @note This function will /hang/ if errors occur (usually
+ *       caused by faulty displays.
+ ******************************************************************************/
+void graphics_init(void)
+{
+#if (qUseDisplay)
+  EMSTATUS status;
+
+  /* Initialize the DMD module for the DISPLAY device driver. */
+  status = DMD_init(0);
+  if (DMD_OK != status) {
+    while (1) ;
+  }
+
+  status = GLIB_contextInit(&glib_context);
+  if (GLIB_OK != status) {
+    while (1) ;
+  }
+
+  glib_context.backgroundColor = White;
+  glib_context.foregroundColor = Black;
+
+  // Clear what's currently on screen
+  GLIB_clear(&glib_context);
+
+  GLIB_setFont(&glib_context, (GLIB_Font_t *)&GLIB_FontNarrow6x8);
+
+  GLIB_drawStringOnLine(&glib_context, "****************", 1, GLIB_ALIGN_CENTER, 0, 0, 0);
+  GLIB_drawStringOnLine(&glib_context, "* TEST UNIDIR  *", 2, GLIB_ALIGN_CENTER, 0, 0, 0);
+#if (qMaster)
+  GLIB_drawStringOnLine(&glib_context, "*   (Master)   *", 3, GLIB_ALIGN_CENTER, 0, 0, 0);
+#else
+  GLIB_drawStringOnLine(&glib_context, "*   (Slave)    *", 3, GLIB_ALIGN_CENTER, 0, 0, 0);
+#endif  // qMaster
+  GLIB_drawStringOnLine(&glib_context, "****************", 4, GLIB_ALIGN_CENTER, 0, 0, 0);
+  GLIB_setFont(&glib_context, (GLIB_Font_t *)&GLIB_FontNormal8x8);
+  GLIB_drawStringOnLine(&glib_context, "Press BTN0", 6, GLIB_ALIGN_CENTER, 0, 0, 0);
+  GLIB_drawStringOnLine(&glib_context, "on Master to", 7, GLIB_ALIGN_CENTER, 0, 0, 0);
+  GLIB_drawStringOnLine(&glib_context, "start / stop TX", 8, GLIB_ALIGN_CENTER, 0, 0, 0);
+
+  GLIB_setFont(&glib_context, (GLIB_Font_t *)&GLIB_FontNarrow6x8);
+  GLIB_drawStringOnLine(&glib_context, "*** STOPPED ***", 12, GLIB_ALIGN_CENTER, 0, 0, 0);
+
+  // Force a redraw
+  DMD_updateDisplay();
+#endif  // qUseDisplay
+}
 
 // -----------------------------------------------------------------------------
 //                          Public Function Definitions
@@ -193,7 +266,8 @@ void app_process_action(RAIL_Handle_t rail_handle)
     state = S_CALIBRATION_ERROR;
   }
 
-  switch (state) {
+  switch (state)
+  {
     case S_PACKET_RECEIVED:
       // Packet received:
       //  - Check whether RAIL_HoldRxPacket() was successful, i.e. packet handle is valid
@@ -221,30 +295,35 @@ void app_process_action(RAIL_Handle_t rail_handle)
       GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_RX);
       state = S_IDLE;
       break;
+
     case S_PACKET_SENT:
 #if (qPrintTX)
       app_log_info("Packet has been sent (%d)\n",TX_counter);
 #endif
 #if defined(SL_CATALOG_LED1_PRESENT)
-      sl_led_toggle(&sl_led_led1);
+      //sl_led_toggle(&sl_led_led1);
 #else
       sl_led_toggle(&sl_led_led0);
 #endif
       //timeout = RAIL_GetTime() + 200;
       state = S_IDLE;
       break;
+
     case S_RX_PACKET_ERROR:
       // Handle Rx error
       app_log_error("RX Error (%llX)\n", error_code);
       state = S_IDLE;
       break;
+
     case S_TX_PACKET_ERROR:
       // Handle Tx error
       app_log_error("TX Error (%llX)\n", error_code);
       state = S_IDLE;
       break;
+
     case S_WAIT_TX:
       break;
+
     case S_IDLE:
 #if (qMaster)
       if (tx_requested) {
@@ -279,8 +358,38 @@ void app_process_action(RAIL_Handle_t rail_handle)
 //          app_log_info("TX Timeout:  %d\n",TX_tab[2]);
 //          app_log_info("TX Err rate: %0.3f%%\n",localStat3);
           app_log_info("TX Rate :    %0.2f msg/s (100 slave: %0.2f ms)\n",localStat,localStat2);
-          old_TX_counter = TX_counter;
 
+#if (qUseDisplay)
+          char textBuf[32];
+
+          // Clear what's currently on screen
+//          GLIB_clear(&glib_context);
+
+          GLIB_setFont(&glib_context, (GLIB_Font_t *)&GLIB_FontNormal8x8);
+//          GLIB_drawStringOnLine(&glib_context, "****************", 1, GLIB_ALIGN_CENTER, 0, 0, 0);
+//          GLIB_drawStringOnLine(&glib_context, "* TEST UNIDIR  *", 2, GLIB_ALIGN_CENTER, 0, 0, 0);
+//          GLIB_drawStringOnLine(&glib_context, "*   (Master)   *", 3, GLIB_ALIGN_CENTER, 0, 0, 0);
+//          GLIB_drawStringOnLine(&glib_context, "****************", 4, GLIB_ALIGN_CENTER, 0, 0, 0);
+          GLIB_drawStringOnLine(&glib_context, "--- STATS TX ---", 5, GLIB_ALIGN_CENTER, 0, 0, true);
+          snprintf(textBuf, sizeof(textBuf), "OK    %lu          ",TX_tab[0]);
+          GLIB_drawStringOnLine(&glib_context, textBuf, 6, GLIB_ALIGN_LEFT, 0, 0, true);
+          snprintf(textBuf, sizeof(textBuf), "Error %lu          ",TX_tab[1]);
+          GLIB_drawStringOnLine(&glib_context, textBuf, 7, GLIB_ALIGN_LEFT, 0, 0, true);
+          snprintf(textBuf, sizeof(textBuf), "Error %0.3f%%      ",localStat3);
+          GLIB_drawStringOnLine(&glib_context, textBuf, 8, GLIB_ALIGN_LEFT, 0, 0, true);
+          snprintf(textBuf, sizeof(textBuf), "Rate  %0.1f fs     ",localStat);
+          GLIB_drawStringOnLine(&glib_context, textBuf, 9, GLIB_ALIGN_LEFT, 0, 0, true);
+          snprintf(textBuf, sizeof(textBuf), "Loop  %0.1f ms     ",localStat2);
+          GLIB_drawStringOnLine(&glib_context, textBuf, 10, GLIB_ALIGN_LEFT, 0, 0, true);
+
+//          GLIB_setFont(&glib_context, (GLIB_Font_t *)&GLIB_FontNarrow6x8);
+//          GLIB_drawStringOnLine(&glib_context, ">>> RUNNING >>>", 12, GLIB_ALIGN_CENTER, 0, 0, 0);
+
+          // Force a redraw
+          DMD_updateDisplay();
+#endif  // qUseDisplay
+
+          old_TX_counter = TX_counter;
           timeout = RAIL_GetTime() + 20000000;
       }
       else if (!tx_requested)
@@ -288,7 +397,7 @@ void app_process_action(RAIL_Handle_t rail_handle)
           timeout = RAIL_GetTime() + 20000000;
           old_TX_counter = TX_counter;
         }
-#else
+#else // !qMaster
       if (rx_first && (RAIL_GetTime() >= timeout)) {
 
           float localStat = (float)(RX_counter-old_RX_counter) / 20.0f;
@@ -301,6 +410,36 @@ void app_process_action(RAIL_Handle_t rail_handle)
 //          app_log_info("RX Err rate: %0.3f%%\n",localStat3);
           app_log_info("RX Err rate: %0.3f%% (%d/%d)\n",localStat3,RX_tab[1],RX_tab[2]);
 //          app_log_info("RX Rate :    %0.2f msg/s\n",localStat);
+
+#if (qUseDisplay)
+          char textBuf[32];
+
+          // Clear what's currently on screen
+//          GLIB_clear(&glib_context);
+
+          GLIB_setFont(&glib_context, (GLIB_Font_t *)&GLIB_FontNormal8x8);
+//          GLIB_drawStringOnLine(&glib_context, "****************", 1, GLIB_ALIGN_CENTER, 0, 0, 0);
+//          GLIB_drawStringOnLine(&glib_context, "* TEST UNIDIR  *", 2, GLIB_ALIGN_CENTER, 0, 0, 0);
+//          GLIB_drawStringOnLine(&glib_context, "*   (Slave)    *", 3, GLIB_ALIGN_CENTER, 0, 0, 0);
+//          GLIB_drawStringOnLine(&glib_context, "****************", 4, GLIB_ALIGN_CENTER, 0, 0, 0);
+          GLIB_drawStringOnLine(&glib_context, "--- STATS RX ---", 5, GLIB_ALIGN_CENTER, 0, 0, true);
+          snprintf(textBuf, sizeof(textBuf), "OK    %lu          ",RX_tab[0]);
+          GLIB_drawStringOnLine(&glib_context, textBuf, 6, GLIB_ALIGN_LEFT, 0, 0, true);
+          snprintf(textBuf, sizeof(textBuf), "Error %lu          ",RX_tab[1]);
+          GLIB_drawStringOnLine(&glib_context, textBuf, 7, GLIB_ALIGN_LEFT, 0, 0, true);
+          snprintf(textBuf, sizeof(textBuf), "TO    %lu           ",RX_tab[2]);
+          GLIB_drawStringOnLine(&glib_context, textBuf, 8, GLIB_ALIGN_LEFT, 0, 0, true);
+          snprintf(textBuf, sizeof(textBuf), "Error %0.3f%%      ",localStat3);
+          GLIB_drawStringOnLine(&glib_context, textBuf, 9, GLIB_ALIGN_LEFT, 0, 0, true);
+          snprintf(textBuf, sizeof(textBuf), "Rate  %0.1f fs     ",localStat);
+          GLIB_drawStringOnLine(&glib_context, textBuf, 10, GLIB_ALIGN_LEFT, 0, 0, true);
+
+          GLIB_setFont(&glib_context, (GLIB_Font_t *)&GLIB_FontNarrow6x8);
+          GLIB_drawStringOnLine(&glib_context, ">>> RUNNING >>>", 12, GLIB_ALIGN_CENTER, 0, 0, true);
+
+          // Force a redraw
+          DMD_updateDisplay();
+#endif  // qUseDisplay
           old_RX_counter = RX_counter;
 
           timeout = RAIL_GetTime() + 20000000;
@@ -310,8 +449,9 @@ void app_process_action(RAIL_Handle_t rail_handle)
           timeout = RAIL_GetTime() + 20000000;
           old_RX_counter = RX_counter;
         }
-#endif
+#endif  // qMaster
       break;
+
     case S_CALIBRATION_ERROR:
       calibration_status_buff = calibration_status;
       app_log_error("CAL Error (%llX / %d)\n",
@@ -319,6 +459,7 @@ void app_process_action(RAIL_Handle_t rail_handle)
                     calibration_status_buff);
       state = S_IDLE;
       break;
+
     default:
       // Unexpected state
       app_log_error("Unknown state (%d)\n", state);
@@ -372,11 +513,33 @@ void sl_button_on_change(const sl_button_t *handle)
 {
   if (sl_button_get_state(handle) == SL_SIMPLE_BUTTON_PRESSED) {
     tx_requested = !tx_requested;
+#if (qUseDisplay)
     //tx_requested = true;
+    GLIB_setFont(&glib_context, (GLIB_Font_t *)&GLIB_FontNarrow6x8);
+    //GLIB_drawStringOnLine(&glib_context, "                ", 12, GLIB_ALIGN_CENTER, 0, 0, 0);
+    // Force a redraw
+    //DMD_updateDisplay();
+#endif  // qUseDisplay
     if (tx_requested)
-      app_log_info("> Start TX\n");
+      {
+        app_log_info("> Start TX\n");
+        sl_led_turn_on(&sl_led_led1);
+#if (qUseDisplay)
+        GLIB_drawStringOnLine(&glib_context, ">>> RUNNING >>>", 12, GLIB_ALIGN_CENTER, 0, 0, true);
+#endif  // qUseDisplay
+      }
     else
-      app_log_info("> Stop TX\n");
+      {
+        app_log_info("> Stop TX\n");
+        sl_led_turn_off(&sl_led_led1);
+#if (qUseDisplay)
+        GLIB_drawStringOnLine(&glib_context, "*** STOPPED ***", 12, GLIB_ALIGN_CENTER, 0, 0, true);
+#endif  // qUseDisplay
+      }
+#if (qUseDisplay)
+    // Force a redraw
+    DMD_updateDisplay();
+#endif  // qUseDisplay
   }
 #if defined(SL_CATALOG_KERNEL_PRESENT)
   app_task_notify();
@@ -589,6 +752,8 @@ static uint16_t unpack_packet(uint8_t *rx_destination, const RAIL_RxPacketInfo_t
   return ((packet_information->packetBytes > RAIL_FIFO_SIZE) ? RAIL_FIFO_SIZE : packet_information->packetBytes);
 }
 
+
+#if (qMaster)
 /******************************************************************************
  * The API prepares the packet for sending and load it in the RAIL TX FIFO
  *****************************************************************************/
@@ -602,4 +767,5 @@ static void prepare_package(RAIL_Handle_t rail_handle, uint8_t *out_data, uint16
              bytes_writen_in_fifo,
              TX_PAYLOAD_LENGTH);
 }
+#endif  // qMaster
 #endif

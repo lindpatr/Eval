@@ -74,6 +74,10 @@ static void validation_check(void);
 // -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
+//                          Private Function Definitions
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
 //                          Public Function Definitions
 // -----------------------------------------------------------------------------
 /******************************************************************************
@@ -100,10 +104,14 @@ RAIL_Handle_t app_init(void)
   sl_led_turn_off(&sl_led_led0);
 #if defined(SL_CATALOG_LED1_PRESENT)
   sl_led_turn_off(&sl_led_led1);
-#endif
+#endif  // SL_CATALOG_LED1_PRESENT
 
+  // Debug pin
   GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_TX, gpioModePushPull, RESET);
   GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_RX, gpioModePushPull, RESET);
+
+  // LCD start
+  graphics_init();
 
   // Start reception
   RAIL_Status_t status = RAIL_StartRx(rail_handle, CHANNEL, NULL);
@@ -114,13 +122,11 @@ RAIL_Handle_t app_init(void)
   // Print Id software
   const char string[] = "\nTest EFR32xG32 - ";
   app_log_info("%s", string);
-
-  // Print EM9305
 #if (qMaster)
   const char string2[] = "Master";
-#else
+#else // !qMaster
   const char string2[] = "Slave";
-#endif
+#endif  // qMaster
   const char string3[] = "OneWay";
 
   // CLI info message

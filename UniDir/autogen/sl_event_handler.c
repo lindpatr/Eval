@@ -13,6 +13,7 @@
 #include "sl_rail_util_rssi.h"
 #include "sl_rail_util_init.h"
 #include "sl_board_control.h"
+#include "sl_sleeptimer.h"
 #include "app_log.h"
 #include "sl_debug_swo.h"
 #include "gpiointerrupt.h"
@@ -50,6 +51,7 @@ void sl_driver_init(void)
 void sl_service_init(void)
 {
   sl_board_configure_vcom();
+  sl_sleeptimer_init();
   sl_iostream_stdlib_disable_buffering();
   sl_mpu_disable_execute_from_ram();
   sl_iostream_init_instances();
