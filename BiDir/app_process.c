@@ -293,12 +293,12 @@ void DecodeReceivedMsg(void)
 }
 
 /******************************************************************************
- * DisplayReceivedMsg : print and display RX statistics
+ * DisplayRx : print and display RX statistics
  *****************************************************************************/
 void DisplayRx(void)
 {
 	// Statistics
-	float localStat = (float) (RX_counter - old_RX_counter) / 20.0f;
+	float localStat = (float) (RX_counter - old_RX_counter) / (float)(kStatPeriod/1000000);
 	float localStat3 = 100.0f * (float) (RX_tab[1] + RX_tab[2]) / (float) RX_counter;
 
 	// Print on serial COM
@@ -328,15 +328,17 @@ void DisplayRx(void)
 	// Force a redraw
 	DMD_updateDisplay();
 #endif  // qUseDisplay
+
+	old_RX_counter = RX_counter;
 }
 
 /******************************************************************************
- * DisplayReceivedMsg : print and display TX statistics
+ * DisplayTx : print and display TX statistics
  *****************************************************************************/
 void DisplayTx(void)
 {
 	// Statistics
-	float localStat = (float) (TX_counter - old_TX_counter) / 20.0f;
+	float localStat = (float) (TX_counter - old_TX_counter) / (float)(kStatPeriod/1000000);
 	float localStat2 = (10.0f * 10100.0f) / localStat;
 	float localStat3 = 100.0f * (float) (TX_tab[1] + TX_tab[2]) / (float) TX_counter;
 
@@ -364,6 +366,50 @@ void DisplayTx(void)
 	// Force a redraw
 	DMD_updateDisplay();
 #endif  // qUseDisplay
+
+	old_TX_counter = TX_counter;
+}
+
+/******************************************************************************
+ * DisplayStat : print and display statistics
+ *****************************************************************************/
+void DisplayStat(void)
+{
+	// Statistics
+	float localStat = (float) (TX_counter + RX_counter - old_TX_counter - old_RX_counter) / (float)(kStatPeriod/1000000);
+	float localStat2 = (10.0f * 10100.0f) / localStat;
+	float localStat3 = 100.0f * (float) (TX_tab[1] + TX_tab[2]) / (float) TX_counter;
+	float localStat4 = 100.0f * (float) (RX_tab[1] + RX_tab[2]) / (float) RX_counter;
+
+	// Print on serial COM
+	app_log_info("TX Error: %0.3f%% (Err:%d/TO:%d)\n", localStat3, TX_tab[1], TX_tab[2]);
+	app_log_info("RX Error: %0.3f%% (Err:%d/TO:%d)\n", localStat4, RX_tab[1], RX_tab[2]);
+	app_log_info("Rate :    %0.2f msg/s (loop: %0.2f ms)\n", localStat, localStat2);
+
+#if (qUseDisplay)
+	// Print on LCD display
+	char textBuf[32];
+
+	GLIB_setFont(&glib_context, (GLIB_Font_t*) &GLIB_FontNormal8x8);
+	snprintf(textBuf, sizeof(textBuf), "TX OK %lu          ", TX_tab[0]);
+	GLIB_drawStringOnLine(&glib_context, textBuf, 5, GLIB_ALIGN_LEFT, 0, 0, true);
+	snprintf(textBuf, sizeof(textBuf), "RX OK %lu          ", RX_tab[0]);
+	GLIB_drawStringOnLine(&glib_context, textBuf, 6, GLIB_ALIGN_LEFT, 0, 0, true);
+	snprintf(textBuf, sizeof(textBuf), "TX Err %0.3f%%      ", localStat3);
+	GLIB_drawStringOnLine(&glib_context, textBuf, 7, GLIB_ALIGN_LEFT, 0, 0, true);
+	snprintf(textBuf, sizeof(textBuf), "RX Err %0.3f%%      ", localStat4);
+	GLIB_drawStringOnLine(&glib_context, textBuf, 8, GLIB_ALIGN_LEFT, 0, 0, true);
+	snprintf(textBuf, sizeof(textBuf), "Rate  %0.1f fs     ", localStat);
+	GLIB_drawStringOnLine(&glib_context, textBuf, 9, GLIB_ALIGN_LEFT, 0, 0, true);
+	snprintf(textBuf, sizeof(textBuf), "Loop  %0.1f ms     ", localStat2);
+	GLIB_drawStringOnLine(&glib_context, textBuf, 10, GLIB_ALIGN_LEFT, 0, 0, true);
+
+	// Force a redraw
+	DMD_updateDisplay();
+#endif  // qUseDisplay
+
+	old_TX_counter = TX_counter;
+	old_RX_counter = RX_counter;
 }
 
 // -----------------------------------------------------------------------------
@@ -438,7 +484,11 @@ void app_process_action(void)
 		packet_recieved = false;
 		GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
 		if (!rx_first)
+		{
+			old_TX_counter = TX_counter;
+			old_RX_counter = RX_counter;
 			rx_first = true;
+		}
 		SetState(kMsgReceived);
 	}
 	else if (packet_sent)
@@ -550,8 +600,7 @@ void app_process_action(void)
 	{
 		if (RAIL_GetTime() >= timeout)
 		{
-			DisplayTx();
-			old_TX_counter = TX_counter;
+			DisplayStat();
 			timeout = RAIL_GetTime() + kStatPeriod;
 		}
 	}
@@ -560,8 +609,7 @@ void app_process_action(void)
 	{
 		if (RAIL_GetTime() >= timeout)
 		{
-			DisplayRx();
-			old_RX_counter = RX_counter;
+			DisplayStat();
 			timeout = RAIL_GetTime() + kStatPeriod;
 		}
 	}

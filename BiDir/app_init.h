@@ -39,9 +39,9 @@
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
 // Compile directives
-#define qMaster         1
-#define qPrintTX        1
-#define qPrintRX        1
+#define qMaster			0
+#define qPrintTX        0
+#define qPrintRX        0
 #define qUseDisplay     1
 
 // GPIO debug
