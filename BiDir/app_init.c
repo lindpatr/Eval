@@ -72,8 +72,9 @@ static void validation_check(void);
 /// A static handle of a RAIL instance
 volatile RAIL_Handle_t gRailHandle;
 /// A static var for RX schedule config
-RAIL_ScheduleRxConfig_t gRailScheduleCfg;
-
+RAIL_ScheduleRxConfig_t gRailScheduleCfgRX;
+/// A static var for TX schedule config
+RAIL_ScheduleRxConfig_t gRailScheduleCfgTX;
 
 // -----------------------------------------------------------------------------
 //                          Private Function Definitions
@@ -124,12 +125,20 @@ void app_init(void)
 	}
 
 	// Set timeout for scheduled RX
-	gRailScheduleCfg.start = 0;
-	gRailScheduleCfg.startMode = RAIL_TIME_DELAY;
-	gRailScheduleCfg.end = RX_TIMEOUT;
-	gRailScheduleCfg.endMode = RAIL_TIME_DELAY;
-	gRailScheduleCfg.hardWindowEnd = false;
-	gRailScheduleCfg.rxTransitionEndSchedule = false;
+	gRailScheduleCfgRX.start = 0;
+	gRailScheduleCfgRX.startMode = RAIL_TIME_DELAY;
+	gRailScheduleCfgRX.end = RX_TIMEOUT;
+	gRailScheduleCfgRX.endMode = RAIL_TIME_DELAY;
+	gRailScheduleCfgRX.hardWindowEnd = false;
+	gRailScheduleCfgRX.rxTransitionEndSchedule = false;
+
+	// Set scheduled TX
+	gRailScheduleCfgTX.start = TX_START;
+	gRailScheduleCfgTX.startMode = RAIL_TIME_DELAY;
+	gRailScheduleCfgTX.end = gRailScheduleCfgRX.start + TX_TIMEOUT;
+	gRailScheduleCfgTX.endMode = RAIL_TIME_DELAY;
+	gRailScheduleCfgTX.hardWindowEnd = false;
+	gRailScheduleCfgTX.rxTransitionEndSchedule = false;
 
 	// Print Id software
 	const char string[] = "\nTest EFR32xG32 - ";

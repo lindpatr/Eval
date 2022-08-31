@@ -142,6 +142,7 @@ volatile bool gTX_requested = false;
 volatile bool gRX_requested = true;
 volatile bool gRX_first = false;
 
+
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
 // -----------------------------------------------------------------------------
@@ -194,14 +195,14 @@ void CfgRxMode(void)
 
 
 	// RX with timeout
-	//RAIL_Status_t status = RAIL_ScheduleRx(gRailHandle, CHANNEL, &gRailScheduleCfg, NULL);
+//	RAIL_Status_t status = RAIL_ScheduleRx(gRailHandle, CHANNEL, &gRailScheduleCfgRX, NULL);
 	RAIL_Status_t status = RAIL_StartRx(gRailHandle, CHANNEL, NULL);
 	RAIL_SetMultiTimer(&gRX_timeout, RX_TIMEOUT, RAIL_TIME_DELAY, &timer_callback, NULL);
 
 	if (status != RAIL_STATUS_NO_ERROR)
 	{
 #if (qDebugPrintErr)
-		//app_log_warning("Warning RAIL_ScheduleRx (%d)\n", status);
+//		app_log_warning("Warning RAIL_ScheduleRx (%d)\n", status);
 		app_log_warning("Warning RAIL_StartRx (%d)\n", status);
 #endif	// qDebugPrintErr
 
@@ -229,12 +230,14 @@ void CfgTxMode(void)
 	GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
 
 	// Start TX and check result
-	RAIL_Status_t status = RAIL_StartTx(gRailHandle, CHANNEL,
-			RAIL_TX_OPTIONS_DEFAULT, NULL);
+	RAIL_Status_t status = RAIL_StartTx(gRailHandle, CHANNEL,RAIL_TX_OPTIONS_DEFAULT, NULL);
+	// TX with timeout
+//	RAIL_Status_t status = RAIL_StartScheduledTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, &gRailScheduleCfgTX, NULL);
 
 	if (status != RAIL_STATUS_NO_ERROR)
 	{
 #if (qDebugPrintErr)
+//		app_log_warning("Warning RAIL_StartScheduledTx (%d)\n", status);
 		app_log_warning("Warning RAIL_StartTx (%d)\n", status);
 #endif	// qDebugPrintErr
 	}
@@ -408,7 +411,7 @@ void DisplayStat(void)
 	float localStat4 = 100.0f * (float) (gRX_tab[1] + gRX_tab[2]) / (float) gRX_counter;
 
 	// Print on serial COM
-	app_log_info("TX Count: %lu\n", gTX_tab[0]);
+	app_log_info("\nTX Count: %lu\n", gTX_tab[0]);
 	app_log_info("RX Count: %lu\n", gRX_tab[0]);
 	app_log_info("TX Error: %0.3f%% (Err:%d/TO:%d)\n", localStat3, gTX_tab[1], gTX_tab[2]);
 	app_log_info("RX Error: %0.3f%% (Err:%d/TO:%d)\n", localStat4, gRX_tab[1], gRX_tab[2]);
@@ -580,6 +583,9 @@ void app_process_action(void)
 	// -----------------------------------------
 	case kInit:
 		// Sate after POR, wait until pressing BTN0 on Master or receiving message (on Slave)
+#if (!qMaster)
+		SetState(kWaitRx);
+#endif	// qMaster
 		break;
 
 	case kStart:
@@ -734,16 +740,19 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 	// Handle Rx events
 	if (events & RAIL_EVENTS_RX_COMPLETION)
 	{
-		if (events & RAIL_EVENT_RX_PACKET_RECEIVED)
+//		if (gProtocolState == kWaitRx)
 		{
-			// Keep the packet in the radio buffer, download it later at the state machine
-			RAIL_HoldRxPacket(rail_handle);
-			gPacketRecieved = true;
-		}
-		else
-		{
-			// Handle Rx error
-			gRX_error = true;
+			if (events & RAIL_EVENT_RX_PACKET_RECEIVED)
+			{
+				// Keep the packet in the radio buffer, download it later at the state machine
+				RAIL_HoldRxPacket(rail_handle);
+				gPacketRecieved = true;
+			}
+			else
+			{
+				// Handle Rx error
+				gRX_error = true;
+			}
 		}
 	}
 
@@ -756,15 +765,18 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 	// Handle Tx events
 	if (events & RAIL_EVENTS_TX_COMPLETION)
 	{
-		if (events & RAIL_EVENT_TX_PACKET_SENT)
+//		if (gProtocolState == kSendMsg)
 		{
-			// Handle next step
-			gPacketSent = true;
-		}
-		else
-		{
-			// Handle Tx error
-			gTX_error = true;
+			if (events & RAIL_EVENT_TX_PACKET_SENT)
+			{
+				// Handle next step
+				gPacketSent = true;
+			}
+			else
+			{
+				// Handle Tx error
+				gTX_error = true;
+			}
 		}
 	}
 

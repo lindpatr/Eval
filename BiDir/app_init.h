@@ -55,8 +55,12 @@
 // Timeout for RX
 #if (qMaster)
 #define RX_TIMEOUT	(850U)							// in us
+#define TX_START	(80U)							// in us
+#define TX_TIMEOUT	(850U)							// in us
 #else
 #define RX_TIMEOUT	(1000U)							// in us
+#define TX_START	(80U)							// in us
+#define TX_TIMEOUT	(1000U)							// in us
 #endif	// qMaster
 
 // -----------------------------------------------------------------------------
@@ -65,7 +69,9 @@
 /// A static handle of a RAIL instance
 extern volatile RAIL_Handle_t gRailHandle;
 /// A static var for RX schedule config
-extern RAIL_ScheduleRxConfig_t	gRailScheduleCfg;
+extern RAIL_ScheduleRxConfig_t	gRailScheduleCfgRX;
+/// A static var for TX schedule config
+extern RAIL_ScheduleRxConfig_t	gRailScheduleCfgTX;
 
 
 // -----------------------------------------------------------------------------
