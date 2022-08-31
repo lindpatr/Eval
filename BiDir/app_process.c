@@ -136,6 +136,10 @@ volatile bool tx_requested = false;
 /// Flag, indicating received packet is forwarded on CLI or not
 volatile bool rx_requested = true;
 volatile bool rx_first = false;
+
+RAIL_ScheduleRxConfig_t	rail_schedule_cfg;
+RAIL_SchedulerInfo_t rail_schedule_info;
+
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
 // -----------------------------------------------------------------------------
@@ -176,16 +180,36 @@ void SetState(StateEnum state)
  *****************************************************************************/
 void CfgRxMode(void)
 {
+	// Start RX and check result
+	rail_schedule_cfg.start = 0;
+	rail_schedule_cfg.startMode = RAIL_TIME_DELAY;
+	rail_schedule_cfg.end = 1500;
+	rail_schedule_cfg.endMode = RAIL_TIME_DELAY;
+	rail_schedule_cfg.hardWindowEnd = false;
+	rail_schedule_cfg.rxTransitionEndSchedule = false;
+
+//	RAIL_StateTiming_t timing;
+//
+//	timing.rxSearchTimeout = (RAIL_TransitionTime_t)1500;
+
+//	RAIL_Status_t rail_status = RAIL_SetStateTiming(grail_handle, &timing);
 	// For oscillo debug
 	GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
 
-	// Start RX and check result
-	RAIL_Status_t rail_status = RAIL_StartRx(grail_handle, CHANNEL, NULL);
+	RAIL_Status_t rail_status = RAIL_ScheduleRx(grail_handle, CHANNEL, &rail_schedule_cfg, NULL);
 
-	if (rail_status != RAIL_STATUS_NO_ERROR)
+
+	if (rail_status == RAIL_STATUS_NO_ERROR)
 	{
-		app_log_warning("Warning RAIL_StartRx (%d)\n", rail_status);
+		//rail_status = RAIL_StartRx(grail_handle, CHANNEL, NULL);
+
+		if (rail_status != RAIL_STATUS_NO_ERROR)
+		{
+			app_log_warning("Warning RAIL_StartRx (%d)\n", rail_status);
+		}
 	}
+	else
+		app_log_warning("Warning RAIL_ScheduleRx (%d)\n", rail_status);
 }
 
 /******************************************************************************
@@ -623,6 +647,7 @@ void app_process_action(void)
 void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 {
 	error_code = events;
+
 	// Handle Rx events
 	if (events & RAIL_EVENTS_RX_COMPLETION)
 	{
@@ -638,6 +663,18 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 			rx_error = true;
 		}
 	}
+
+	// Handle RX timeout
+	if (events & (1ULL << RAIL_EVENT_RX_SCHEDULED_RX_END_SHIFT))
+	{
+#if (qMaster)
+    	SetState(kSwitchTx);
+#else
+		// Handle Rx error
+		rx_error = true;
+#endif
+	}
+
 	// Handle Tx events
 	if (events & RAIL_EVENTS_TX_COMPLETION)
 	{
