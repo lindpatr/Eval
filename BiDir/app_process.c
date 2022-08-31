@@ -99,11 +99,9 @@ static union
 	uint8_t fifo[RAIL_FIFO_SIZE];
 } tx_fifo;
 
-#if (qMaster)
 /// Transmit packet
 static uint8_t out_packet[TX_PAYLOAD_LENGTH] =
 { 0x0F, 0x16, 0x11, 0x22, 0x33, 0x44 };
-#endif  // qMaster
 
 /// Flags to update state machine from interrupt
 static volatile bool packet_recieved = false;
@@ -405,7 +403,7 @@ void graphics_init(void)
 	GLIB_setFont(&glib_context, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
 
 	GLIB_drawStringOnLine(&glib_context, "****************", 1, GLIB_ALIGN_CENTER, 0, 0, 0);
-	GLIB_drawStringOnLine(&glib_context, "* TEST UNIDIR  *", 2, GLIB_ALIGN_CENTER, 0, 0, 0);
+	GLIB_drawStringOnLine(&glib_context, "* TEST BIDIR  *", 2, GLIB_ALIGN_CENTER, 0, 0, 0);
 #if (qMaster)
 	GLIB_drawStringOnLine(&glib_context, "*   (Master)   *", 3, GLIB_ALIGN_CENTER, 0, 0, 0);
 #else
@@ -583,7 +581,7 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 		if (events & RAIL_EVENT_RX_PACKET_RECEIVED)
 		{
 			// Keep the packet in the radio buffer, download it later at the state machine
-			RAIL_HoldRxPacket(grail_handle);
+			RAIL_HoldRxPacket(rail_handle);
 			packet_recieved = true;
 		}
 		else
@@ -609,16 +607,13 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 	// Perform all calibrations when needed
 	if (events & RAIL_EVENT_CAL_NEEDED)
 	{
-		calibration_status = RAIL_Calibrate(grail_handle, NULL,
+		calibration_status = RAIL_Calibrate(rail_handle, NULL,
 		RAIL_CAL_ALL_PENDING);
 		if (calibration_status != RAIL_STATUS_NO_ERROR)
 		{
 			cal_error = true;
 		}
 	}
-#if defined(SL_CATALOG_KERNEL_PRESENT)
-	app_task_notify();
-#endif
 }
 
 /******************************************************************************
@@ -851,7 +846,6 @@ static uint16_t unpack_packet(uint8_t *rx_destination, const RAIL_RxPacketInfo_t
 																	packet_information->packetBytes);
 }
 
-#if (qMaster)
 /******************************************************************************
  * The API prepares the packet for sending and load it in the RAIL TX FIFO
  *****************************************************************************/
@@ -863,5 +857,4 @@ static void prepare_package(uint8_t *out_data, uint16_t length)
 	true);
 	app_assert(bytes_writen_in_fifo == TX_PAYLOAD_LENGTH, "RAIL_WriteTxFifo() failed to write in fifo (%d bytes instead of %d bytes)\n", bytes_writen_in_fifo, TX_PAYLOAD_LENGTH);
 }
-#endif  // qMaster
 #endif
