@@ -66,7 +66,7 @@
 /// State machine
 typedef enum
 {
-	kInit = 0, kStart, kStop,
+	kInit = 0, kStart, kStop, kIdle,
 
 	kWaitRx, kMsgReceived, kErrorRx, kTimeOutRx, kSwitchRx,
 
@@ -89,14 +89,9 @@ static volatile uint64_t gErrorCode = RAIL_EVENTS_NONE;
 static volatile RAIL_Status_t gCalibrationStatus = RAIL_STATUS_NO_ERROR;
 
 /// Timeout for printing and displaying the statistics
-static RAIL_Time_t gStatPeriodTimeout = 0UL;
+//static RAIL_Time_t gStatPeriodTimeout = 0UL;
 /// A static handle of a RAIL timer
 static RAIL_MultiTimer_t gStatPeriodTimer, gRX_timeout;
-
-// Set up one timer for 1 ms from now and one at time 2000000 in the RAIL
-// timebase
-//RAIL_SetMultiTimer(&gRX_timeout, 1000, RAIL_TIME_RELATIVE, &timer_callback, NULL);
-//RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_ABSOLUTE, &timer_callback, NULL);
 
 
 /// Receive and Send FIFO
@@ -117,8 +112,10 @@ static uint8_t gTX_packet[TX_PAYLOAD_LENGTH] =
 static volatile bool gPacketRecieved = false;
 static volatile bool gPacketSent = false;
 static volatile bool gRX_error = false;
+static volatile bool gRX_timeout_error = false;
 static volatile bool gTX_error = false;
 static volatile bool gCAL_error = false;
+static volatile bool gStatTimerDone = false;
 
 /// TX and RX counters
 static uint32_t gRX_counter = 0UL;
@@ -128,7 +125,7 @@ static uint32_t gRX_counter_old = 0UL;
 static uint32_t gRX_counter_prev = 0UL;
 
 /// Tables for error statistics
-static uint32_t gCB_tab[50] = {0};	   // index: see RAIL_ENUM_GENERIC(RAIL_Events_t, uint64_t) in rail_types.h
+//static uint32_t gCB_tab[50] = {0};	   // index: see RAIL_ENUM_GENERIC(RAIL_Events_t, uint64_t) in rail_types.h
 static uint32_t gTX_tab[3] = { 0 };    // 0 = TX_OK, 1 = TX_Err, 2 = ND
 static uint32_t gRX_tab[3] = { 0 };    // 0 = RX_OK, 1 = RX_Err, 2 = RX_TimeOut
 static uint32_t gCAL_tab[3] = { 0 };   // 0 = ND,    1 = CAL_Err, 2 = ND
@@ -309,9 +306,9 @@ void DecodeReceivedMsg(void)
 		if (gRX_requested)
 		{
 			DisplayReceivedMsg(start_of_packet, packet_size);
-			if ((gRX_counter - gRX_counter_prev) > 1)
-				gRX_tab[2]++;
-			else
+//			if ((gRX_counter - gRX_counter_prev) > 1)
+//				gRX_tab[2]++;
+//			else
 				gRX_tab[0]++;
 		}
 		// Indicate RX in progress on LED0
@@ -522,6 +519,7 @@ void app_process_action(void)
 #if (!qMaster)
 		if (!gRX_first)
 		{
+			gRX_first = true;
 #if (qUseDisplay)
 			GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
 			GLIB_drawStringOnLine(&gGlibContext, ">>> RUNNING >>>", 12, GLIB_ALIGN_CENTER, 0, 0, true);
@@ -530,8 +528,8 @@ void app_process_action(void)
 #endif  // qUseDisplay
 			gTX_counter_old = gTX_counter;
 			gRX_counter_old = gRX_counter;
-			gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
-			gRX_first = true;
+			RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_DELAY, &timer_callback, NULL);
+			//gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
 		}
 #endif	// !qMaster
 		SetState(kMsgReceived);
@@ -548,6 +546,16 @@ void app_process_action(void)
 		gRX_error = false;
 		gRX_tab[1]++;
 		SetState(kErrorRx);
+	}
+	else if (gRX_timeout_error)
+	{
+		gRX_timeout_error = false;
+		gRX_tab[2]++;
+#if (qMaster)
+		SetState(kSwitchTx);
+#else
+		SetState(kSwitchRx);
+#endif
 	}
 	else if (gTX_error)
 	{
@@ -577,10 +585,34 @@ void app_process_action(void)
 	case kStart:
 		// TX started by pressing BTN0
 		SetState(kSwitchTx);
+		app_log_info("> Start TX\n");
+		sl_led_turn_on(&sl_led_led1);
+#if (qUseDisplay)
+		GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
+		GLIB_drawStringOnLine(&gGlibContext, ">>> RUNNING >>>", 12, GLIB_ALIGN_CENTER, 0, 0, true);
+		// Force a redraw
+		DMD_updateDisplay();
+#endif  // qUseDisplay
+		//gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
+		RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_DELAY, &timer_callback, NULL);
+		gTX_counter_old = gTX_counter;
 		break;
 
 	case kStop:
 		// TX stopped by pressing BTN0
+		SetState(kIdle);
+		app_log_info("> Stop TX\n");
+		sl_led_turn_off(&sl_led_led1);
+#if (qUseDisplay)
+		GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
+		GLIB_drawStringOnLine(&gGlibContext, "*** STOPPED ***", 12, GLIB_ALIGN_CENTER, 0, 0, true);
+		// Force a redraw
+		DMD_updateDisplay();
+#endif  // qUseDisplay
+		break;
+
+	case kIdle:
+		// Wait action
 		break;
 
 		// -----------------------------------------
@@ -669,19 +701,23 @@ void app_process_action(void)
 #if (qMaster)
 	if (gTX_requested)
 	{
-		if (RAIL_GetTime() >= gStatPeriodTimeout)
+		if (gStatTimerDone/*gRAIL_GetTime() >= gStatPeriodTimeout*/)
 		{
+			gStatTimerDone = false;
 			DisplayStat();
-			gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
+			//gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
+			RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_DELAY, &timer_callback, NULL);
 		}
 	}
 #else
 	if (gRX_first)
 	{
-		if (RAIL_GetTime() >= gStatPeriodTimeout)
+		if (gStatTimerDone/*gRAIL_GetTime() >= gStatPeriodTimeout*/)
 		{
+			gStatTimerDone = false;
 			DisplayStat();
-			gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
+			//gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
+			RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_DELAY, &timer_callback, NULL);
 		}
 	}
 #endif	// qMaster
@@ -714,12 +750,7 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 	// Handle RX timeout
 	if (events & (1ULL << RAIL_EVENT_RX_SCHEDULED_RX_END_SHIFT))
 	{
-#if (qMaster)
-		SetState(kSwitchTx);
-#else
-		// Handle Rx error
-		gRX_error = true;
-#endif
+		gRX_timeout_error = true;
 	}
 
 	// Handle Tx events
@@ -727,6 +758,7 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 	{
 		if (events & RAIL_EVENT_TX_PACKET_SENT)
 		{
+			// Handle next step
 			gPacketSent = true;
 		}
 		else
@@ -759,28 +791,10 @@ void sl_button_on_change(const sl_button_t *handle)
 
 		if (gTX_requested)
 		{
-			app_log_info("> Start TX\n");
-			sl_led_turn_on(&sl_led_led1);
-#if (qUseDisplay)
-			GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
-			GLIB_drawStringOnLine(&gGlibContext, ">>> RUNNING >>>", 12, GLIB_ALIGN_CENTER, 0, 0, true);
-			// Force a redraw
-			DMD_updateDisplay();
-#endif  // qUseDisplay
-			gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
-			gTX_counter_old = gTX_counter;
 			SetState(kStart);
 		}
 		else
 		{
-			app_log_info("> Stop TX\n");
-			sl_led_turn_off(&sl_led_led1);
-#if (qUseDisplay)
-			GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
-			GLIB_drawStringOnLine(&gGlibContext, "*** STOPPED ***", 12, GLIB_ALIGN_CENTER, 0, 0, true);
-			// Force a redraw
-			DMD_updateDisplay();
-#endif  // qUseDisplay
 			SetState(kStop);
 		}
 	}
@@ -796,17 +810,11 @@ void timer_callback(RAIL_MultiTimer_t *tmr, RAIL_Time_t expectedTimeOfEvent, voi
 
 	if (tmr == &gStatPeriodTimer)
 	{
-		// Timer 1 action
+		gStatTimerDone = true;
 	}
 	else	// gRX_timeout
 	{
-		// Timer 2 action
-#if (qMaster)
-		SetState(kSwitchTx);
-#else
-		// Handle Rx error
-		gRX_error = true;
-#endif
+		gRX_timeout_error = true;
 	}
 }
 

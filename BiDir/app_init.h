@@ -39,7 +39,7 @@
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
 // Compile directives
-#define qMaster			1
+#define qMaster			0
 #define qUseDisplay     1
 #define qPrintTX        0
 #define qPrintRX        0
@@ -54,7 +54,7 @@
 
 // Timeout for RX
 #if (qMaster)
-#define RX_TIMEOUT	(600U)							// in us
+#define RX_TIMEOUT	(850U)							// in us
 #else
 #define RX_TIMEOUT	(1000U)							// in us
 #endif	// qMaster
