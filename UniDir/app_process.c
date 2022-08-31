@@ -172,7 +172,9 @@ static uint32_t CAL_tab[3] = {0};   // 0 = ND,    1 = CAL_Err, 2 = ND
 
 /// LCD variables
 /// Context used all over the graphics
+#if (qUseDisplay)
 static GLIB_Context_t glib_context;
+#endif  // qUseDisplay
 // -----------------------------------------------------------------------------
 //                          Private Function Definitions
 // -----------------------------------------------------------------------------
