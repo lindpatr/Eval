@@ -56,20 +56,21 @@
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
 /// Size of RAIL RX/TX FIFO
-#define RAIL_FIFO_SIZE (512U)
-/// Transmit data length
-#define TX_PAYLOAD_LENGTH (06U)
+#define RAIL_FIFO_SIZE (512U)						// in bytes
+/// Transmit data length (fixed payload)
+#define TX_PAYLOAD_LENGTH (06U)						// in bytes
+// Period to print statistics
+#define STAT_PERIOD_s (20U)							// in us
+#define STAT_PERIOD_us (STAT_PERIOD_s * 1000000ULL)	// in sec
 
-#define kStatPeriod	20000000
-
-/// State machine of simple_trx
+/// State machine
 typedef enum
 {
-	kNone, kInit, kStop,
+	kInit = 0, kStart, kStop,
 
-	kWaitRx, kMsgReceived, kErrorRx, kSwitchRx,
+	kWaitRx, kMsgReceived, kErrorRx, kTimeOutRx, kSwitchRx,
 
-	kSendMsg, kMsgSent, kErrorTx, kSwitchTx,
+	kSendMsg, kMsgSent, kErrorTx, kTimeOutTx, kSwitchTx,
 
 	kErrorCal
 } StateEnum;
@@ -78,67 +79,71 @@ typedef enum
 //                                Global Variables
 // -----------------------------------------------------------------------------
 /// The variable shows the actual state of the state machine
-static volatile StateEnum gProtocolState = kNone;
-static volatile StateEnum gPrevProtocolState = kNone;
+static volatile StateEnum gProtocolState = kInit;
+static volatile StateEnum gPrevProtocolState = kInit;
 
 /// Contains the last RAIL Rx/Tx error events
-static volatile uint64_t error_code = 0;
+static volatile uint64_t gErrorCode = RAIL_EVENTS_NONE;
 
 /// Contains the status of RAIL Calibration
-static volatile RAIL_Status_t calibration_status = 0;
+static volatile RAIL_Status_t gCalibrationStatus = RAIL_STATUS_NO_ERROR;
 
-static RAIL_Time_t timeout = 0UL;
+/// Timeout for printing and displaying the statistics
+static RAIL_Time_t gStatPeriodTimeout = 0UL;
+/// A static handle of a RAIL timer
+static RAIL_MultiTimer_t gStatPeriodTimer, gRX_timeout;
+
+// Set up one timer for 1 ms from now and one at time 2000000 in the RAIL
+// timebase
+//RAIL_SetMultiTimer(&gRX_timeout, 1000, RAIL_TIME_RELATIVE, &timer_callback, NULL);
+//RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_ABSOLUTE, &timer_callback, NULL);
+
 
 /// Receive and Send FIFO
-static uint8_t rx_fifo[RAIL_FIFO_SIZE];
+static uint8_t gRX_fifo[RAIL_FIFO_SIZE];
 
 static union
 {
 	// Used to align this buffer as needed
 	RAIL_FIFO_ALIGNMENT_TYPE align[RAIL_FIFO_SIZE / RAIL_FIFO_ALIGNMENT];
 	uint8_t fifo[RAIL_FIFO_SIZE];
-} tx_fifo;
+} gTX_fifo;
 
 /// Transmit packet
-static uint8_t out_packet[TX_PAYLOAD_LENGTH] =
+static uint8_t gTX_packet[TX_PAYLOAD_LENGTH] =
 { 0x0F, 0x16, 0x11, 0x22, 0x33, 0x44 };
 
 /// Flags to update state machine from interrupt
-static volatile bool packet_recieved = false;
-static volatile bool packet_sent = false;
-static volatile bool rx_error = false;
-static volatile bool tx_error = false;
-static volatile bool cal_error = false;
+static volatile bool gPacketRecieved = false;
+static volatile bool gPacketSent = false;
+static volatile bool gRX_error = false;
+static volatile bool gTX_error = false;
+static volatile bool gCAL_error = false;
 
 /// TX and RX counters
-static uint32_t RX_counter = 0UL;
-static uint32_t TX_counter = 0UL;
-static uint32_t old_TX_counter = 0UL;
-static uint32_t old_RX_counter = 0UL;
-static uint32_t prev_RX_counter = 0UL;
+static uint32_t gRX_counter = 0UL;
+static uint32_t gTX_counter = 0UL;
+static uint32_t gTX_counter_old = 0UL;
+static uint32_t gRX_counter_old = 0UL;
+static uint32_t gRX_counter_prev = 0UL;
 
 /// Tables for error statistics
-static uint32_t TX_tab[3] =
-{ 0 };    // 0 = TX_OK, 1 = TX_Err, 2 = ND
-static uint32_t RX_tab[3] =
-{ 0 };    // 0 = RX_OK, 1 = RX_Err, 2 = RX_TimeOut
-static uint32_t CAL_tab[3] =
-{ 0 };   // 0 = ND,    1 = CAL_Err, 2 = ND
+static uint32_t gCB_tab[50] = {0};	   // index: see RAIL_ENUM_GENERIC(RAIL_Events_t, uint64_t) in rail_types.h
+static uint32_t gTX_tab[3] = { 0 };    // 0 = TX_OK, 1 = TX_Err, 2 = ND
+static uint32_t gRX_tab[3] = { 0 };    // 0 = RX_OK, 1 = RX_Err, 2 = RX_TimeOut
+static uint32_t gCAL_tab[3] = { 0 };   // 0 = ND,    1 = CAL_Err, 2 = ND
 
 /// LCD variables
 /// Context used all over the graphics
 #if (qUseDisplay)
-static GLIB_Context_t glib_context;
+static GLIB_Context_t gGlibContext;
 #endif  // qUseDisplay
 
 /// Flag, indicating transmit request (button was pressed / CLI transmit request has occurred)
-volatile bool tx_requested = false;
+volatile bool gTX_requested = false;
 /// Flag, indicating received packet is forwarded on CLI or not
-volatile bool rx_requested = true;
-volatile bool rx_first = false;
-
-RAIL_ScheduleRxConfig_t	rail_schedule_cfg;
-RAIL_SchedulerInfo_t rail_schedule_info;
+volatile bool gRX_requested = true;
+volatile bool gRX_first = false;
 
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
@@ -157,11 +162,16 @@ static uint16_t unpack_packet(uint8_t *rx_destination, const RAIL_RxPacketInfo_t
 /******************************************************************************
  * The API prepares the packet for sending and load it in the RAIL TX FIFO
  *
- * @param grail_handle Which rail handlers should be used for the TX FIFO writing
+ * @param gRailHandle Which rail handlers should be used for the TX FIFO writing
  * @param out_data The payload buffer
  * @param length The length of the payload
  *****************************************************************************/
 static void prepare_package(uint8_t *out_data, uint16_t length);
+
+/******************************************************************************
+ * Timer callback, called if any button is pressed or released.
+ *****************************************************************************/
+void timer_callback(RAIL_MultiTimer_t *tmr, RAIL_Time_t expectedTimeOfEvent, void *cbArg);
 
 // -----------------------------------------------------------------------------
 //                          Private Function Declarations
@@ -181,35 +191,24 @@ void SetState(StateEnum state)
 void CfgRxMode(void)
 {
 	// Start RX and check result
-	rail_schedule_cfg.start = 0;
-	rail_schedule_cfg.startMode = RAIL_TIME_DELAY;
-	rail_schedule_cfg.end = 1500;
-	rail_schedule_cfg.endMode = RAIL_TIME_DELAY;
-	rail_schedule_cfg.hardWindowEnd = false;
-	rail_schedule_cfg.rxTransitionEndSchedule = false;
 
-//	RAIL_StateTiming_t timing;
-//
-//	timing.rxSearchTimeout = (RAIL_TransitionTime_t)1500;
-
-//	RAIL_Status_t rail_status = RAIL_SetStateTiming(grail_handle, &timing);
 	// For oscillo debug
 	GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
 
-	RAIL_Status_t rail_status = RAIL_ScheduleRx(grail_handle, CHANNEL, &rail_schedule_cfg, NULL);
 
+	// RX with timeout
+	//RAIL_Status_t status = RAIL_ScheduleRx(gRailHandle, CHANNEL, &gRailScheduleCfg, NULL);
+	RAIL_Status_t status = RAIL_StartRx(gRailHandle, CHANNEL, NULL);
+	RAIL_SetMultiTimer(&gRX_timeout, RX_TIMEOUT, RAIL_TIME_DELAY, &timer_callback, NULL);
 
-	if (rail_status == RAIL_STATUS_NO_ERROR)
+	if (status != RAIL_STATUS_NO_ERROR)
 	{
-		//rail_status = RAIL_StartRx(grail_handle, CHANNEL, NULL);
+#if (qDebugPrintErr)
+		//app_log_warning("Warning RAIL_ScheduleRx (%d)\n", status);
+		app_log_warning("Warning RAIL_StartRx (%d)\n", status);
+#endif	// qDebugPrintErr
 
-		if (rail_status != RAIL_STATUS_NO_ERROR)
-		{
-			app_log_warning("Warning RAIL_StartRx (%d)\n", rail_status);
-		}
 	}
-	else
-		app_log_warning("Warning RAIL_ScheduleRx (%d)\n", rail_status);
 }
 
 /******************************************************************************
@@ -218,27 +217,29 @@ void CfgRxMode(void)
 void CfgTxMode(void)
 {
 	// Data
-	TX_counter++;
+	gTX_counter++;
 
 	// Initialize buffer
-	out_packet[2] = (TX_counter & 0x000000FF) >> 0;
-	out_packet[3] = (TX_counter & 0x0000FF00) >> 8;
-	out_packet[4] = (TX_counter & 0x00FF0000) >> 16;
-	out_packet[5] = (TX_counter & 0xFF000000) >> 24;
+	gTX_packet[2] = (gTX_counter & 0x000000FF) >> 0;
+	gTX_packet[3] = (gTX_counter & 0x0000FF00) >> 8;
+	gTX_packet[4] = (gTX_counter & 0x00FF0000) >> 16;
+	gTX_packet[5] = (gTX_counter & 0xFF000000) >> 24;
 
 	// Initialize radio buffer
-	prepare_package(out_packet, sizeof(out_packet));
+	prepare_package(gTX_packet, sizeof(gTX_packet));
 
 	// For oscillo debug
 	GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
 
 	// Start TX and check result
-	RAIL_Status_t rail_status = RAIL_StartTx(grail_handle, CHANNEL,
-	RAIL_TX_OPTIONS_DEFAULT, NULL);
+	RAIL_Status_t status = RAIL_StartTx(gRailHandle, CHANNEL,
+			RAIL_TX_OPTIONS_DEFAULT, NULL);
 
-	if (rail_status != RAIL_STATUS_NO_ERROR)
+	if (status != RAIL_STATUS_NO_ERROR)
 	{
-		app_log_warning("Warning RAIL_StartTx (%d)\n", rail_status);
+#if (qDebugPrintErr)
+		app_log_warning("Warning RAIL_StartTx (%d)\n", status);
+#endif	// qDebugPrintErr
 	}
 }
 
@@ -247,11 +248,6 @@ void CfgTxMode(void)
  *****************************************************************************/
 void DisplayReceivedMsg(const uint8_t *const rx_buffer, uint16_t length)
 {
-	// Backup previous data
-	prev_RX_counter = RX_counter;
-	// Extract received data
-	RX_counter = (uint32_t) ((rx_buffer[2] << 0) + (rx_buffer[3] << 8) + (rx_buffer[4] << 16) + (rx_buffer[5] << 24));
-
 #if (qPrintRX)
 	// Print received data on serial COM
 	app_log_info("RX: ");
@@ -259,7 +255,13 @@ void DisplayReceivedMsg(const uint8_t *const rx_buffer, uint16_t length)
 		app_log_info("0x%02X, ", rx_buffer[i]);
 	}
 	app_log_info("\n");
+#else
+	(void) length;
 #endif
+	// Backup previous data
+	gRX_counter_prev = gRX_counter;
+	// Extract received data
+	gRX_counter = (uint32_t) ((rx_buffer[2] << 0) + (rx_buffer[3] << 8) + (rx_buffer[4] << 16) + (rx_buffer[5] << 24));
 
 }
 
@@ -270,8 +272,10 @@ void DisplaySentMsg(void)
 {
 #if (qPrintTX)
 	// Print sent data on serial COM
-	app_log_info("TX: %d\n",TX_counter);
+	app_log_info("TX: %d\n",gTX_counter);
 #endif
+	// Indicate TX in progress on LED1
+	sl_led_toggle(&sl_led_led1);
 }
 
 /******************************************************************************
@@ -283,35 +287,36 @@ void DecodeReceivedMsg(void)
 	RAIL_RxPacketHandle_t rx_packet_handle;
 	RAIL_RxPacketInfo_t packet_info;
 	// Status indicator of the RAIL API calls
-	RAIL_Status_t rail_status = RAIL_STATUS_NO_ERROR;
+	RAIL_Status_t status = RAIL_STATUS_NO_ERROR;
 
 	// Packet received:
 	//  - Check whether RAIL_HoldRxPacket() was successful, i.e. packet handle is valid
 	//  - Copy it to the application FIFO
 	//  - Free up the radio FIFO
 	//  - Return to app IDLE state (RAIL will automatically switch back to Rx radio state)
-	rx_packet_handle = RAIL_GetRxPacketInfo(grail_handle,
-	RAIL_RX_PACKET_HANDLE_OLDEST_COMPLETE, &packet_info);
+	rx_packet_handle = RAIL_GetRxPacketInfo(gRailHandle, RAIL_RX_PACKET_HANDLE_OLDEST_COMPLETE, &packet_info);
 	while (rx_packet_handle != RAIL_RX_PACKET_HANDLE_INVALID)
 	{
 		uint8_t *start_of_packet = 0;
-		uint16_t packet_size = unpack_packet(rx_fifo, &packet_info, &start_of_packet);
-		rail_status = RAIL_ReleaseRxPacket(grail_handle, rx_packet_handle);
-		if (rail_status != RAIL_STATUS_NO_ERROR)
+		uint16_t packet_size = unpack_packet(gRX_fifo, &packet_info, &start_of_packet);
+		status = RAIL_ReleaseRxPacket(gRailHandle, rx_packet_handle);
+		if (status != RAIL_STATUS_NO_ERROR)
 		{
-			app_log_warning("Error ReleaseRxPacket (%d)\n", rail_status);
+#if (qDebugPrintErr)
+			app_log_warning("Error ReleaseRxPacket (%d)\n", status);
+#endif	// qDebugPrintErr
 		}
-		if (rx_requested)
+		if (gRX_requested)
 		{
 			DisplayReceivedMsg(start_of_packet, packet_size);
-			if ((RX_counter - prev_RX_counter) > 1)
-				RX_tab[2]++;
+			if ((gRX_counter - gRX_counter_prev) > 1)
+				gRX_tab[2]++;
 			else
-				RX_tab[0]++;
+				gRX_tab[0]++;
 		}
+		// Indicate RX in progress on LED0
 		sl_led_toggle(&sl_led_led0);
-		rx_packet_handle = RAIL_GetRxPacketInfo(grail_handle,
-		RAIL_RX_PACKET_HANDLE_OLDEST_COMPLETE, &packet_info);
+		rx_packet_handle = RAIL_GetRxPacketInfo(gRailHandle, RAIL_RX_PACKET_HANDLE_OLDEST_COMPLETE, &packet_info);
 	}
 	GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_RX);
 }
@@ -322,38 +327,38 @@ void DecodeReceivedMsg(void)
 void DisplayRx(void)
 {
 	// Statistics
-	float localStat = (float) (RX_counter - old_RX_counter) / (float) (kStatPeriod / 1000000);
-	float localStat3 = 100.0f * (float) (RX_tab[1] + RX_tab[2]) / (float) RX_counter;
+	float localStat = (float) (gRX_counter - gRX_counter_old) / (float) (STAT_PERIOD_s);
+	float localStat3 = 100.0f * (float) (gRX_tab[1] + gRX_tab[2]) / (float) gRX_counter;
 
 	// Print on serial COM
-	app_log_info("RX Error: %0.3f%% (Err:%d/TO:%d)\n", localStat3, RX_tab[1], RX_tab[2]);
+	app_log_info("RX Error: %0.3f%% (Err:%d/TO:%d)\n", localStat3, gRX_tab[1], gRX_tab[2]);
 	app_log_info("RX Rate : %0.2f msg/s\n", localStat);
 
 #if (qUseDisplay)
 	// Print on LCD display
 	char textBuf[32];
 
-	GLIB_setFont(&glib_context, (GLIB_Font_t*) &GLIB_FontNormal8x8);
-	GLIB_drawStringOnLine(&glib_context, "--- STATS RX ---", 5, GLIB_ALIGN_CENTER, 0, 0, true);
-	snprintf(textBuf, sizeof(textBuf), "OK    %lu          ", RX_tab[0]);
-	GLIB_drawStringOnLine(&glib_context, textBuf, 6, GLIB_ALIGN_LEFT, 0, 0, true);
-	snprintf(textBuf, sizeof(textBuf), "Error %lu          ", RX_tab[1]);
-	GLIB_drawStringOnLine(&glib_context, textBuf, 7, GLIB_ALIGN_LEFT, 0, 0, true);
-	snprintf(textBuf, sizeof(textBuf), "TO    %lu           ", RX_tab[2]);
-	GLIB_drawStringOnLine(&glib_context, textBuf, 8, GLIB_ALIGN_LEFT, 0, 0, true);
+	GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNormal8x8);
+	GLIB_drawStringOnLine(&gGlibContext, "--- STATS RX ---", 5, GLIB_ALIGN_CENTER, 0, 0, true);
+	snprintf(textBuf, sizeof(textBuf), "OK    %lu          ", gRX_tab[0]);
+	GLIB_drawStringOnLine(&gGlibContext, textBuf, 6, GLIB_ALIGN_LEFT, 0, 0, true);
+	snprintf(textBuf, sizeof(textBuf), "Error %lu          ", gRX_tab[1]);
+	GLIB_drawStringOnLine(&gGlibContext, textBuf, 7, GLIB_ALIGN_LEFT, 0, 0, true);
+	snprintf(textBuf, sizeof(textBuf), "TO    %lu           ", gRX_tab[2]);
+	GLIB_drawStringOnLine(&gGlibContext, textBuf, 8, GLIB_ALIGN_LEFT, 0, 0, true);
 	snprintf(textBuf, sizeof(textBuf), "Error %0.3f%%      ", localStat3);
-	GLIB_drawStringOnLine(&glib_context, textBuf, 9, GLIB_ALIGN_LEFT, 0, 0, true);
+	GLIB_drawStringOnLine(&gGlibContext, textBuf, 9, GLIB_ALIGN_LEFT, 0, 0, true);
 	snprintf(textBuf, sizeof(textBuf), "Rate  %0.1f fs     ", localStat);
-	GLIB_drawStringOnLine(&glib_context, textBuf, 10, GLIB_ALIGN_LEFT, 0, 0, true);
+	GLIB_drawStringOnLine(&gGlibContext, textBuf, 10, GLIB_ALIGN_LEFT, 0, 0, true);
 
-	GLIB_setFont(&glib_context, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
-	GLIB_drawStringOnLine(&glib_context, ">>> RUNNING >>>", 12, GLIB_ALIGN_CENTER, 0, 0, true);
+	GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
+	GLIB_drawStringOnLine(&gGlibContext, ">>> RUNNING >>>", 12, GLIB_ALIGN_CENTER, 0, 0, true);
 
 	// Force a redraw
 	DMD_updateDisplay();
 #endif  // qUseDisplay
 
-	old_RX_counter = RX_counter;
+	gRX_counter_old = gRX_counter;
 }
 
 /******************************************************************************
@@ -362,36 +367,36 @@ void DisplayRx(void)
 void DisplayTx(void)
 {
 	// Statistics
-	float localStat = (float) (TX_counter - old_TX_counter) / (float) (kStatPeriod / 1000000);
+	float localStat = (float) (gTX_counter - gTX_counter_old) / (float) (STAT_PERIOD_s);
 	float localStat2 = (10.0f * 10100.0f) / localStat;
-	float localStat3 = 100.0f * (float) (TX_tab[1] + TX_tab[2]) / (float) TX_counter;
+	float localStat3 = 100.0f * (float) (gTX_tab[1] + gTX_tab[2]) / (float) gTX_counter;
 
 	// Print on serial COM
-	app_log_info("TX Error: %0.3f%% (Err:%d/TO:%d)\n", localStat3, TX_tab[1], TX_tab[2]);
+	app_log_info("TX Error: %0.3f%% (Err:%d/TO:%d)\n", localStat3, gTX_tab[1], gTX_tab[2]);
 	app_log_info("TX Rate :    %0.2f msg/s (loop: %0.2f ms)\n", localStat, localStat2);
 
 #if (qUseDisplay)
 	// Print on LCD display
 	char textBuf[32];
 
-	GLIB_setFont(&glib_context, (GLIB_Font_t*) &GLIB_FontNormal8x8);
-	GLIB_drawStringOnLine(&glib_context, "--- STATS TX ---", 5, GLIB_ALIGN_CENTER, 0, 0, true);
-	snprintf(textBuf, sizeof(textBuf), "OK    %lu          ", TX_tab[0]);
-	GLIB_drawStringOnLine(&glib_context, textBuf, 6, GLIB_ALIGN_LEFT, 0, 0, true);
-	snprintf(textBuf, sizeof(textBuf), "Error %lu          ", TX_tab[1]);
-	GLIB_drawStringOnLine(&glib_context, textBuf, 7, GLIB_ALIGN_LEFT, 0, 0, true);
+	GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNormal8x8);
+	GLIB_drawStringOnLine(&gGlibContext, "--- STATS TX ---", 5, GLIB_ALIGN_CENTER, 0, 0, true);
+	snprintf(textBuf, sizeof(textBuf), "OK    %lu          ", gTX_tab[0]);
+	GLIB_drawStringOnLine(&gGlibContext, textBuf, 6, GLIB_ALIGN_LEFT, 0, 0, true);
+	snprintf(textBuf, sizeof(textBuf), "Error %lu          ", gTX_tab[1]);
+	GLIB_drawStringOnLine(&gGlibContext, textBuf, 7, GLIB_ALIGN_LEFT, 0, 0, true);
 	snprintf(textBuf, sizeof(textBuf), "Error %0.3f%%      ", localStat3);
-	GLIB_drawStringOnLine(&glib_context, textBuf, 8, GLIB_ALIGN_LEFT, 0, 0, true);
+	GLIB_drawStringOnLine(&gGlibContext, textBuf, 8, GLIB_ALIGN_LEFT, 0, 0, true);
 	snprintf(textBuf, sizeof(textBuf), "Rate  %0.1f fs     ", localStat);
-	GLIB_drawStringOnLine(&glib_context, textBuf, 9, GLIB_ALIGN_LEFT, 0, 0, true);
+	GLIB_drawStringOnLine(&gGlibContext, textBuf, 9, GLIB_ALIGN_LEFT, 0, 0, true);
 	snprintf(textBuf, sizeof(textBuf), "Loop  %0.1f ms     ", localStat2);
-	GLIB_drawStringOnLine(&glib_context, textBuf, 10, GLIB_ALIGN_LEFT, 0, 0, true);
+	GLIB_drawStringOnLine(&gGlibContext, textBuf, 10, GLIB_ALIGN_LEFT, 0, 0, true);
 
 	// Force a redraw
 	DMD_updateDisplay();
 #endif  // qUseDisplay
 
-	old_TX_counter = TX_counter;
+	gTX_counter_old = gTX_counter;
 }
 
 /******************************************************************************
@@ -400,40 +405,42 @@ void DisplayTx(void)
 void DisplayStat(void)
 {
 	// Statistics
-	float localStat = (float) (TX_counter + RX_counter - old_TX_counter - old_RX_counter) / (float) (kStatPeriod / 1000000);
+	float localStat = (float) (gTX_counter + gRX_counter - gTX_counter_old - gRX_counter_old) / (float) (STAT_PERIOD_s);
 	float localStat2 = (10.0f * 10100.0f) / localStat;
-	float localStat3 = 100.0f * (float) (TX_tab[1] + TX_tab[2]) / (float) TX_counter;
-	float localStat4 = 100.0f * (float) (RX_tab[1] + RX_tab[2]) / (float) RX_counter;
+	float localStat3 = 100.0f * (float) (gTX_tab[1] + gTX_tab[2]) / (float) gTX_counter;
+	float localStat4 = 100.0f * (float) (gRX_tab[1] + gRX_tab[2]) / (float) gRX_counter;
 
 	// Print on serial COM
-	app_log_info("TX Error: %0.3f%% (Err:%d/TO:%d)\n", localStat3, TX_tab[1], TX_tab[2]);
-	app_log_info("RX Error: %0.3f%% (Err:%d/TO:%d)\n", localStat4, RX_tab[1], RX_tab[2]);
+	app_log_info("TX Count: %lu\n", gTX_tab[0]);
+	app_log_info("RX Count: %lu\n", gRX_tab[0]);
+	app_log_info("TX Error: %0.3f%% (Err:%d/TO:%d)\n", localStat3, gTX_tab[1], gTX_tab[2]);
+	app_log_info("RX Error: %0.3f%% (Err:%d/TO:%d)\n", localStat4, gRX_tab[1], gRX_tab[2]);
 	app_log_info("Rate :    %0.2f msg/s (loop: %0.2f ms)\n", localStat, localStat2);
 
 #if (qUseDisplay)
 	// Print on LCD display
 	char textBuf[32];
 
-	GLIB_setFont(&glib_context, (GLIB_Font_t*) &GLIB_FontNormal8x8);
-	snprintf(textBuf, sizeof(textBuf), "TX OK %lu          ", TX_tab[0]);
-	GLIB_drawStringOnLine(&glib_context, textBuf, 5, GLIB_ALIGN_LEFT, 0, 0, true);
-	snprintf(textBuf, sizeof(textBuf), "RX OK %lu          ", RX_tab[0]);
-	GLIB_drawStringOnLine(&glib_context, textBuf, 6, GLIB_ALIGN_LEFT, 0, 0, true);
+	GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNormal8x8);
+	snprintf(textBuf, sizeof(textBuf), "TX Cnt %lu          ", gTX_tab[0]);
+	GLIB_drawStringOnLine(&gGlibContext, textBuf, 5, GLIB_ALIGN_LEFT, 0, 0, true);
+	snprintf(textBuf, sizeof(textBuf), "RX Cnt %lu          ", gRX_tab[0]);
+	GLIB_drawStringOnLine(&gGlibContext, textBuf, 6, GLIB_ALIGN_LEFT, 0, 0, true);
 	snprintf(textBuf, sizeof(textBuf), "TX Err %0.3f%%      ", localStat3);
-	GLIB_drawStringOnLine(&glib_context, textBuf, 7, GLIB_ALIGN_LEFT, 0, 0, true);
+	GLIB_drawStringOnLine(&gGlibContext, textBuf, 7, GLIB_ALIGN_LEFT, 0, 0, true);
 	snprintf(textBuf, sizeof(textBuf), "RX Err %0.3f%%      ", localStat4);
-	GLIB_drawStringOnLine(&glib_context, textBuf, 8, GLIB_ALIGN_LEFT, 0, 0, true);
+	GLIB_drawStringOnLine(&gGlibContext, textBuf, 8, GLIB_ALIGN_LEFT, 0, 0, true);
 	snprintf(textBuf, sizeof(textBuf), "Rate  %0.1f fs     ", localStat);
-	GLIB_drawStringOnLine(&glib_context, textBuf, 9, GLIB_ALIGN_LEFT, 0, 0, true);
+	GLIB_drawStringOnLine(&gGlibContext, textBuf, 9, GLIB_ALIGN_LEFT, 0, 0, true);
 	snprintf(textBuf, sizeof(textBuf), "Loop  %0.1f ms     ", localStat2);
-	GLIB_drawStringOnLine(&glib_context, textBuf, 10, GLIB_ALIGN_LEFT, 0, 0, true);
+	GLIB_drawStringOnLine(&gGlibContext, textBuf, 10, GLIB_ALIGN_LEFT, 0, 0, true);
 
 	// Force a redraw
 	DMD_updateDisplay();
 #endif  // qUseDisplay
 
-	old_TX_counter = TX_counter;
-	old_RX_counter = RX_counter;
+	gTX_counter_old = gTX_counter;
+	gRX_counter_old = gRX_counter;
 }
 
 // -----------------------------------------------------------------------------
@@ -453,40 +460,44 @@ void graphics_init(void)
 	status = DMD_init(0);
 	if (DMD_OK != status)
 	{
-		while (1)
-			;
+#if (qDebugPrintErr)
+		app_log_error("Error DMD_init (%d)\n", status);
+#endif	//qDebugPrintErr
+		return;
 	}
 
-	status = GLIB_contextInit(&glib_context);
+	status = GLIB_contextInit(&gGlibContext);
 	if (GLIB_OK != status)
 	{
-		while (1)
-			;
+#if (qDebugPrintErr)
+		app_log_error("Error GLIB_contextInit (%d)\n", status);
+#endif	//qDebugPrintErr
+		return;
 	}
 
-	glib_context.backgroundColor = White;
-	glib_context.foregroundColor = Black;
+	gGlibContext.backgroundColor = White;
+	gGlibContext.foregroundColor = Black;
 
 	// Clear what's currently on screen
-	GLIB_clear(&glib_context);
+	GLIB_clear(&gGlibContext);
 
-	GLIB_setFont(&glib_context, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
+	GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
 
-	GLIB_drawStringOnLine(&glib_context, "****************", 1, GLIB_ALIGN_CENTER, 0, 0, 0);
-	GLIB_drawStringOnLine(&glib_context, "* TEST BIDIR  *", 2, GLIB_ALIGN_CENTER, 0, 0, 0);
+	GLIB_drawStringOnLine(&gGlibContext, "****************", 1, GLIB_ALIGN_CENTER, 0, 0, 0);
+	GLIB_drawStringOnLine(&gGlibContext, "* TEST BIDIR  *", 2, GLIB_ALIGN_CENTER, 0, 0, 0);
 #if (qMaster)
-	GLIB_drawStringOnLine(&glib_context, "*   (Master)   *", 3, GLIB_ALIGN_CENTER, 0, 0, 0);
+	GLIB_drawStringOnLine(&gGlibContext, "*   (Master)   *", 3, GLIB_ALIGN_CENTER, 0, 0, 0);
 #else
-	GLIB_drawStringOnLine(&glib_context, "*   (Slave)    *", 3, GLIB_ALIGN_CENTER, 0, 0, 0);
+	GLIB_drawStringOnLine(&gGlibContext, "*   (Slave)    *", 3, GLIB_ALIGN_CENTER, 0, 0, 0);
 #endif  // qMaster
-	GLIB_drawStringOnLine(&glib_context, "****************", 4, GLIB_ALIGN_CENTER, 0, 0, 0);
-	GLIB_setFont(&glib_context, (GLIB_Font_t*) &GLIB_FontNormal8x8);
-	GLIB_drawStringOnLine(&glib_context, "Press BTN0", 6, GLIB_ALIGN_CENTER, 0, 0, 0);
-	GLIB_drawStringOnLine(&glib_context, "on Master to", 7, GLIB_ALIGN_CENTER, 0, 0, 0);
-	GLIB_drawStringOnLine(&glib_context, "start / stop TX", 8, GLIB_ALIGN_CENTER, 0, 0, 0);
+	GLIB_drawStringOnLine(&gGlibContext, "****************", 4, GLIB_ALIGN_CENTER, 0, 0, 0);
+	GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNormal8x8);
+	GLIB_drawStringOnLine(&gGlibContext, "Press BTN0", 6, GLIB_ALIGN_CENTER, 0, 0, 0);
+	GLIB_drawStringOnLine(&gGlibContext, "on Master to", 7, GLIB_ALIGN_CENTER, 0, 0, 0);
+	GLIB_drawStringOnLine(&gGlibContext, "start / stop TX", 8, GLIB_ALIGN_CENTER, 0, 0, 0);
 
-	GLIB_setFont(&glib_context, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
-	GLIB_drawStringOnLine(&glib_context, "*** STOPPED ***", 12, GLIB_ALIGN_CENTER, 0, 0, 0);
+	GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
+	GLIB_drawStringOnLine(&gGlibContext, "*** STOPPED ***", 12, GLIB_ALIGN_CENTER, 0, 0, 0);
 
 	// Force a redraw
 	DMD_updateDisplay();
@@ -501,78 +512,116 @@ void graphics_init(void)
  *****************************************************************************/
 void app_process_action(void)
 {
-	RAIL_Status_t calibration_status_buff = RAIL_STATUS_NO_ERROR;
-
-	if (packet_recieved)
+	/// -----------------------------------------
+	/// Decode from interrupt / callback
+	/// -----------------------------------------
+	if (gPacketRecieved)
 	{
-		packet_recieved = false;
-		GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
-		if (!rx_first)
+		gPacketRecieved = false;
+
+#if (!qMaster)
+		if (!gRX_first)
 		{
-			old_TX_counter = TX_counter;
-			old_RX_counter = RX_counter;
-			rx_first = true;
+#if (qUseDisplay)
+			GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
+			GLIB_drawStringOnLine(&gGlibContext, ">>> RUNNING >>>", 12, GLIB_ALIGN_CENTER, 0, 0, true);
+			// Force a redraw
+			DMD_updateDisplay();
+#endif  // qUseDisplay
+			gTX_counter_old = gTX_counter;
+			gRX_counter_old = gRX_counter;
+			gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
+			gRX_first = true;
 		}
+#endif	// !qMaster
 		SetState(kMsgReceived);
 	}
-	else if (packet_sent)
+	else if (gPacketSent)
 	{
-		packet_sent = false;
+		gPacketSent = false;
 		GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_TX);
-		TX_tab[0]++;
+		gTX_tab[0]++;
 		SetState(kMsgSent);
 	}
-	else if (rx_error)
+	else if (gRX_error)
 	{
-		rx_error = false;
-		RX_tab[1]++;
+		gRX_error = false;
+		gRX_tab[1]++;
 		SetState(kErrorRx);
 	}
-	else if (tx_error)
+	else if (gTX_error)
 	{
-		tx_error = false;
-		TX_tab[1]++;
+		gTX_error = false;
+		gTX_tab[1]++;
 		SetState(kErrorTx);
 	}
-	else if (cal_error)
+	else if (gCAL_error)
 	{
-		cal_error = false;
-		CAL_tab[1]++;
+		gCAL_error = false;
+		gCAL_tab[1]++;
 		SetState(kErrorCal);
 	}
 
+	/// -----------------------------------------
+	/// State machine
+	/// -----------------------------------------
 	switch (gProtocolState)
 	{
-	case kNone:
-		// Wait TX start
+	// -----------------------------------------
+	// Startup + flow control
+	// -----------------------------------------
+	case kInit:
+		// Sate after POR, wait until pressing BTN0 on Master or receiving message (on Slave)
 		break;
 
-	case kInit:
-#if (qMaster)
-		// Emission avec timeout
-		SetState(kSendMsg);
-		CfgTxMode();
-#else
-		// attente d'un message
-		SetState(kWaitRx);
-		CfgRxMode();
-#endif
+	case kStart:
+		// TX started by pressing BTN0
+		SetState(kSwitchTx);
 		break;
 
 	case kStop:
-		// TX stopped
+		// TX stopped by pressing BTN0
 		break;
 
+		// -----------------------------------------
+		// RX
+		// -----------------------------------------
 	case kWaitRx:
-		// timeout management ?
+		// Wait receiving message
 		break;
 
 	case kMsgReceived:
+		// Message received
 		SetState(kSwitchTx);
 		DecodeReceivedMsg();
 		break;
 
+	case kErrorRx:
+		// Error on RX
+		SetState(kSwitchRx);
+#if (qDebugPrintErr)
+		app_log_error("RX Error (%llX)\n", gErrorCode);
+#endif	// qDebugPrintErr
+		break;
+
+	case kTimeOutRx:
+		// Timeout on RX
+		SetState(kSwitchRx);
+#if (qDebugPrintErr)
+		app_log_error("RX Error (%llX)\n", gErrorCode);
+#endif	// qDebugPrintErr
+		break;
+
+	case kSwitchRx:
+		SetState(kWaitRx);
+		CfgRxMode();
+		break;
+
+		// -----------------------------------------
+		// TX
+		// -----------------------------------------
 	case kSendMsg:
+		// Wait until message sent
 		break;
 
 	case kMsgSent:
@@ -585,13 +634,14 @@ void app_process_action(void)
 		//#endif
 
 		SetState(kSwitchRx);	// bidirectional
-
 		DisplaySentMsg();
 		break;
 
-	case kSwitchRx:
-		SetState(kWaitRx);
-		CfgRxMode();
+	case kErrorTx:
+		SetState(kSwitchTx);
+#if (qDebugPrintErr)
+		app_log_error("TX Error (%llX)\n", gErrorCode);
+#endif	// qDebugPrintErr
 		break;
 
 	case kSwitchTx:
@@ -599,42 +649,39 @@ void app_process_action(void)
 		CfgTxMode();
 		break;
 
-	case kErrorRx:
-		SetState(kSwitchRx);
-		app_log_error("RX Error (%llX)\n", error_code);
-		break;
-
-	case kErrorTx:
-		SetState(kSwitchTx);
-		app_log_error("TX Error (%llX)\n", error_code);
-		break;
-
+		// -----------------------------------------
+		// CAL
+		// -----------------------------------------
 	case kErrorCal:
-		calibration_status_buff = calibration_status;
-		app_log_error("CAL Error (%llX / %d)\n", error_code, calibration_status_buff);
+#if (qDebugPrintErr)
+		app_log_error("CAL Error (%llX / %d)\n", gErrorCode, gCalibrationStatus);
+#endif	// qDebugPrintErr
 		break;
 
 	default:
-		app_log_error("Unknown state (%d)\n", gProtocolState);
+		app_assert(false, "Unknown state (%d)\n", gProtocolState);
 		break;
 	}
 
+	/// -----------------------------------------
+	/// Statistics
+	/// -----------------------------------------
 #if (qMaster)
-	if (tx_requested)
+	if (gTX_requested)
 	{
-		if (RAIL_GetTime() >= timeout)
+		if (RAIL_GetTime() >= gStatPeriodTimeout)
 		{
 			DisplayStat();
-			timeout = RAIL_GetTime() + kStatPeriod;
+			gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
 		}
 	}
 #else
-	if (rx_first)
+	if (gRX_first)
 	{
-		if (RAIL_GetTime() >= timeout)
+		if (RAIL_GetTime() >= gStatPeriodTimeout)
 		{
 			DisplayStat();
-			timeout = RAIL_GetTime() + kStatPeriod;
+			gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
 		}
 	}
 #endif	// qMaster
@@ -646,7 +693,7 @@ void app_process_action(void)
  *****************************************************************************/
 void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 {
-	error_code = events;
+	gErrorCode = events;
 
 	// Handle Rx events
 	if (events & RAIL_EVENTS_RX_COMPLETION)
@@ -655,12 +702,12 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 		{
 			// Keep the packet in the radio buffer, download it later at the state machine
 			RAIL_HoldRxPacket(rail_handle);
-			packet_recieved = true;
+			gPacketRecieved = true;
 		}
 		else
 		{
 			// Handle Rx error
-			rx_error = true;
+			gRX_error = true;
 		}
 	}
 
@@ -668,10 +715,10 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 	if (events & (1ULL << RAIL_EVENT_RX_SCHEDULED_RX_END_SHIFT))
 	{
 #if (qMaster)
-    	SetState(kSwitchTx);
+		SetState(kSwitchTx);
 #else
 		// Handle Rx error
-		rx_error = true;
+		gRX_error = true;
 #endif
 	}
 
@@ -680,23 +727,23 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 	{
 		if (events & RAIL_EVENT_TX_PACKET_SENT)
 		{
-			packet_sent = true;
+			gPacketSent = true;
 		}
 		else
 		{
 			// Handle Tx error
-			tx_error = true;
+			gTX_error = true;
 		}
 	}
 
 	// Perform all calibrations when needed
 	if (events & RAIL_EVENT_CAL_NEEDED)
 	{
-		calibration_status = RAIL_Calibrate(rail_handle, NULL,
-		RAIL_CAL_ALL_PENDING);
-		if (calibration_status != RAIL_STATUS_NO_ERROR)
+		gCalibrationStatus = RAIL_Calibrate(rail_handle, NULL,
+				RAIL_CAL_ALL_PENDING);
+		if (gCalibrationStatus != RAIL_STATUS_NO_ERROR)
 		{
-			cal_error = true;
+			gCAL_error = true;
 		}
 	}
 }
@@ -708,46 +755,69 @@ void sl_button_on_change(const sl_button_t *handle)
 {
 	if (sl_button_get_state(handle) == SL_SIMPLE_BUTTON_PRESSED)
 	{
-		tx_requested = !tx_requested;
-#if (qUseDisplay)
-		GLIB_setFont(&glib_context, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
-#endif  // qUseDisplay
-		if (tx_requested)
+		gTX_requested = !gTX_requested;
+
+		if (gTX_requested)
 		{
 			app_log_info("> Start TX\n");
 			sl_led_turn_on(&sl_led_led1);
 #if (qUseDisplay)
-			GLIB_drawStringOnLine(&glib_context, ">>> RUNNING >>>", 12, GLIB_ALIGN_CENTER, 0, 0, true);
+			GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
+			GLIB_drawStringOnLine(&gGlibContext, ">>> RUNNING >>>", 12, GLIB_ALIGN_CENTER, 0, 0, true);
+			// Force a redraw
+			DMD_updateDisplay();
 #endif  // qUseDisplay
-			timeout = RAIL_GetTime() + kStatPeriod;
-			old_TX_counter = TX_counter;
-			SetState(kInit);
+			gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
+			gTX_counter_old = gTX_counter;
+			SetState(kStart);
 		}
 		else
 		{
 			app_log_info("> Stop TX\n");
 			sl_led_turn_off(&sl_led_led1);
 #if (qUseDisplay)
-			GLIB_drawStringOnLine(&glib_context, "*** STOPPED ***", 12, GLIB_ALIGN_CENTER, 0, 0, true);
+			GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
+			GLIB_drawStringOnLine(&gGlibContext, "*** STOPPED ***", 12, GLIB_ALIGN_CENTER, 0, 0, true);
+			// Force a redraw
+			DMD_updateDisplay();
 #endif  // qUseDisplay
 			SetState(kStop);
 		}
-#if (qUseDisplay)
-		// Force a redraw
-		DMD_updateDisplay();
-#endif  // qUseDisplay
+	}
+}
+
+/******************************************************************************
+ * Timer callback, called if any button is pressed or released.
+ *****************************************************************************/
+void timer_callback(RAIL_MultiTimer_t *tmr, RAIL_Time_t expectedTimeOfEvent, void *cbArg)
+{
+	(void)expectedTimeOfEvent;
+	(void)cbArg;
+
+	if (tmr == &gStatPeriodTimer)
+	{
+		// Timer 1 action
+	}
+	else	// gRX_timeout
+	{
+		// Timer 2 action
+#if (qMaster)
+		SetState(kSwitchTx);
+#else
+		// Handle Rx error
+		gRX_error = true;
+#endif
 	}
 }
 
 /******************************************************************************
  * Set up the rail TX fifo for later usage
- * @param grail_handle Which rail handler should be updated
+ * @param gRailHandle Which rail handler should be updated
  *****************************************************************************/
 void set_up_tx_fifo(void)
 {
 	uint16_t allocated_tx_fifo_size = 0;
-	allocated_tx_fifo_size = RAIL_SetTxFifo(grail_handle, tx_fifo.fifo, 0,
-	RAIL_FIFO_SIZE);
+	allocated_tx_fifo_size = RAIL_SetTxFifo(gRailHandle, gTX_fifo.fifo, 0, RAIL_FIFO_SIZE);
 	app_assert(allocated_tx_fifo_size == RAIL_FIFO_SIZE, "RAIL_SetTxFifo() failed to allocate a large enough fifo (%d bytes instead of %d bytes)\n", allocated_tx_fifo_size, RAIL_FIFO_SIZE);
 }
 
@@ -814,7 +884,7 @@ static void prepare_package(uint8_t *out_data, uint16_t length)
 			out_data,
 			&packet_size,
 			tx_frame_buffer);
-	bytes_writen_in_fifo = RAIL_WriteTxFifo(grail_handle, tx_frame_buffer, packet_size, true);
+	bytes_writen_in_fifo = RAIL_WriteTxFifo(gRailHandle, tx_frame_buffer, packet_size, true);
 	app_assert(bytes_writen_in_fifo == packet_size,
 			"RAIL_WriteTxFifo() failed to write in fifo (%d bytes instead of %d bytes)\n",
 			bytes_writen_in_fifo,
@@ -866,7 +936,7 @@ static void prepare_package(uint8_t *out_data, uint16_t length)
 			out_data,
 			&packet_size,
 			tx_frame_buffer);
-	bytes_writen_in_fifo = RAIL_WriteTxFifo(grail_handle, tx_frame_buffer, packet_size, true);
+	bytes_writen_in_fifo = RAIL_WriteTxFifo(gRailHandle, tx_frame_buffer, packet_size, true);
 	app_assert(bytes_writen_in_fifo == packet_size,
 			"RAIL_WriteTxFifo() failed to write in fifo (%d bytes instead of %d bytes)\n",
 			bytes_writen_in_fifo,
@@ -911,7 +981,7 @@ static void prepare_package(uint8_t *out_data, uint16_t length)
 			&packet_size,
 			tx_frame_buffer);
 
-	bytes_writen_in_fifo = RAIL_WriteTxFifo(grail_handle, tx_frame_buffer, packet_size, true);
+	bytes_writen_in_fifo = RAIL_WriteTxFifo(gRailHandle, tx_frame_buffer, packet_size, true);
 	app_assert(bytes_writen_in_fifo == packet_size,
 			"RAIL_WriteTxFifo() failed to write in fifo (%d bytes instead of %d bytes)\n",
 			bytes_writen_in_fifo,
@@ -925,9 +995,7 @@ static uint16_t unpack_packet(uint8_t *rx_destination, const RAIL_RxPacketInfo_t
 {
 	RAIL_CopyRxPacket(rx_destination, packet_information);
 	*start_of_payload = rx_destination;
-	return ((packet_information->packetBytes > RAIL_FIFO_SIZE) ?
-	RAIL_FIFO_SIZE :
-																	packet_information->packetBytes);
+	return ((packet_information->packetBytes > RAIL_FIFO_SIZE) ? RAIL_FIFO_SIZE : packet_information->packetBytes);
 }
 
 /******************************************************************************
@@ -937,8 +1005,7 @@ static void prepare_package(uint8_t *out_data, uint16_t length)
 {
 	// Check if write fifo has written all bytes
 	uint16_t bytes_writen_in_fifo = 0;
-	bytes_writen_in_fifo = RAIL_WriteTxFifo(grail_handle, out_data, length,
-	true);
+	bytes_writen_in_fifo = RAIL_WriteTxFifo(gRailHandle, out_data, length, true);
 	app_assert(bytes_writen_in_fifo == TX_PAYLOAD_LENGTH, "RAIL_WriteTxFifo() failed to write in fifo (%d bytes instead of %d bytes)\n", bytes_writen_in_fifo, TX_PAYLOAD_LENGTH);
 }
 #endif

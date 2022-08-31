@@ -65,4 +65,11 @@ void app_process_action(void);
  *****************************************************************************/
 void set_up_tx_fifo(void);
 
+/*******************************************************************************
+ * @brief Initializes the graphics stack.
+ * @note This function will /hang/ if errors occur (usually
+ *       caused by faulty displays.
+ ******************************************************************************/
+void graphics_init(void);
+
 #endif  // APP_PROCESS_H

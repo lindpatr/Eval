@@ -57,23 +57,23 @@
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
 
+
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
 // -----------------------------------------------------------------------------
 /*****************************************************************************
-* Checks phy setting to avoid errors at packet sending
-*****************************************************************************/
+ * Checks phy setting to avoid errors at packet sending
+ *****************************************************************************/
 static void validation_check(void);
 
 // -----------------------------------------------------------------------------
 //                                Global Variables
 // -----------------------------------------------------------------------------
 /// A static handle of a RAIL instance
-RAIL_Handle_t grail_handle;
+volatile RAIL_Handle_t gRailHandle;
+/// A static var for RX schedule config
+RAIL_ScheduleRxConfig_t gRailScheduleCfg;
 
-// -----------------------------------------------------------------------------
-//                                Static Variables
-// -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
 //                          Private Function Definitions
@@ -85,9 +85,9 @@ RAIL_Handle_t grail_handle;
 /******************************************************************************
  * Print sample app name
  *****************************************************************************/
-SL_WEAK void print_sample_app_name(const char* app_name)
+SL_WEAK void print_sample_app_name(const char *app_name)
 {
-  app_log_info("%s\n", app_name);
+	app_log_info("%s\n", app_name);
 }
 
 /******************************************************************************
@@ -95,63 +95,76 @@ SL_WEAK void print_sample_app_name(const char* app_name)
  *****************************************************************************/
 void app_init(void)
 {
-  validation_check();
+	validation_check();
 
-  // Get RAIL handle, used later by the application
-  grail_handle = sl_rail_util_get_handle(SL_RAIL_UTIL_HANDLE_INST0);
+	// Get RAIL handle, used later by the application
+	gRailHandle = sl_rail_util_get_handle(SL_RAIL_UTIL_HANDLE_INST0);
 
-  set_up_tx_fifo();
+	// Set up TX FIDO
+	set_up_tx_fifo();
 
-  // Turn OFF LEDs
-  sl_led_turn_off(&sl_led_led0);
-#if defined(SL_CATALOG_LED1_PRESENT)
-  sl_led_turn_off(&sl_led_led1);
-#endif  // SL_CATALOG_LED1_PRESENT
+	// Turn OFF LEDs
+	sl_led_turn_off(&sl_led_led0);
+	sl_led_turn_off(&sl_led_led1);
 
-  // Debug pin
-  GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_TX, gpioModePushPull, RESET);
-  GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_RX, gpioModePushPull, RESET);
+	// Debug pins
+	GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_TX, gpioModePushPull, RESET);
+	GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_RX, gpioModePushPull, RESET);
 
-  // LCD start
-  graphics_init();
+	// LCD start
+	graphics_init();
 
-  // Start reception
-  RAIL_Status_t status = RAIL_StartRx(grail_handle, CHANNEL, NULL);
-  if (status != RAIL_STATUS_NO_ERROR) {
-	  app_log_warning("Warning RAIL_StartRx (%d)\n", status);
-  }
+	// Enable Start reception (without timeout)
+	RAIL_Status_t status = RAIL_StartRx(gRailHandle, CHANNEL, NULL);
+	if (status != RAIL_STATUS_NO_ERROR)
+	{
+#if (qDebugPrintErr)
+		app_log_warning("Warning RAIL_StartRx (%d)\n", status);
+#endif	// qDebugPrintErr
+	}
 
-  // Print Id software
-  const char string[] = "\nTest EFR32xG32 - ";
-  app_log_info("%s", string);
+	// Set timeout for scheduled RX
+	gRailScheduleCfg.start = 0;
+	gRailScheduleCfg.startMode = RAIL_TIME_DELAY;
+	gRailScheduleCfg.end = RX_TIMEOUT;
+	gRailScheduleCfg.endMode = RAIL_TIME_DELAY;
+	gRailScheduleCfg.hardWindowEnd = false;
+	gRailScheduleCfg.rxTransitionEndSchedule = false;
+
+	// Print Id software
+	const char string[] = "\nTest EFR32xG32 - ";
+	app_log_info("%s", string);
 #if (qMaster)
-  const char string2[] = "Master";
+	const char string2[] = "Master";
 #else // !qMaster
-  const char string2[] = "Slave";
+	const char string2[] = "Slave";
 #endif  // qMaster
-  const char string3[] = "BiDir";
+	const char string3[] = "BiDir";
 
-  // CLI info message
-  app_log_info("%s (%s)\n", string2, string3);
-  app_log_info("--------------------------------\n");
+	// CLI info message
+	app_log_info("%s (%s)\n", string2, string3);
+	app_log_info("--------------------------------\n");
+
+	// Set up timers
+	RAIL_ConfigMultiTimer(true);
 }
 
 // -----------------------------------------------------------------------------
 //                          Static Function Definitions
 // -----------------------------------------------------------------------------
 /*****************************************************************************
-* Checks phy setting to avoid errors at packet sending
-*****************************************************************************/
+ * Checks phy setting to avoid errors at packet sending
+ *****************************************************************************/
 static void validation_check(void)
 {
-  _Static_assert(SL_RAIL_UTIL_INIT_PROTOCOL_INST0_DEFAULT == SL_RAIL_UTIL_PROTOCOL_PROPRIETARY,
-                 "Please use the Flex (RAIL) - Simple TRX Standards sample app instead, which is designed to show the protocol usage.");
+	_Static_assert(SL_RAIL_UTIL_INIT_PROTOCOL_INST0_DEFAULT == SL_RAIL_UTIL_PROTOCOL_PROPRIETARY,
+			"Please use the Flex (RAIL) - Simple TRX Standards sample app instead, which is designed to show the protocol usage.");
 #if defined(RAIL0_CHANNEL_GROUP_1_PROFILE_WISUN_OFDM) && !defined(HARDWARE_BOARD_HAS_EFF)
-  _Static_assert(SL_RAIL_UTIL_PA_SELECTION_SUBGHZ == RAIL_TX_POWER_MODE_OFDM_PA,
-                 "Please use the OFDM PA settings in the sl_rail_util_pa_config.h for OFDM phys.");
+	_Static_assert(SL_RAIL_UTIL_PA_SELECTION_SUBGHZ == RAIL_TX_POWER_MODE_OFDM_PA,
+			"Please use the OFDM PA settings in the sl_rail_util_pa_config.h for OFDM phys.");
 #endif
 #if defined(RAIL0_CHANNEL_GROUP_1_PROFILE_WISUN_OFDM) && RAIL_SUPPORTS_EFF && defined(HARDWARE_BOARD_HAS_EFF)
-  _Static_assert(SL_RAIL_UTIL_PA_SELECTION_SUBGHZ >= RAIL_TX_POWER_MODE_OFDM_PA_EFF_30DBM,
-                 "Please use the OFDM PA for EFF settings in the sl_rail_util_pa_config.h for OFDM phys.");
+	_Static_assert(SL_RAIL_UTIL_PA_SELECTION_SUBGHZ >= RAIL_TX_POWER_MODE_OFDM_PA_EFF_30DBM,
+			"Please use the OFDM PA for EFF settings in the sl_rail_util_pa_config.h for OFDM phys.");
 #endif
 }

@@ -40,9 +40,10 @@
 // -----------------------------------------------------------------------------
 // Compile directives
 #define qMaster			1
+#define qUseDisplay     1
 #define qPrintTX        0
 #define qPrintRX        0
-#define qUseDisplay     1
+#define qDebugPrintErr	0
 
 // GPIO debug
 #define DEBUG_PIN_TX    1         // PB01 --> Exp Header 9
@@ -51,11 +52,21 @@
 #define SET             1
 #define RESET           0
 
+// Timeout for RX
+#if (qMaster)
+#define RX_TIMEOUT	(600U)							// in us
+#else
+#define RX_TIMEOUT	(1000U)							// in us
+#endif	// qMaster
+
 // -----------------------------------------------------------------------------
 //                                Global Variables
 // -----------------------------------------------------------------------------
 /// A static handle of a RAIL instance
-extern RAIL_Handle_t grail_handle;
+extern volatile RAIL_Handle_t gRailHandle;
+/// A static var for RX schedule config
+extern RAIL_ScheduleRxConfig_t	gRailScheduleCfg;
+
 
 // -----------------------------------------------------------------------------
 //                          Public Function Declarations
