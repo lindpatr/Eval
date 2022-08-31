@@ -255,11 +255,11 @@ void DisplaySentMsg(void)
  *****************************************************************************/
 void DecodeReceivedMsg(void)
 {
-	  // RAIL Rx packet handles
-	  RAIL_RxPacketHandle_t rx_packet_handle;
-	  RAIL_RxPacketInfo_t packet_info;
-	  // Status indicator of the RAIL API calls
-	  RAIL_Status_t rail_status = RAIL_STATUS_NO_ERROR;
+	// RAIL Rx packet handles
+	RAIL_RxPacketHandle_t rx_packet_handle;
+	RAIL_RxPacketInfo_t packet_info;
+	// Status indicator of the RAIL API calls
+	RAIL_Status_t rail_status = RAIL_STATUS_NO_ERROR;
 
 	// Packet received:
 	//  - Check whether RAIL_HoldRxPacket() was successful, i.e. packet handle is valid
@@ -298,7 +298,7 @@ void DecodeReceivedMsg(void)
 void DisplayRx(void)
 {
 	// Statistics
-	float localStat = (float) (RX_counter - old_RX_counter) / (float)(kStatPeriod/1000000);
+	float localStat = (float) (RX_counter - old_RX_counter) / (float) (kStatPeriod / 1000000);
 	float localStat3 = 100.0f * (float) (RX_tab[1] + RX_tab[2]) / (float) RX_counter;
 
 	// Print on serial COM
@@ -338,7 +338,7 @@ void DisplayRx(void)
 void DisplayTx(void)
 {
 	// Statistics
-	float localStat = (float) (TX_counter - old_TX_counter) / (float)(kStatPeriod/1000000);
+	float localStat = (float) (TX_counter - old_TX_counter) / (float) (kStatPeriod / 1000000);
 	float localStat2 = (10.0f * 10100.0f) / localStat;
 	float localStat3 = 100.0f * (float) (TX_tab[1] + TX_tab[2]) / (float) TX_counter;
 
@@ -376,7 +376,7 @@ void DisplayTx(void)
 void DisplayStat(void)
 {
 	// Statistics
-	float localStat = (float) (TX_counter + RX_counter - old_TX_counter - old_RX_counter) / (float)(kStatPeriod/1000000);
+	float localStat = (float) (TX_counter + RX_counter - old_TX_counter - old_RX_counter) / (float) (kStatPeriod / 1000000);
 	float localStat2 = (10.0f * 10100.0f) / localStat;
 	float localStat3 = 100.0f * (float) (TX_tab[1] + TX_tab[2]) / (float) TX_counter;
 	float localStat4 = 100.0f * (float) (RX_tab[1] + RX_tab[2]) / (float) RX_counter;
@@ -520,7 +520,7 @@ void app_process_action(void)
 	switch (gProtocolState)
 	{
 	case kNone:
-			// Wait TX start
+		// Wait TX start
 		break;
 
 	case kInit:
@@ -536,7 +536,7 @@ void app_process_action(void)
 		break;
 
 	case kStop:
-			// TX stopped
+		// TX stopped
 		break;
 
 	case kWaitRx:
@@ -552,13 +552,13 @@ void app_process_action(void)
 		break;
 
 	case kMsgSent:
-//#if (!qMaster)
-//		if (gFirstTimoutSet)
-//		{
-//			RF_SetRxTimeout( kRxTimeOut, true );
-//			gFirstTimoutSet = false;
-//		}
-//#endif
+		//#if (!qMaster)
+		//		if (gFirstTimoutSet)
+		//		{
+		//			RF_SetRxTimeout( kRxTimeOut, true );
+		//			gFirstTimoutSet = false;
+		//		}
+		//#endif
 
 		SetState(kSwitchRx);	// bidirectional
 
@@ -717,7 +717,6 @@ void set_up_tx_fifo(void)
 // -----------------------------------------------------------------------------
 //                          Static Function Definitions
 // -----------------------------------------------------------------------------
-
 
 #if defined(RAIL0_CHANNEL_GROUP_1_PHY_IEEE802154_SUN_FSK_169MHZ_4FSK_9P6KBPS)  \
 		|| defined(RAIL0_CHANNEL_GROUP_1_PHY_IEEE802154_SUN_FSK_169MHZ_2FSK_4P8KBPS) \
