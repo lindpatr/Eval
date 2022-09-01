@@ -78,6 +78,14 @@
 // [TIMER4]$
 
 // $[USART0]
+// USART0 CLK on PC02
+#define USART0_CLK_PORT                          gpioPortC
+#define USART0_CLK_PIN                           2
+
+// USART0 TX on PC00
+#define USART0_TX_PORT                           gpioPortC
+#define USART0_TX_PIN                            0
+
 // [USART0]$
 
 // $[USART1]
@@ -132,6 +140,27 @@
 // [MODEM]$
 
 // $[CUSTOM_PIN_NAME]
+#define BTN0_PORT                                gpioPortB
+#define BTN0_PIN                                 0
+
+#define DEBUG1_PORT                              gpioPortB
+#define DEBUG1_PIN                               1
+
+#define DEBUG2_PORT                              gpioPortB
+#define DEBUG2_PIN                               2
+
+#define DEBUG3_PORT                              gpioPortB
+#define DEBUG3_PIN                               3
+
+#define EN_DISPL_PORT                            gpioPortC
+#define EN_DISPL_PIN                             7
+
+#define LED0_PORT                                gpioPortD
+#define LED0_PIN                                 2
+
+#define LED1_PORT                                gpioPortD
+#define LED1_PIN                                 3
+
 // [CUSTOM_PIN_NAME]$
 
 #endif // PIN_CONFIG_H
