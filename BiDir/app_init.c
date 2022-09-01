@@ -101,7 +101,7 @@ void app_init(void)
 	// Get RAIL handle, used later by the application
 	gRailHandle = sl_rail_util_get_handle(SL_RAIL_UTIL_HANDLE_INST0);
 
-	// Set up TX FIDO
+	// Set up TX FIFO
 	set_up_tx_fifo();
 
 	// Turn OFF LEDs
@@ -111,18 +111,10 @@ void app_init(void)
 	// Debug pins
 	GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_TX, gpioModePushPull, RESET);
 	GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_RX, gpioModePushPull, RESET);
+	GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_MISC, gpioModePushPull, RESET);
 
 	// LCD start
 	graphics_init();
-
-	// Enable Start reception (without timeout)
-	RAIL_Status_t status = RAIL_StartRx(gRailHandle, CHANNEL, NULL);
-	if (status != RAIL_STATUS_NO_ERROR)
-	{
-#if (qDebugPrintErr)
-		app_log_warning("Warning RAIL_StartRx (%d)\n", status);
-#endif	// qDebugPrintErr
-	}
 
 	// Set timeout for scheduled RX
 	gRailScheduleCfgRX.start = 0;
@@ -135,7 +127,7 @@ void app_init(void)
 	// Set scheduled TX
 	gRailScheduleCfgTX.start = TX_START;
 	gRailScheduleCfgTX.startMode = RAIL_TIME_DELAY;
-	gRailScheduleCfgTX.end = gRailScheduleCfgRX.start + TX_TIMEOUT;
+	gRailScheduleCfgTX.end = TX_START + TX_TIMEOUT;
 	gRailScheduleCfgTX.endMode = RAIL_TIME_DELAY;
 	gRailScheduleCfgTX.hardWindowEnd = false;
 	gRailScheduleCfgTX.rxTransitionEndSchedule = false;
@@ -156,6 +148,17 @@ void app_init(void)
 
 	// Set up timers
 	RAIL_ConfigMultiTimer(true);
+
+#if (!qMaster)
+	// Enable Start reception (without timeout)
+	RAIL_Status_t status = RAIL_StartRx(gRailHandle, CHANNEL, NULL);
+	if (status != RAIL_STATUS_NO_ERROR)
+	{
+#if (qDebugPrintErr)
+		app_log_warning("Warning RAIL_StartRx (%d)\n", status);
+#endif	// qDebugPrintErr
+	}
+#endif	// !qMaster
 }
 
 // -----------------------------------------------------------------------------

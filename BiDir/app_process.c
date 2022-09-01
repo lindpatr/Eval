@@ -63,6 +63,8 @@
 #define STAT_PERIOD_s (20U)							// in us
 #define STAT_PERIOD_us (STAT_PERIOD_s * 1000000ULL)	// in sec
 
+#define SIZE_UINT64_IN_BITS	(int)(8*sizeof(uint64_t))
+
 /// State machine
 typedef enum
 {
@@ -84,6 +86,7 @@ static volatile StateEnum gPrevProtocolState = kInit;
 
 /// Contains the last RAIL Rx/Tx error events
 static volatile uint64_t gErrorCode = RAIL_EVENTS_NONE;
+static uint64_t gOldErrorCode = RAIL_EVENTS_NONE;
 
 /// Contains the status of RAIL Calibration
 static volatile RAIL_Status_t gCalibrationStatus = RAIL_STATUS_NO_ERROR;
@@ -91,7 +94,7 @@ static volatile RAIL_Status_t gCalibrationStatus = RAIL_STATUS_NO_ERROR;
 /// Timeout for printing and displaying the statistics
 //static RAIL_Time_t gStatPeriodTimeout = 0UL;
 /// A static handle of a RAIL timer
-static RAIL_MultiTimer_t gStatPeriodTimer, gRX_timeout;
+static RAIL_MultiTimer_t gStatPeriodTimer, gRX_timeout, gTX_timeout;
 
 
 /// Receive and Send FIFO
@@ -114,6 +117,7 @@ static volatile bool gPacketSent = false;
 static volatile bool gRX_error = false;
 static volatile bool gRX_timeout_error = false;
 static volatile bool gTX_error = false;
+static volatile bool gTX_timeout_error = false;
 static volatile bool gCAL_error = false;
 static volatile bool gStatTimerDone = false;
 
@@ -125,7 +129,7 @@ static uint32_t gRX_counter_old = 0UL;
 static uint32_t gRX_counter_prev = 0UL;
 
 /// Tables for error statistics
-//static uint32_t gCB_tab[50] = {0};	   // index: see RAIL_ENUM_GENERIC(RAIL_Events_t, uint64_t) in rail_types.h
+static volatile uint32_t gCB_tab[SIZE_UINT64_IN_BITS] = {0};	   // index: see RAIL_ENUM_GENERIC(RAIL_Events_t, uint64_t) in rail_types.h
 static uint32_t gTX_tab[3] = { 0 };    // 0 = TX_OK, 1 = TX_Err, 2 = ND
 static uint32_t gRX_tab[3] = { 0 };    // 0 = RX_OK, 1 = RX_Err, 2 = RX_TimeOut
 static uint32_t gCAL_tab[3] = { 0 };   // 0 = ND,    1 = CAL_Err, 2 = ND
@@ -141,6 +145,8 @@ volatile bool gTX_requested = false;
 /// Flag, indicating received packet is forwarded on CLI or not
 volatile bool gRX_requested = true;
 volatile bool gRX_first = false;
+static volatile bool gStartProcess = false;
+static volatile bool gStopProcess = false;
 
 
 // -----------------------------------------------------------------------------
@@ -209,9 +215,6 @@ void CfgRxMode(void)
 	}
 }
 
-/******************************************************************************
- * CfgTxMode : prepare buffer and change to TX mode
- *****************************************************************************/
 void CfgTxMode(void)
 {
 	// Data
@@ -242,6 +245,7 @@ void CfgTxMode(void)
 #endif	// qDebugPrintErr
 	}
 }
+
 
 /******************************************************************************
  * DisplayReceivedMsg : print received data
@@ -512,12 +516,15 @@ void graphics_init(void)
  *****************************************************************************/
 void app_process_action(void)
 {
+	GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_MISC);
+
 	/// -----------------------------------------
 	/// Decode from interrupt / callback
 	/// -----------------------------------------
 	if (gPacketRecieved)
 	{
 		gPacketRecieved = false;
+		RAIL_CancelMultiTimer(&gRX_timeout);
 
 #if (!qMaster)
 		if (!gRX_first)
@@ -554,11 +561,7 @@ void app_process_action(void)
 	{
 		gRX_timeout_error = false;
 		gRX_tab[2]++;
-#if (qMaster)
-		SetState(kSwitchTx);
-#else
-		SetState(kSwitchRx);
-#endif
+		SetState(kTimeOutRx);
 	}
 	else if (gTX_error)
 	{
@@ -566,11 +569,27 @@ void app_process_action(void)
 		gTX_tab[1]++;
 		SetState(kErrorTx);
 	}
+	else if (gTX_timeout_error)
+	{
+		gTX_timeout_error = false;
+		gTX_tab[2]++;
+		SetState(kTimeOutTx);
+	}
 	else if (gCAL_error)
 	{
 		gCAL_error = false;
 		gCAL_tab[1]++;
 		SetState(kErrorCal);
+	}
+	else if (gStartProcess)
+	{
+		gStartProcess = false;
+		SetState(kStart);
+	}
+	else if (gStopProcess)
+	{
+		gStopProcess = false;
+		SetState(kStop);
 	}
 
 	/// -----------------------------------------
@@ -583,7 +602,10 @@ void app_process_action(void)
 	// -----------------------------------------
 	case kInit:
 		// Sate after POR, wait until pressing BTN0 on Master or receiving message (on Slave)
-#if (!qMaster)
+		prepare_package(gTX_packet, sizeof(gTX_packet));
+#if (qMaster)
+		SetState(kIdle);
+#else
 		SetState(kWaitRx);
 #endif	// qMaster
 		break;
@@ -636,17 +658,33 @@ void app_process_action(void)
 
 	case kErrorRx:
 		// Error on RX
+#if (qMaster)
 		SetState(kSwitchRx);
+#else
+		SetState(kSwitchRx);
+#endif
 #if (qDebugPrintErr)
-		app_log_error("RX Error (%llX)\n", gErrorCode);
+		if (gErrorCode != gOldErrorCode)
+		{
+			app_log_error("RX Error (0x%llX)\n", gErrorCode);
+			gOldErrorCode = gErrorCode;
+		}
 #endif	// qDebugPrintErr
 		break;
 
 	case kTimeOutRx:
 		// Timeout on RX
+#if (qMaster)
+		SetState(kSwitchTx);
+#else
 		SetState(kSwitchRx);
+#endif
 #if (qDebugPrintErr)
-		app_log_error("RX Error (%llX)\n", gErrorCode);
+		if (gErrorCode != gOldErrorCode)
+		{
+			app_log_error("RX TimeOut (0x%llX)\n", gErrorCode);
+			gOldErrorCode = gErrorCode;
+		}
 #endif	// qDebugPrintErr
 		break;
 
@@ -663,22 +701,38 @@ void app_process_action(void)
 		break;
 
 	case kMsgSent:
-		//#if (!qMaster)
-		//		if (gFirstTimoutSet)
-		//		{
-		//			RF_SetRxTimeout( kRxTimeOut, true );
-		//			gFirstTimoutSet = false;
-		//		}
-		//#endif
-
 		SetState(kSwitchRx);	// bidirectional
 		DisplaySentMsg();
 		break;
 
 	case kErrorTx:
-		SetState(kSwitchTx);
+#if (qMaster)
+		SetState(kSwitchRx);
+#else
+		SetState(kSwitchRx);
+#endif
 #if (qDebugPrintErr)
-		app_log_error("TX Error (%llX)\n", gErrorCode);
+		if (gErrorCode != gOldErrorCode)
+		{
+			app_log_error("TX Error (0x%llX)\n", gErrorCode);
+			gOldErrorCode = gErrorCode;
+		}
+#endif	// qDebugPrintErr
+		break;
+
+	case kTimeOutTx:
+		// Timeout on TX
+#if (qMaster)
+		// ??? SetState(kSwitchTx);
+#else
+		// ??? SetState(kSwitchTx);
+#endif
+#if (qDebugPrintErr)
+		if (gErrorCode != gOldErrorCode)
+		{
+			app_log_error("TX TimeOut (0x%llX)\n", gErrorCode);
+			gOldErrorCode = gErrorCode;
+		}
 #endif	// qDebugPrintErr
 		break;
 
@@ -692,7 +746,11 @@ void app_process_action(void)
 		// -----------------------------------------
 	case kErrorCal:
 #if (qDebugPrintErr)
-		app_log_error("CAL Error (%llX / %d)\n", gErrorCode, gCalibrationStatus);
+		if (gErrorCode != gOldErrorCode)
+		{
+			app_log_error("CAL Error (0x%llX / %d)\n", gErrorCode, gCalibrationStatus);
+			gOldErrorCode = gErrorCode;
+		}
 #endif	// qDebugPrintErr
 		break;
 
@@ -733,9 +791,28 @@ void app_process_action(void)
 /******************************************************************************
  * RAIL callback, called if a RAIL event occurs.
  *****************************************************************************/
+
+
+static __INLINE void DecodeEvents(RAIL_Events_t *events)
+{
+	uint64_t ev = *events;
+
+	for (int i = 0; i <SIZE_UINT64_IN_BITS; i++)
+	{
+		if (ev & 0x1ULL)
+			gCB_tab[i]++;
+
+		ev >>= 1;
+	}
+}
+
 void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 {
 	gErrorCode = events;
+
+	GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_MISC);
+
+	DecodeEvents(&events);
 
 	// Handle Rx events
 	if (events & RAIL_EVENTS_RX_COMPLETION)
@@ -756,7 +833,7 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 		}
 	}
 
-	// Handle RX timeout
+	// Handle Rx timeout
 	if (events & (1ULL << RAIL_EVENT_RX_SCHEDULED_RX_END_SHIFT))
 	{
 		gRX_timeout_error = true;
@@ -780,11 +857,16 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 		}
 	}
 
+	// Handle TX timeout
+//	if (events & (1ULL << ???))
+//	{
+//		gTX_timeout_error = true;
+//	}
+//
 	// Perform all calibrations when needed
 	if (events & RAIL_EVENT_CAL_NEEDED)
 	{
-		gCalibrationStatus = RAIL_Calibrate(rail_handle, NULL,
-				RAIL_CAL_ALL_PENDING);
+		gCalibrationStatus = RAIL_Calibrate(rail_handle, NULL, RAIL_CAL_ALL_PENDING);
 		if (gCalibrationStatus != RAIL_STATUS_NO_ERROR)
 		{
 			gCAL_error = true;
@@ -803,11 +885,11 @@ void sl_button_on_change(const sl_button_t *handle)
 
 		if (gTX_requested)
 		{
-			SetState(kStart);
+			gStartProcess = true;
 		}
 		else
 		{
-			SetState(kStop);
+			gStopProcess = false;
 		}
 	}
 }
@@ -820,13 +902,17 @@ void timer_callback(RAIL_MultiTimer_t *tmr, RAIL_Time_t expectedTimeOfEvent, voi
 	(void)expectedTimeOfEvent;
 	(void)cbArg;
 
-	if (tmr == &gStatPeriodTimer)
-	{
-		gStatTimerDone = true;
-	}
-	else	// gRX_timeout
+	if (tmr == &gRX_timeout)
 	{
 		gRX_timeout_error = true;
+	}
+	else if (tmr == &gTX_timeout)
+	{
+		gTX_timeout_error = true;
+	}
+	else	// gStatPeriodTimer
+	{
+		gStatTimerDone = true;
 	}
 }
 
@@ -845,169 +931,6 @@ void set_up_tx_fifo(void)
 //                          Static Function Definitions
 // -----------------------------------------------------------------------------
 
-#if defined(RAIL0_CHANNEL_GROUP_1_PHY_IEEE802154_SUN_FSK_169MHZ_4FSK_9P6KBPS)  \
-		|| defined(RAIL0_CHANNEL_GROUP_1_PHY_IEEE802154_SUN_FSK_169MHZ_2FSK_4P8KBPS) \
-		|| defined(RAIL0_CHANNEL_GROUP_1_PHY_IEEE802154_SUN_FSK_169MHZ_2FSK_2P4KBPS) \
-		|| defined(RAIL0_CHANNEL_GROUP_1_PHY_IEEE802154_SUN_FSK_450MHZ_2FSK_4P8KBPS) \
-		|| defined(RAIL0_CHANNEL_GROUP_1_PHY_IEEE802154_SUN_FSK_450MHZ_4FSK_9P6KBPS) \
-		|| defined(RAIL0_CHANNEL_GROUP_1_PHY_IEEE802154_SUN_FSK_896MHZ_2FSK_40KBPS)  \
-		|| defined(RAIL0_CHANNEL_GROUP_1_PHY_IEEE802154_SUN_FSK_915MHZ_2FSK_10KBPS)  \
-		|| defined(RAIL0_CHANNEL_GROUP_1_PHY_IEEE802154_SUN_FSK_920MHZ_4FSK_400KBPS)
-#undef RAIL0_CHANNEL_GROUP_1_PROFILE_BASE
-#define RAIL0_CHANNEL_GROUP_1_PROFILE_WISUN_FSK
-#endif
-
-#if defined(RAIL0_CHANNEL_GROUP_1_PROFILE_WISUN) || defined(RAIL0_CHANNEL_GROUP_1_PROFILE_WISUN_FSK) || defined(RAIL0_CHANNEL_GROUP_1_PROFILE_WISUN_FAN_1_0) || defined(RAIL0_CHANNEL_GROUP_1_PROFILE_WISUN_HAN)
-/******************************************************************************
- * The API helps to unpack the received packet, point to the payload and returns the length.
- *****************************************************************************/
-static uint16_t unpack_packet(uint8_t *rx_destination, const RAIL_RxPacketInfo_t *packet_information, uint8_t **start_of_payload)
-{
-	sl_flex_802154_packet_mhr_frame_t rx_mhr = { 0 };
-	uint16_t payload_size = 0;
-	uint8_t rx_phr_config = 0U;
-	RAIL_CopyRxPacket(rx_destination, packet_information);
-
-	*start_of_payload = sl_flex_802154_packet_unpack_g_opt_data_frame(&rx_phr_config,
-			&rx_mhr,
-			&payload_size,
-			rx_destination);
-	return ((payload_size > (RAIL_FIFO_SIZE - SL_FLEX_IEEE802154_MHR_LENGTH)) ? (RAIL_FIFO_SIZE - SL_FLEX_IEEE802154_MHR_LENGTH) : payload_size);
-}
-
-/******************************************************************************
- * The API prepares the packet for sending and load it in the RAIL TX FIFO
- *****************************************************************************/
-static void prepare_package(uint8_t *out_data, uint16_t length)
-{
-	// Check if write fifo has written all bytes
-	uint16_t bytes_writen_in_fifo = 0;
-	uint16_t packet_size = 0U;
-	uint8_t tx_phr_config = SL_FLEX_IEEE802154G_PHR_MODE_SWITCH_OFF
-			| SL_FLEX_IEEE802154G_PHR_CRC_4_BYTE
-			| SL_FLEX_IEEE802154G_PHR_DATA_WHITENING_ON;
-	sl_flex_802154_packet_mhr_frame_t tx_mhr = {
-			.frame_control          = MAC_FRAME_TYPE_DATA                \
-			| MAC_FRAME_FLAG_PANID_COMPRESSION \
-			| MAC_FRAME_DESTINATION_MODE_SHORT \
-			| MAC_FRAME_VERSION_2006           \
-			| MAC_FRAME_SOURCE_MODE_SHORT,
-			.sequence_number        = 0U,
-			.destination_pan_id     = (0xFFFF),
-			.destination_address    = (0xFFFF),
-			.source_address         = (0x0000)
-	};
-	uint8_t tx_frame_buffer[256];
-	sl_flex_802154_packet_pack_g_opt_data_frame(tx_phr_config,
-			&tx_mhr,
-			length,
-			out_data,
-			&packet_size,
-			tx_frame_buffer);
-	bytes_writen_in_fifo = RAIL_WriteTxFifo(gRailHandle, tx_frame_buffer, packet_size, true);
-	app_assert(bytes_writen_in_fifo == packet_size,
-			"RAIL_WriteTxFifo() failed to write in fifo (%d bytes instead of %d bytes)\n",
-			bytes_writen_in_fifo,
-			packet_size);
-}
-#elif defined(RAIL0_CHANNEL_GROUP_1_PROFILE_WISUN_OFDM)
-/******************************************************************************
- * The API helps to unpack the received packet, point to the payload and returns the length.
- *****************************************************************************/
-static uint16_t unpack_packet(uint8_t *rx_destination,
-		const RAIL_RxPacketInfo_t *packet_information,
-		uint8_t **start_of_payload)
-{
-	uint16_t payload_size = 0U;
-	uint8_t rate = 0U;
-	uint8_t scrambler = 0U;
-
-	RAIL_CopyRxPacket(rx_destination, packet_information);
-	*start_of_payload = sl_flex_802154_packet_unpack_ofdm_data_frame(packet_information,
-			&rate,
-			&scrambler,
-			&payload_size,
-			rx_destination);
-	return payload_size;
-}
-
-/******************************************************************************
- * The API prepares the packet for sending and load it in the RAIL TX FIFO
- *****************************************************************************/
-static void prepare_package(uint8_t *out_data, uint16_t length)
-{
-	// Check if write fifo has written all bytes
-	uint16_t bytes_writen_in_fifo = 0;
-	uint16_t packet_size = 0U;
-	uint8_t tx_frame_buffer[256];
-	uint8_t rate = 0x06;     // rate: 5 bits wide, The Rate field (RA4-RA0) specifies the data rate of the payload and is equal to the numerical value of the MCS
-	// 0x0 BPSK, coding rate 1/2, 4 x frequency repetition
-	// 0x1 BPSK, coding rate 1/2, 2 x frequency repetition
-	// 0x2 QPSK, coding rate 1/2, 2 x frequency repetition
-	// 0x3 QPSK, coding rate 1/2
-	// 0x4 QPSK, coding rate 3/4
-	// 0x5 16-QAM, coding rate 1/2
-	// 0x6 16-QAM, coding rate 3/4
-	uint8_t scrambler = 0; // scrambler: 2 bits wide, The Scrambler field (S1-S0) specifies the scrambling seed
-
-	sl_flex_802154_packet_pack_ofdm_data_frame(rate,
-			scrambler,
-			length,
-			out_data,
-			&packet_size,
-			tx_frame_buffer);
-	bytes_writen_in_fifo = RAIL_WriteTxFifo(gRailHandle, tx_frame_buffer, packet_size, true);
-	app_assert(bytes_writen_in_fifo == packet_size,
-			"RAIL_WriteTxFifo() failed to write in fifo (%d bytes instead of %d bytes)\n",
-			bytes_writen_in_fifo,
-			packet_size);
-}
-
-#elif defined(RAIL0_CHANNEL_GROUP_1_PROFILE_SUN_OQPSK)
-/******************************************************************************
- * The API helps to unpack the received packet, point to the payload and returns the length.
- *****************************************************************************/
-static uint16_t unpack_packet(uint8_t *rx_destination, const RAIL_RxPacketInfo_t *packet_information, uint8_t **start_of_payload)
-{
-	uint16_t payload_size = 0U;
-	bool spreadingMode = false;
-	uint8_t rateMode = 0U;
-
-	RAIL_CopyRxPacket(rx_destination, packet_information);
-	*start_of_payload = sl_flex_802154_packet_unpack_oqpsk_data_frame(packet_information,
-			&spreadingMode,
-			&rateMode,
-			&payload_size,
-			rx_destination);
-	return payload_size;
-}
-
-/******************************************************************************
- * The API prepares the packet for sending and load it in the RAIL TX FIFO
- *****************************************************************************/
-static void prepare_package(uint8_t *out_data, uint16_t length)
-{
-	// Check if write fifo has written all bytes
-	uint16_t bytes_writen_in_fifo = 0;
-	uint16_t packet_size = 0U;
-	uint8_t tx_frame_buffer[256];
-	bool spreadingMode = false;
-	uint8_t rateMode = 0; // rateMode: 2 bits wide
-
-	sl_flex_802154_packet_pack_oqpsk_data_frame(spreadingMode,
-			rateMode,
-			length,
-			out_data,
-			&packet_size,
-			tx_frame_buffer);
-
-	bytes_writen_in_fifo = RAIL_WriteTxFifo(gRailHandle, tx_frame_buffer, packet_size, true);
-	app_assert(bytes_writen_in_fifo == packet_size,
-			"RAIL_WriteTxFifo() failed to write in fifo (%d bytes instead of %d bytes)\n",
-			bytes_writen_in_fifo,
-			packet_size);
-}
-#else
 /******************************************************************************
  * The API helps to unpack the received packet, point to the payload and returns the length.
  *****************************************************************************/
@@ -1028,4 +951,3 @@ static void prepare_package(uint8_t *out_data, uint16_t length)
 	bytes_writen_in_fifo = RAIL_WriteTxFifo(gRailHandle, out_data, length, true);
 	app_assert(bytes_writen_in_fifo == TX_PAYLOAD_LENGTH, "RAIL_WriteTxFifo() failed to write in fifo (%d bytes instead of %d bytes)\n", bytes_writen_in_fifo, TX_PAYLOAD_LENGTH);
 }
-#endif

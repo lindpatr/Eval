@@ -39,7 +39,12 @@
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
 // Compile directives
+#if (SL_MASTER)
+#define qMaster			1
+#else
 #define qMaster			0
+#endif
+
 #define qUseDisplay     1
 #define qPrintTX        0
 #define qPrintRX        0
@@ -48,6 +53,7 @@
 // GPIO debug
 #define DEBUG_PIN_TX    1         // PB01 --> Exp Header 9
 #define DEBUG_PIN_RX    2         // PB02 --> Exp Header 15
+#define DEBUG_PIN_MISC	3		  // PB03 --> Exp Header 16
 #define DEBUG_PORT      gpioPortB
 #define SET             1
 #define RESET           0
