@@ -50,3 +50,17 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+BiDir/GNU ARM v10.3.1 - Default/
+
+BiDir/Master Debug/
+
+BiDir/Master Release/
+
+BiDir/Slave Debug/
+
+BiDir/Slave Release/
+
+BiDir/ - Copie.cproject
+
+BiDir/- Copie.cproject
