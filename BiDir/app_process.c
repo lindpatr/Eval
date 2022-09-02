@@ -93,6 +93,8 @@ static volatile RAIL_Status_t gCalibrationStatus = RAIL_STATUS_NO_ERROR;
 
 /// Timeout for printing and displaying the statistics
 //static RAIL_Time_t gStatPeriodTimeout = 0UL;
+static volatile RAIL_Time_t gElapsedTime = 0UL;
+static volatile RAIL_Time_t gOldElapsedTime = 0UL;
 /// A static handle of a RAIL timer
 static RAIL_MultiTimer_t gStatPeriodTimer, gRX_timeout, gTX_timeout;
 
@@ -109,6 +111,7 @@ static union
 
 /// Transmit packet
 static uint8_t gTX_packet[TX_PAYLOAD_LENGTH] =
+//{ 0xAA, 0x06, 0x11, 0x22, 0x33, 0x44 };
 { 0x0F, 0x16, 0x11, 0x22, 0x33, 0x44 };
 
 /// Flags to update state machine from interrupt
@@ -122,10 +125,10 @@ static volatile bool gCAL_error = false;
 static volatile bool gStatTimerDone = false;
 
 /// TX and RX counters
-static uint32_t gRX_counter = 0UL;
-static uint32_t gTX_counter = 0UL;
-static uint32_t gTX_counter_old = 0UL;
-static uint32_t gRX_counter_old = 0UL;
+static volatile uint32_t gRX_counter = 0UL;
+static volatile uint32_t gTX_counter = 0UL;
+static volatile uint32_t gTX_counter_old = 0UL;
+static volatile uint32_t gRX_counter_old = 0UL;
 static uint32_t gRX_counter_prev = 0UL;
 
 /// Tables for error statistics
@@ -145,8 +148,8 @@ volatile bool gTX_requested = false;
 /// Flag, indicating received packet is forwarded on CLI or not
 volatile bool gRX_requested = true;
 volatile bool gRX_first = false;
+volatile bool gPrintStat = false;
 static volatile bool gStartProcess = false;
-static volatile bool gStopProcess = false;
 
 
 // -----------------------------------------------------------------------------
@@ -199,7 +202,6 @@ void CfgRxMode(void)
 	// For oscillo debug
 	GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
 
-
 	// RX with timeout
 //	RAIL_Status_t status = RAIL_ScheduleRx(gRailHandle, CHANNEL, &gRailScheduleCfgRX, NULL);
 	RAIL_Status_t status = RAIL_StartRx(gRailHandle, CHANNEL, NULL);
@@ -211,10 +213,12 @@ void CfgRxMode(void)
 //		app_log_warning("Warning RAIL_ScheduleRx (%d)\n", status);
 		app_log_warning("Warning RAIL_StartRx (%d)\n", status);
 #endif	// qDebugPrintErr
-
 	}
 }
 
+/******************************************************************************
+ * CfgTxMode : prepare buffer and change to TX mode
+ *****************************************************************************/
 void CfgTxMode(void)
 {
 	// Data
@@ -298,6 +302,7 @@ void DecodeReceivedMsg(void)
 	//  - Copy it to the application FIFO
 	//  - Free up the radio FIFO
 	//  - Return to app IDLE state (RAIL will automatically switch back to Rx radio state)
+
 	rx_packet_handle = RAIL_GetRxPacketInfo(gRailHandle, RAIL_RX_PACKET_HANDLE_OLDEST_COMPLETE, &packet_info);
 	while (rx_packet_handle != RAIL_RX_PACKET_HANDLE_INVALID)
 	{
@@ -326,90 +331,12 @@ void DecodeReceivedMsg(void)
 }
 
 /******************************************************************************
- * DisplayRx : print and display RX statistics
- *****************************************************************************/
-void DisplayRx(void)
-{
-	// Statistics
-	float localStat = (float) (gRX_counter - gRX_counter_old) / (float) (STAT_PERIOD_s);
-	float localStat3 = 100.0f * (float) (gRX_tab[1] + gRX_tab[2]) / (float) gRX_counter;
-
-	// Print on serial COM
-	app_log_info("RX Error: %0.3f%% (Err:%d/TO:%d)\n", localStat3, gRX_tab[1], gRX_tab[2]);
-	app_log_info("RX Rate : %0.2f msg/s\n", localStat);
-
-#if (qUseDisplay)
-	// Print on LCD display
-	char textBuf[32];
-
-	GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNormal8x8);
-	GLIB_drawStringOnLine(&gGlibContext, "--- STATS RX ---", 5, GLIB_ALIGN_CENTER, 0, 0, true);
-	snprintf(textBuf, sizeof(textBuf), "OK    %lu          ", gRX_tab[0]);
-	GLIB_drawStringOnLine(&gGlibContext, textBuf, 6, GLIB_ALIGN_LEFT, 0, 0, true);
-	snprintf(textBuf, sizeof(textBuf), "Error %lu          ", gRX_tab[1]);
-	GLIB_drawStringOnLine(&gGlibContext, textBuf, 7, GLIB_ALIGN_LEFT, 0, 0, true);
-	snprintf(textBuf, sizeof(textBuf), "TO    %lu           ", gRX_tab[2]);
-	GLIB_drawStringOnLine(&gGlibContext, textBuf, 8, GLIB_ALIGN_LEFT, 0, 0, true);
-	snprintf(textBuf, sizeof(textBuf), "Error %0.3f%%      ", localStat3);
-	GLIB_drawStringOnLine(&gGlibContext, textBuf, 9, GLIB_ALIGN_LEFT, 0, 0, true);
-	snprintf(textBuf, sizeof(textBuf), "Rate  %0.1f fs     ", localStat);
-	GLIB_drawStringOnLine(&gGlibContext, textBuf, 10, GLIB_ALIGN_LEFT, 0, 0, true);
-
-	GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
-	GLIB_drawStringOnLine(&gGlibContext, ">>> RUNNING >>>", 12, GLIB_ALIGN_CENTER, 0, 0, true);
-
-	// Force a redraw
-	DMD_updateDisplay();
-#endif  // qUseDisplay
-
-	gRX_counter_old = gRX_counter;
-}
-
-/******************************************************************************
- * DisplayTx : print and display TX statistics
- *****************************************************************************/
-void DisplayTx(void)
-{
-	// Statistics
-	float localStat = (float) (gTX_counter - gTX_counter_old) / (float) (STAT_PERIOD_s);
-	float localStat2 = (10.0f * 10100.0f) / localStat;
-	float localStat3 = 100.0f * (float) (gTX_tab[1] + gTX_tab[2]) / (float) gTX_counter;
-
-	// Print on serial COM
-	app_log_info("TX Error: %0.3f%% (Err:%d/TO:%d)\n", localStat3, gTX_tab[1], gTX_tab[2]);
-	app_log_info("TX Rate :    %0.2f msg/s (loop: %0.2f ms)\n", localStat, localStat2);
-
-#if (qUseDisplay)
-	// Print on LCD display
-	char textBuf[32];
-
-	GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNormal8x8);
-	GLIB_drawStringOnLine(&gGlibContext, "--- STATS TX ---", 5, GLIB_ALIGN_CENTER, 0, 0, true);
-	snprintf(textBuf, sizeof(textBuf), "OK    %lu          ", gTX_tab[0]);
-	GLIB_drawStringOnLine(&gGlibContext, textBuf, 6, GLIB_ALIGN_LEFT, 0, 0, true);
-	snprintf(textBuf, sizeof(textBuf), "Error %lu          ", gTX_tab[1]);
-	GLIB_drawStringOnLine(&gGlibContext, textBuf, 7, GLIB_ALIGN_LEFT, 0, 0, true);
-	snprintf(textBuf, sizeof(textBuf), "Error %0.3f%%      ", localStat3);
-	GLIB_drawStringOnLine(&gGlibContext, textBuf, 8, GLIB_ALIGN_LEFT, 0, 0, true);
-	snprintf(textBuf, sizeof(textBuf), "Rate  %0.1f fs     ", localStat);
-	GLIB_drawStringOnLine(&gGlibContext, textBuf, 9, GLIB_ALIGN_LEFT, 0, 0, true);
-	snprintf(textBuf, sizeof(textBuf), "Loop  %0.1f ms     ", localStat2);
-	GLIB_drawStringOnLine(&gGlibContext, textBuf, 10, GLIB_ALIGN_LEFT, 0, 0, true);
-
-	// Force a redraw
-	DMD_updateDisplay();
-#endif  // qUseDisplay
-
-	gTX_counter_old = gTX_counter;
-}
-
-/******************************************************************************
  * DisplayStat : print and display statistics
  *****************************************************************************/
 void DisplayStat(void)
 {
 	// Statistics
-	float localStat = (float) (gTX_counter + gRX_counter - gTX_counter_old - gRX_counter_old) / (float) (STAT_PERIOD_s);
+	float localStat = (float)(gTX_counter + gRX_counter - gTX_counter_old - gRX_counter_old) / ((float)(gElapsedTime - gOldElapsedTime) / 1000000.0f);
 	float localStat2 = (10.0f * 10100.0f) / localStat;
 	float localStat3 = 100.0f * (float) (gTX_tab[1] + gTX_tab[2]) / (float) gTX_counter;
 	float localStat4 = 100.0f * (float) (gRX_tab[1] + gRX_tab[2]) / (float) gRX_counter;
@@ -442,7 +369,6 @@ void DisplayStat(void)
 	// Force a redraw
 	DMD_updateDisplay();
 #endif  // qUseDisplay
-
 	gTX_counter_old = gTX_counter;
 	gRX_counter_old = gRX_counter;
 }
@@ -497,8 +423,8 @@ void graphics_init(void)
 	GLIB_drawStringOnLine(&gGlibContext, "****************", 4, GLIB_ALIGN_CENTER, 0, 0, 0);
 	GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNormal8x8);
 	GLIB_drawStringOnLine(&gGlibContext, "Press BTN0", 6, GLIB_ALIGN_CENTER, 0, 0, 0);
-	GLIB_drawStringOnLine(&gGlibContext, "on Master to", 7, GLIB_ALIGN_CENTER, 0, 0, 0);
-	GLIB_drawStringOnLine(&gGlibContext, "start / stop TX", 8, GLIB_ALIGN_CENTER, 0, 0, 0);
+	GLIB_drawStringOnLine(&gGlibContext, "to display", 7, GLIB_ALIGN_CENTER, 0, 0, 0);
+	GLIB_drawStringOnLine(&gGlibContext, "statistics", 8, GLIB_ALIGN_CENTER, 0, 0, 0);
 
 	GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
 	GLIB_drawStringOnLine(&gGlibContext, "*** STOPPED ***", 12, GLIB_ALIGN_CENTER, 0, 0, 0);
@@ -516,7 +442,7 @@ void graphics_init(void)
  *****************************************************************************/
 void app_process_action(void)
 {
-	GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_MISC);
+	//GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_MISC);
 
 	/// -----------------------------------------
 	/// Decode from interrupt / callback
@@ -524,22 +450,23 @@ void app_process_action(void)
 	if (gPacketRecieved)
 	{
 		gPacketRecieved = false;
-		RAIL_CancelMultiTimer(&gRX_timeout);
+		// DEBUG RAIL_CancelMultiTimer(&gRX_timeout);
 
 #if (!qMaster)
 		if (!gRX_first)
 		{
 			gRX_first = true;
-#if (qUseDisplay)
-			GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
-			GLIB_drawStringOnLine(&gGlibContext, ">>> RUNNING >>>", 12, GLIB_ALIGN_CENTER, 0, 0, true);
-			// Force a redraw
-			DMD_updateDisplay();
-#endif  // qUseDisplay
+//#if (qUseDisplay)
+//			GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
+//			GLIB_drawStringOnLine(&gGlibContext, ">>> RUNNING >>>", 12, GLIB_ALIGN_CENTER, 0, 0, true);
+//			// Force a redraw
+//			DMD_updateDisplay();
+//#endif  // qUseDisplay
 			gTX_counter_old = gTX_counter;
 			gRX_counter_old = gRX_counter;
-			RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_DELAY, &timer_callback, NULL);
+			//RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_DELAY, &timer_callback, NULL);
 			//gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
+			gElapsedTime = RAIL_GetTime();
 		}
 #endif	// !qMaster
 		SetState(kMsgReceived);
@@ -560,6 +487,7 @@ void app_process_action(void)
 	else if (gRX_timeout_error)
 	{
 		gRX_timeout_error = false;
+		GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_MISC);
 		gRX_tab[2]++;
 		SetState(kTimeOutRx);
 	}
@@ -586,11 +514,6 @@ void app_process_action(void)
 		gStartProcess = false;
 		SetState(kStart);
 	}
-	else if (gStopProcess)
-	{
-		gStopProcess = false;
-		SetState(kStop);
-	}
 
 	/// -----------------------------------------
 	/// State machine
@@ -606,6 +529,12 @@ void app_process_action(void)
 #if (qMaster)
 		SetState(kIdle);
 #else
+#if (qUseDisplay)
+		GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
+		GLIB_drawStringOnLine(&gGlibContext, ">>> RUNNING >>>", 12, GLIB_ALIGN_CENTER, 0, 0, true);
+		// Force a redraw
+		DMD_updateDisplay();
+#endif  // qUseDisplay
 		SetState(kWaitRx);
 #endif	// qMaster
 		break;
@@ -622,8 +551,8 @@ void app_process_action(void)
 		DMD_updateDisplay();
 #endif  // qUseDisplay
 		//gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
-		RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_DELAY, &timer_callback, NULL);
-		gTX_counter_old = gTX_counter;
+		//RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_DELAY, &timer_callback, NULL);
+		//gTX_counter_old = gTX_counter;
 		break;
 
 	case kStop:
@@ -633,7 +562,7 @@ void app_process_action(void)
 		sl_led_turn_off(&sl_led_led1);
 #if (qUseDisplay)
 		GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
-		GLIB_drawStringOnLine(&gGlibContext, "*** STOPPED ***", 12, GLIB_ALIGN_CENTER, 0, 0, true);
+		GLIB_drawStringOnLine(&gGlibContext, "*** END ***", 12, GLIB_ALIGN_CENTER, 0, 0, true);
 		// Force a redraw
 		DMD_updateDisplay();
 #endif  // qUseDisplay
@@ -707,9 +636,9 @@ void app_process_action(void)
 
 	case kErrorTx:
 #if (qMaster)
-		SetState(kSwitchRx);
+		SetState(kSwitchTx);
 #else
-		SetState(kSwitchRx);
+		SetState(kSwitchTx);
 #endif
 #if (qDebugPrintErr)
 		if (gErrorCode != gOldErrorCode)
@@ -762,30 +691,17 @@ void app_process_action(void)
 	/// -----------------------------------------
 	/// Statistics
 	/// -----------------------------------------
-#if (qMaster)
-	if (gTX_requested)
+	if (gPrintStat)
 	{
-		if (gStatTimerDone/*gRAIL_GetTime() >= gStatPeriodTimeout*/)
+		gPrintStat = false;
+		//if (gStatTimerDone/*gRAIL_GetTime() >= gStatPeriodTimeout*/)
 		{
 			gStatTimerDone = false;
 			DisplayStat();
 			//gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
-			RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_DELAY, &timer_callback, NULL);
+			//RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_DELAY, &timer_callback, NULL);
 		}
 	}
-#else
-	if (gRX_first)
-	{
-		if (gStatTimerDone/*gRAIL_GetTime() >= gStatPeriodTimeout*/)
-		{
-			gStatTimerDone = false;
-			DisplayStat();
-			//gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
-			RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_DELAY, &timer_callback, NULL);
-		}
-	}
-#endif	// qMaster
-
 }
 
 /******************************************************************************
@@ -810,9 +726,9 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 {
 	gErrorCode = events;
 
-	GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_MISC);
+	//GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_MISC);
 
-	DecodeEvents(&events);
+	//DecodeEvents(&events);
 
 	// Handle Rx events
 	if (events & RAIL_EVENTS_RX_COMPLETION)
@@ -834,10 +750,10 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 	}
 
 	// Handle Rx timeout
-	if (events & (1ULL << RAIL_EVENT_RX_SCHEDULED_RX_END_SHIFT))
-	{
-		gRX_timeout_error = true;
-	}
+//	if (events & (1ULL << RAIL_EVENT_RX_SCHEDULED_RX_END_SHIFT))
+//	{
+//		gRX_timeout_error = true;
+//	}
 
 	// Handle Tx events
 	if (events & RAIL_EVENTS_TX_COMPLETION)
@@ -881,16 +797,27 @@ void sl_button_on_change(const sl_button_t *handle)
 {
 	if (sl_button_get_state(handle) == SL_SIMPLE_BUTTON_PRESSED)
 	{
-		gTX_requested = !gTX_requested;
-
-		if (gTX_requested)
+#if (qMaster)
+		if (!gTX_requested)
 		{
 			gStartProcess = true;
+
+			gTX_requested = true;
+			gElapsedTime = RAIL_GetTime();
+
 		}
 		else
 		{
-			gStopProcess = false;
+			gOldElapsedTime = gElapsedTime;
+			gElapsedTime = RAIL_GetTime();
+			gPrintStat = true;
 		}
+#else
+	gOldElapsedTime = gElapsedTime;
+	gElapsedTime = RAIL_GetTime();
+	gPrintStat = true;
+
+#endif	// qMaster
 	}
 }
 
@@ -899,20 +826,21 @@ void sl_button_on_change(const sl_button_t *handle)
  *****************************************************************************/
 void timer_callback(RAIL_MultiTimer_t *tmr, RAIL_Time_t expectedTimeOfEvent, void *cbArg)
 {
-	(void)expectedTimeOfEvent;
-	(void)cbArg;
+	(void) expectedTimeOfEvent;
+	(void) cbArg;
 
-	if (tmr == &gRX_timeout)
+	if (tmr == &gStatPeriodTimer)
+	{
+		gStatTimerDone = true;
+	}
+	else if (tmr == &gRX_timeout)
 	{
 		gRX_timeout_error = true;
+		GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_MISC);
 	}
 	else if (tmr == &gTX_timeout)
 	{
 		gTX_timeout_error = true;
-	}
-	else	// gStatPeriodTimer
-	{
-		gStatTimerDone = true;
 	}
 }
 

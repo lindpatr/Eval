@@ -45,6 +45,8 @@
   #include "sl_system_process_action.h"
 #endif // SL_CATALOG_KERNEL_PRESENT
 
+#include "em_gpio.h"
+
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
@@ -90,7 +92,6 @@ int main(void)
     // Do not remove this call: Silicon Labs components process action routine
     // must be called from the super loop.
     sl_system_process_action();
-
     // Application process.
     app_process_action();
 

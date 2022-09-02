@@ -116,6 +116,17 @@ void app_init(void)
 	// LCD start
 	graphics_init();
 
+#if (!qMaster)
+	// Enable Start reception (without timeout)
+	RAIL_Status_t status = RAIL_StartRx(gRailHandle, CHANNEL, NULL);
+	if (status != RAIL_STATUS_NO_ERROR)
+	{
+#if (qDebugPrintErr)
+		app_log_warning("Warning RAIL_StartRx (%d)\n", status);
+#endif	// qDebugPrintErr
+	}
+#endif	// !qMaster
+
 	// Set timeout for scheduled RX
 	gRailScheduleCfgRX.start = 0;
 	gRailScheduleCfgRX.startMode = RAIL_TIME_DELAY;
@@ -148,17 +159,6 @@ void app_init(void)
 
 	// Set up timers
 	RAIL_ConfigMultiTimer(true);
-
-#if (!qMaster)
-	// Enable Start reception (without timeout)
-	RAIL_Status_t status = RAIL_StartRx(gRailHandle, CHANNEL, NULL);
-	if (status != RAIL_STATUS_NO_ERROR)
-	{
-#if (qDebugPrintErr)
-		app_log_warning("Warning RAIL_StartRx (%d)\n", status);
-#endif	// qDebugPrintErr
-	}
-#endif	// !qMaster
 }
 
 // -----------------------------------------------------------------------------
