@@ -450,7 +450,6 @@ void app_process_action(void)
 	if (gPacketRecieved)
 	{
 		gPacketRecieved = false;
-		// DEBUG RAIL_CancelMultiTimer(&gRX_timeout);
 
 #if (!qMaster)
 		if (!gRX_first)
@@ -726,13 +725,12 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 {
 	gErrorCode = events;
 
-	//GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_MISC);
-
 	//DecodeEvents(&events);
 
 	// Handle Rx events
 	if (events & RAIL_EVENTS_RX_COMPLETION)
 	{
+		//RAIL_CancelMultiTimer(&gRX_timeout);
 //		if (gProtocolState == kWaitRx)
 		{
 			if (events & RAIL_EVENT_RX_PACKET_RECEIVED)
