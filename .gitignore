@@ -64,3 +64,7 @@ BiDir/Slave Release/
 BiDir/ - Copie.cproject
 
 BiDir/- Copie.cproject
+
+*.bak
+
+*.bak0
