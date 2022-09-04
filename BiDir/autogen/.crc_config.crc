@@ -1,6 +1,7 @@
 #CRC Codes for initially generated config files -- do not modify!
 app_assert_config.h=1351236558
 app_log_config.h=854633757
+dmadrv_config.h=1207334949
 emlib_core_debug_config.h=-551881347
 rail/profile_base.restriction=-1980215595
 rail/profile_connect.restriction=295472632
@@ -19,6 +20,7 @@ sl_memlcd_usart_config.h=-985479069
 sl_memory_config.h=-1749993755
 sl_mx25_flash_shutdown_usart_config.h=906629526
 sl_rail_util_callbacks_config.h=-845407485
+sl_rail_util_dma_config.h=1994124653
 sl_rail_util_init_inst0_config.h=-343216388
 sl_rail_util_pa_config.h=-2122058088
 sl_rail_util_protocol_config.h=-719104098

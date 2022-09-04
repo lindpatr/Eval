@@ -74,7 +74,7 @@ volatile RAIL_Handle_t gRailHandle;
 /// A static var for RX schedule config
 RAIL_ScheduleRxConfig_t gRailScheduleCfgRX;
 /// A static var for TX schedule config
-RAIL_ScheduleRxConfig_t gRailScheduleCfgTX;
+RAIL_ScheduleTxConfig_t gRailScheduleCfgTX;
 
 // -----------------------------------------------------------------------------
 //                          Private Function Definitions
@@ -136,12 +136,9 @@ void app_init(void)
 	gRailScheduleCfgRX.rxTransitionEndSchedule = false;
 
 	// Set scheduled TX
-	gRailScheduleCfgTX.start = TX_START;
-	gRailScheduleCfgTX.startMode = RAIL_TIME_DELAY;
-	gRailScheduleCfgTX.end = TX_START + TX_TIMEOUT;
-	gRailScheduleCfgTX.endMode = RAIL_TIME_DELAY;
-	gRailScheduleCfgTX.hardWindowEnd = false;
-	gRailScheduleCfgTX.rxTransitionEndSchedule = false;
+	gRailScheduleCfgTX.when = TX_START;
+	gRailScheduleCfgTX.mode = RAIL_TIME_DELAY;
+	gRailScheduleCfgTX.txDuringRx = RAIL_SCHEDULED_TX_DURING_RX_ABORT_TX;		// ou RAIL_SCHEDULED_TX_DURING_RX_POSTPONE_TX --> à voir?
 
 	// Print Id software
 	const char string[] = "\nTest EFR32xG32 - ";

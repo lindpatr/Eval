@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cdtprojectproperties>
+  <section name="org.eclipse.cdt.internal.ui.wizards.settingswizards.IncludePaths">
+    <language id="org.eclipse.cdt.core.gcc" name="C Source File">
+      <includepath workspace_path="true">/${ProjName}/config</includepath>
+      <includepath workspace_path="true">/${ProjName}/autogen</includepath>
+      <includepath workspace_path="true">/${ProjName}</includepath>
+      <includepath>${StudioSdkPath}/platform/Device/SiliconLabs/EFR32MG22/Include</includepath>
+      <includepath>${StudioSdkPath}/app/common/util/app_assert</includepath>
+      <includepath>${StudioSdkPath}/app/common/util/app_log</includepath>
+      <includepath>${StudioSdkPath}/platform/common/inc</includepath>
+      <includepath>${StudioSdkPath}/hardware/board/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/driver/button/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/service/cli/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/service/cli/src</includepath>
+      <includepath>${StudioSdkPath}/platform/CMSIS/Core/Include</includepath>
+      <includepath>${StudioSdkPath}/hardware/driver/configuration_over_swo/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/driver/debug/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/service/device_init/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/emdrv/dmadrv/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/middleware/glib/dmd</includepath>
+      <includepath>${StudioSdkPath}/platform/middleware/glib</includepath>
+      <includepath>${StudioSdkPath}/platform/emdrv/common/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/emlib/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/middleware/glib/glib</includepath>
+      <includepath>${StudioSdkPath}/platform/emdrv/gpiointerrupt/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/service/iostream/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/driver/leddrv/inc</includepath>
+      <includepath>${StudioSdkPath}/hardware/driver/memlcd/src/ls013b7dh03</includepath>
+      <includepath>${StudioSdkPath}/hardware/driver/memlcd/inc</includepath>
+      <includepath>${StudioSdkPath}/hardware/driver/memlcd/inc/memlcd_usart</includepath>
+      <includepath>${StudioSdkPath}/platform/service/mpu/inc</includepath>
+      <includepath>${StudioSdkPath}/hardware/driver/mx25_flash_shutdown/inc/sl_mx25_flash_shutdown_usart</includepath>
+      <includepath>${StudioSdkPath}/util/third_party/printf</includepath>
+      <includepath>${StudioSdkPath}/util/third_party/printf/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/common</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/protocol/ble</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/protocol/ieee802154</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/protocol/zwave</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/chip/efr32/efr32xg2x</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/plugin/rail_util_callbacks</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/plugin/rail_util_dma</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/plugin/pa-conversions</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/plugin/pa-conversions/efr32xg22</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/plugin/rail_util_protocol</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/plugin/rail_util_pti</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/plugin/rail_util_rssi</includepath>
+      <includepath>${StudioSdkPath}/app/flex/component/rail/sl_flex_rail_packet_asm</includepath>
+      <includepath>${StudioSdkPath}/platform/common/toolchain/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/service/system/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/service/sleeptimer/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/service/udelay/inc</includepath>
+    </language>
+    <language id="org.eclipse.cdt.core.assembly" name="asm,s,S,S79,s79">
+      <includepath workspace_path="true">/${ProjName}/config</includepath>
+      <includepath workspace_path="true">/${ProjName}/autogen</includepath>
+      <includepath workspace_path="true">/${ProjName}</includepath>
+      <includepath>${StudioSdkPath}/platform/Device/SiliconLabs/EFR32MG22/Include</includepath>
+      <includepath>${StudioSdkPath}/app/common/util/app_assert</includepath>
+      <includepath>${StudioSdkPath}/app/common/util/app_log</includepath>
+      <includepath>${StudioSdkPath}/platform/common/inc</includepath>
+      <includepath>${StudioSdkPath}/hardware/board/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/driver/button/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/service/cli/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/service/cli/src</includepath>
+      <includepath>${StudioSdkPath}/platform/CMSIS/Core/Include</includepath>
+      <includepath>${StudioSdkPath}/hardware/driver/configuration_over_swo/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/driver/debug/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/service/device_init/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/emdrv/dmadrv/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/middleware/glib/dmd</includepath>
+      <includepath>${StudioSdkPath}/platform/middleware/glib</includepath>
+      <includepath>${StudioSdkPath}/platform/emdrv/common/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/emlib/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/middleware/glib/glib</includepath>
+      <includepath>${StudioSdkPath}/platform/emdrv/gpiointerrupt/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/service/iostream/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/driver/leddrv/inc</includepath>
+      <includepath>${StudioSdkPath}/hardware/driver/memlcd/src/ls013b7dh03</includepath>
+      <includepath>${StudioSdkPath}/hardware/driver/memlcd/inc</includepath>
+      <includepath>${StudioSdkPath}/hardware/driver/memlcd/inc/memlcd_usart</includepath>
+      <includepath>${StudioSdkPath}/platform/service/mpu/inc</includepath>
+      <includepath>${StudioSdkPath}/hardware/driver/mx25_flash_shutdown/inc/sl_mx25_flash_shutdown_usart</includepath>
+      <includepath>${StudioSdkPath}/util/third_party/printf</includepath>
+      <includepath>${StudioSdkPath}/util/third_party/printf/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/common</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/protocol/ble</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/protocol/ieee802154</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/protocol/zwave</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/chip/efr32/efr32xg2x</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/plugin/rail_util_callbacks</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/plugin/rail_util_dma</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/plugin/pa-conversions</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/plugin/pa-conversions/efr32xg22</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/plugin/rail_util_protocol</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/plugin/rail_util_pti</includepath>
+      <includepath>${StudioSdkPath}/platform/radio/rail_lib/plugin/rail_util_rssi</includepath>
+      <includepath>${StudioSdkPath}/app/flex/component/rail/sl_flex_rail_packet_asm</includepath>
+      <includepath>${StudioSdkPath}/platform/common/toolchain/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/service/system/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/service/sleeptimer/inc</includepath>
+      <includepath>${StudioSdkPath}/platform/service/udelay/inc</includepath>
+    </language>
+    <language name="Object File"/>
+  </section>
+</cdtprojectproperties>

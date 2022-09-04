@@ -48,7 +48,8 @@
 #define qUseDisplay     1
 #define qPrintTX        0
 #define qPrintRX        0
-#define qDebugPrintErr	0
+#define qPrintEvents	1
+#define qPrintErrors	0
 
 // GPIO debug
 #define DEBUG_PIN_TX    1         // PB01 --> Exp Header 9
@@ -60,13 +61,13 @@
 
 // Timeout for RX
 #if (qMaster)
-#define RX_TIMEOUT	(850U)							// in us
+#define RX_TIMEOUT	(850U/*1000U*/)							// in us
 #define TX_START	(80U)							// in us
 #define TX_TIMEOUT	(850U)							// in us
 #else
-#define RX_TIMEOUT	(1000U)							// in us
+#define RX_TIMEOUT	(850U/*2000U*/)							// in us
 #define TX_START	(80U)							// in us
-#define TX_TIMEOUT	(1000U)							// in us
+#define TX_TIMEOUT	(850U)							// in us
 #endif	// qMaster
 
 // -----------------------------------------------------------------------------
@@ -77,7 +78,7 @@ extern volatile RAIL_Handle_t gRailHandle;
 /// A static var for RX schedule config
 extern RAIL_ScheduleRxConfig_t	gRailScheduleCfgRX;
 /// A static var for TX schedule config
-extern RAIL_ScheduleRxConfig_t	gRailScheduleCfgTX;
+extern RAIL_ScheduleTxConfig_t	gRailScheduleCfgTX;
 
 
 // -----------------------------------------------------------------------------
