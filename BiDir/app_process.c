@@ -60,7 +60,7 @@
 /// Transmit data length (fixed payload)
 #define TX_PAYLOAD_LENGTH (06U)						// in bytes
 // Period to print statistics
-#define STAT_PERIOD_s (20U)							// in us
+#define STAT_PERIOD_s (60U)							// in us
 #define STAT_PERIOD_us (STAT_PERIOD_s * 1000000ULL)	// in sec
 
 #define SIZE_UINT64_IN_BITS	(int)(8*sizeof(uint64_t))
@@ -98,7 +98,7 @@ static volatile RAIL_Status_t gCalibrationStatus = RAIL_STATUS_NO_ERROR;
 static volatile RAIL_Time_t gElapsedTime = 0UL;
 static volatile RAIL_Time_t gOldElapsedTime = 0UL;
 /// A static handle of a RAIL timer
-static RAIL_MultiTimer_t /*gStatPeriodTimer,*/ gRX_timeout, gTX_timeout;
+static RAIL_MultiTimer_t gStatPeriodTimer, gRX_timeout, gTX_timeout;
 
 
 /// Receive and Send FIFO
@@ -120,15 +120,17 @@ static uint8_t gTX_packet[TX_PAYLOAD_LENGTH] =
 static volatile bool gPacketRecieved = false;
 static volatile bool gPacketSent = false;
 static volatile bool gRX_error = false;
+static volatile bool gRX_invalid = false;
 static volatile bool gRX_timeout_error = false;
 static volatile bool gTX_error = false;
+static volatile bool gTX_invalid = false;
 static volatile bool gTX_timeout_error = false;
 static volatile bool gCAL_error = false;
 static volatile bool gStatTimerDone = false;
 
 /// TX and RX counters
 static volatile uint32_t gRX_counter = 0UL;
-static volatile uint32_t gTX_counter = 0UL;
+static volatile uint32_t gTX_counter = 1UL;
 static volatile uint32_t gTX_counter_old = 0UL;
 static volatile uint32_t gRX_counter_old = 0UL;
 static uint32_t gRX_counter_prev = 0UL;
@@ -185,9 +187,9 @@ const char *gCB_descr_tab[SIZE_UINT64_IN_BITS] = {
 		  "IEEE802154_MSW_END  ",
 		  "DETECT_RSSI_THRSHOLD"};
 
-static uint32_t gTX_tab[5] = { 0 };    // 0 = #TX_OK	1 = #TX_Err	 	2 = ND	 		3 = #Retransmit		4 = ND
-static uint32_t gRX_tab[5] = { 0 };    // 0 = #RX_OK 	1 = #RX_Err 	2 = #RX_TimeOut	3 = #Gap RX count	4 = Max gap RX count
-static uint32_t gCAL_tab[5] = { 0 };   // 0 = ND    	1 = #CAL_Err	2 = ND			3 = ND				4 = ND
+static uint32_t gTX_tab[6] = { 0 };    // 0 = #TX_OK	1 = #TX_Err	 	2 = ND	 		3 = #Retransmit		4 = ND					5 = #TX_Invalid
+static uint32_t gRX_tab[6] = { 0 };    // 0 = #RX_OK 	1 = #RX_Err 	2 = #RX_TimeOut	3 = #Gap RX count	4 = Max gap RX count	5 = #RX_Invalid
+static uint32_t gCAL_tab[6] = { 0 };   // 0 = #CAL_REQ 	1 = #CAL_Err	2 = ND			3 = ND				4 = ND					5 = ND
 
 /// LCD variables
 /// Context used all over the graphics
@@ -258,18 +260,34 @@ void CfgRxMode(void)
 	GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
 
 	// RX with timeout
-//	RAIL_Status_t status = RAIL_ScheduleRx(gRailHandle, CHANNEL, &gRailScheduleCfgRX, NULL);
+#if (qUseScheduleRx)
+	RAIL_Status_t status = RAIL_ScheduleRx(gRailHandle, CHANNEL, &gRailScheduleCfgRX, NULL);
+#else
 //  Or standard StartRx with timeout handled by a timer
 	RAIL_Status_t status = RAIL_StartRx(gRailHandle, CHANNEL, NULL);
-	RAIL_SetMultiTimer(&gRX_timeout, RX_TIMEOUT, RAIL_TIME_DELAY, &timer_callback, NULL);
+#endif	// qUseScheduleRx
 
 	if (status != RAIL_STATUS_NO_ERROR)
 	{
 #if (qPrintErrors)
-//		app_log_warning("Warning RAIL_ScheduleRx (%d)\n", status);
+#if (qUseScheduleRx)
+		app_log_warning("Warning RAIL_ScheduleRx (%d)\n", status);
+#else
 		app_log_warning("Warning RAIL_StartRx (%d)\n", status);
+#endif	// qUseScheduleRx
 #endif	// qPrintErrors
 	}
+
+#if (qUseTimeOutRx)
+	status = RAIL_SetMultiTimer(&gRX_timeout, RX_TIMEOUT, RAIL_TIME_DELAY, &timer_callback, NULL);
+
+	if (status != RAIL_STATUS_NO_ERROR)
+	{
+#if (qPrintErrors)
+		app_log_warning("Warning RAIL_SetMultiTimer RX (%d)\n", status);
+#endif	// qPrintErrors
+	}
+#endif	// qUseTimeOutRx
 }
 
 /******************************************************************************
@@ -280,7 +298,7 @@ void CfgTxMode(void)
 	if (!gTX_retry_on_error)
 	{
 		// Data
-		gTX_counter++;
+		//gTX_counter++;		// --> is now incremented when previous msg sucessfully sent
 
 		// Initialize buffer
 		gTX_packet[2] = (gTX_counter & 0x000000FF) >> 0;
@@ -301,18 +319,34 @@ void CfgTxMode(void)
 	GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
 
 	// TX with timeout
+#if (qUseScheduleTx)
 //	RAIL_Status_t status = RAIL_StartScheduledTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, &gRailScheduleCfgTX, NULL);
+#else
 //  Or standard StartTx with timeout handled by a timer
 	RAIL_Status_t status = RAIL_StartTx(gRailHandle, CHANNEL,RAIL_TX_OPTIONS_DEFAULT, NULL);
-	//RAIL_SetMultiTimer(&gTX_timeout, TX_TIMEOUT, RAIL_TIME_DELAY, &timer_callback, NULL);
+#endif	// qUseScheduleTx
 
 	if (status != RAIL_STATUS_NO_ERROR)
 	{
 #if (qPrintErrors)
-//		app_log_warning("Warning RAIL_StartScheduledTx (%d)\n", status);
+#if (qUseScheduleTx)
+		app_log_warning("Warning RAIL_StartScheduledTx (%d)\n", status);
+#else
 		app_log_warning("Warning RAIL_StartTx (%d)\n", status);
+#endif	// qUseScheduleTx
 #endif	// qPrintErrors
 	}
+
+#if (qUseTimeOutTx)
+	status = RAIL_SetMultiTimer(&gTX_timeout, TX_TIMEOUT, RAIL_TIME_DELAY, &timer_callback, NULL);
+
+	if (status != RAIL_STATUS_NO_ERROR)
+	{
+#if (qPrintErrors)
+		app_log_warning("Warning RAIL_SetMultiTimer TX (%d)\n", status);
+#endif	// qPrintErrors
+	}
+#endif	// qUseTimeOutTx
 }
 
 
@@ -374,12 +408,14 @@ void DecodeReceivedMsg(void)
 		uint8_t *start_of_packet = 0;
 		uint16_t packet_size = unpack_packet(gRX_fifo, &packet_info, &start_of_packet);
 		status = RAIL_ReleaseRxPacket(gRailHandle, rx_packet_handle);
+
 		if (status != RAIL_STATUS_NO_ERROR)
 		{
 #if (qPrintErrors)
 			app_log_warning("Error ReleaseRxPacket (%d)\n", status);
 #endif	// qPrintErrors
 		}
+
 		if (gRX_requested)
 		{
 			DisplayReceivedMsg(start_of_packet, packet_size);
@@ -423,13 +459,17 @@ void DisplayEvents(void)
 void DisplayStat(void)
 {
 	// Statistics
-	float localStat = (float)(gTX_counter + gRX_counter - gTX_counter_old - gRX_counter_old) / ((float)(gElapsedTime - gOldElapsedTime) / 1000000.0f);
+	float deltaTime = (float)(gElapsedTime - gOldElapsedTime) / 1000000.0f;
+	float localStat = (float)(gTX_counter + gRX_counter - gTX_counter_old - gRX_counter_old) / deltaTime;
 	float localStat2 = (10.0f * 10100.0f) / localStat;
 	float localStat3 = 100.0f * (float) (gTX_tab[1] + gTX_tab[2]) / (float) gTX_counter;
 	float localStat4 = 100.0f * (float) (gRX_tab[1] + gRX_tab[2]) / (float) gRX_counter;
 
 	// Print on serial COM
 	app_log_info("\n");
+	app_log_info("Performance statistics\n");
+	app_log_info("----------------------\n");
+	app_log_info("Elapsed time       : %0.2f sec\n", deltaTime);
 #if (qMaster)
 	app_log_info("Count (#TX Master) : %lu\n", gTX_tab[0]);
 	app_log_info("Count (#TX Slave)  : %lu\n", gRX_tab[0]);
@@ -438,13 +478,16 @@ void DisplayStat(void)
 	app_log_info("Count (#TX Master) : %lu\n", gRX_tab[0]);
 #endif	// qMaster
 	app_log_info("TX Error (#Err/#TO): %0.3f%% (%d/%d)\n", localStat3, gTX_tab[1], gTX_tab[2]);
-	app_log_info("RX Error (#Err/#TO): %0.3f%% (%d/%d)\n", localStat4, gRX_tab[1], gRX_tab[2]);
+	app_log_info("TX Invalid         : %lu\n", gTX_tab[5]);
 	app_log_info("TX retransmit count: %lu\n", gTX_tab[3]);
+	app_log_info("RX Error (#Err/#TO): %0.3f%% (%d/%d)\n", localStat4, gRX_tab[1], gRX_tab[2]);
+	app_log_info("RX Invalid         : %lu\n", gRX_tab[5]);
 #if (qMaster)
 	app_log_info("Slave counter #gap : %lu (max:%d)\n", gRX_tab[3], gRX_tab[4]);
 #else	// !qMaster
 	app_log_info("Master counter #gap: %lu (max:%d)\n", gRX_tab[3], gRX_tab[4]);
 #endif	// qMaster
+	app_log_info("Cal request (#Err) : %lu (%lu)\n", gCAL_tab[0], gCAL_tab[1]);
 	app_log_info("Rate (loop 100)    : %0.2f msg/s (%0.2f ms)\n", localStat, localStat2);
 
 	DisplayEvents();
@@ -544,6 +587,7 @@ void graphics_init(void)
 void app_process_action(void)
 {
 	RAIL_RadioState_t radio_state = RAIL_RF_STATE_INACTIVE;
+	RAIL_Status_t status = RAIL_STATUS_NO_ERROR;
 
 	//GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_MISC);
 
@@ -566,9 +610,16 @@ void app_process_action(void)
 //#endif  // qUseDisplay
 			gTX_counter_old = gTX_counter;
 			gRX_counter_old = gRX_counter;
-			//RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_DELAY, &timer_callback, NULL);
+			status = RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_DELAY, &timer_callback, NULL);
 			//gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
 			gElapsedTime = RAIL_GetTime();
+
+			if (status != RAIL_STATUS_NO_ERROR)
+			{
+#if (qPrintErrors)
+				app_log_warning("Warning RAIL_SetMultiTimer STAT (%d)\n", status);
+#endif	// qPrintErrors
+			}
 		}
 #endif	// !qMaster
 		SetState(kMsgReceived);
@@ -577,6 +628,7 @@ void app_process_action(void)
 	{
 		gPacketSent = false;
 		GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_TX);
+		gTX_counter++;
 		gTX_tab[0]++;
 		SetState(kMsgSent);
 	}
@@ -593,6 +645,12 @@ void app_process_action(void)
 		gRX_tab[2]++;
 		SetState(kTimeOutRx);
 	}
+	else if (gRX_invalid)
+	{
+		gRX_invalid = false;
+		gRX_tab[5]++;
+		SetState(kErrorRx);
+	}
 	else if (gTX_error)
 	{
 		gTX_error = false;
@@ -604,6 +662,12 @@ void app_process_action(void)
 		gTX_timeout_error = false;
 		gTX_tab[2]++;
 		SetState(kTimeOutTx);
+	}
+	else if (gTX_invalid)
+	{
+		gTX_invalid = false;
+		gTX_tab[5]++;
+		SetState(kErrorTx);
 	}
 	else if (gCAL_error)
 	{
@@ -653,8 +717,16 @@ void app_process_action(void)
 		DMD_updateDisplay();
 #endif  // qUseDisplay
 		//gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
-		//RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_DELAY, &timer_callback, NULL);
-		//gTX_counter_old = gTX_counter;
+		status = RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_DELAY, &timer_callback, NULL);
+		gElapsedTime = RAIL_GetTime();
+		gTX_counter_old = gTX_counter;
+
+		if (status != RAIL_STATUS_NO_ERROR)
+		{
+#if (qPrintErrors)
+			app_log_warning("Warning RAIL_SetMultiTimer STAT (%d)\n", status);
+#endif	// qPrintErrors
+		}
 		break;
 
 	case kStop:
@@ -684,6 +756,14 @@ void app_process_action(void)
 	case kMsgReceived:
 		// Message received
 		SetState(kSwitchTx);
+//		gRailTransitionRX.success = RAIL_RF_STATE_TX;
+//		status = RAIL_SetRxTransitions(gRailHandle, &gRailTransitionRX);
+//		if (status != RAIL_STATUS_NO_ERROR)
+//		{
+//#if (qPrintErrors)
+//			app_log_warning("Warning RAIL_SetRxTransitions (%d)\n", status);
+//#endif	// qPrintErrors
+//		}
 		DecodeReceivedMsg();
 		break;
 
@@ -743,6 +823,14 @@ void app_process_action(void)
 
 	case kMsgSent:
 		SetState(kSwitchRx);	// bidirectional
+//		gRailTransitionRX.success = RAIL_RF_STATE_RX;
+//		status = RAIL_SetRxTransitions(gRailHandle, &gRailTransitionRX);
+//		if (status != RAIL_STATUS_NO_ERROR)
+//		{
+//#if (qPrintErrors)
+//			app_log_warning("Warning RAIL_SetRxTransitions (%d)\n", status);
+//#endif	// qPrintErrors
+//		}
 		DisplaySentMsg();
 		break;
 
@@ -766,11 +854,10 @@ void app_process_action(void)
 	case kTimeOutTx:
 		// Timeout on TX
 #if (qMaster)
-		// ??? SetState(kSwitchTx);
-		// gTX_retry_on_error = true;
+		SetState(kSwitchTx);
+		gTX_retry_on_error = true;
 #else
-		// ??? SetState(kSwitchTx);
-		// gTX_retry_on_error = true;
+		SetState(kSwitchRx);
 #endif
 #if (qPrintErrors)
 		if (gErrorCode != gOldErrorCode)
@@ -817,16 +904,21 @@ void app_process_action(void)
 	/// -----------------------------------------
 	/// Statistics
 	/// -----------------------------------------
-	if (gPrintStat)
+	if (gStatTimerDone || gPrintStat)
 	{
+		gStatTimerDone = false;
 		gPrintStat = false;
-		//if (gStatTimerDone/*gRAIL_GetTime() >= gStatPeriodTimeout*/)
-		{
-			gStatTimerDone = false;
-			DisplayStat();
-			//gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
-			//RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_DELAY, &timer_callback, NULL);
-		}
+		DisplayStat();
+		//gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
+		//status = RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_DELAY, &timer_callback, NULL);
+		//gElapsedTime = RAIL_GetTime();
+
+//		if (status != RAIL_STATUS_NO_ERROR)
+//		{
+//#if (qPrintErrors)
+//			app_log_warning("Warning RAIL_SetMultiTimer STAT (%d)\n", status);
+//#endif	// qPrintErrors
+//		}
 	}
 }
 
@@ -853,15 +945,15 @@ static __INLINE void DecodeEvents(RAIL_Events_t *events)
 
 void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 {
-	gErrorCode = events;
+	gErrorCode = events;	// Save events context
 
-	DecodeEvents(&events);
+	DecodeEvents(&events);	// Count events for debug and statistics
 
-	// Handle Rx events
+	// Handle RX events
 	if (events & RAIL_EVENTS_RX_COMPLETION)
 	{
-		//RAIL_CancelMultiTimer(&gRX_timeout);
-//		if (gProtocolState == kWaitRx)
+		//RAIL_CancelMultiTimer(&gRX_timeout); // --> SetMultTimer also reset it
+		if (gProtocolState == kWaitRx)
 		{
 			if (events & RAIL_EVENT_RX_PACKET_RECEIVED)
 			{
@@ -879,6 +971,9 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 				gRX_error = true;
 			}
 		}
+		else		// Inconsistent state machine when RX
+			// Handle Rx error
+			gRX_invalid = true;
 	}
 
 	// Handle Rx not included in the full completion
@@ -889,16 +984,19 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 		gRX_error = true;
 	}
 
+#if (qUseScheduleRx)
 	// Handle Rx timeout --> needed when RAIL_ScheduleRx used
-//	if (events & (1ULL << RAIL_EVENT_RX_SCHEDULED_RX_END_SHIFT))
-//	{
-//		gRX_timeout_error = true;
-//	}
+	if (events & (1ULL << RAIL_EVENT_RX_SCHEDULED_RX_END_SHIFT))
+	{
+		gRX_timeout_error = true;
+	}
+#endif	// qUseScheduleRx
 
-	// Handle Tx events
+	// Handle TX events
 	if (events & RAIL_EVENTS_TX_COMPLETION)
 	{
-//		if (gProtocolState == kSendMsg)
+		//RAIL_CancelMultiTimer(&gTX_timeout);	// --> SetMultTimer also reset it
+		if (gProtocolState == kSendMsg)
 		{
 			if (events & RAIL_EVENT_TX_PACKET_SENT)
 			{
@@ -915,17 +1013,23 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 				gTX_error = true;
 			}
 		}
+		else		// Inconsistent state machine when RX
+			// Handle Tx error
+			gTX_invalid = true;
 	}
 
-	// Handle TX timeout --> needed when RAIL_StartScheduledTx used
+#if (qUseScheduleTx)
+	// Handle TX timeout --> needed when RAIL_StartScheduledTx is used insteas an additional MultiTimer
 //	if (events & (1ULL << ???))
 //	{
 //		gTX_timeout_error = true;
 //	}
-//
+#endif	// qUseScheduleTx
+
 	// Perform all calibrations when needed
 	if (events & RAIL_EVENT_CAL_NEEDED)
 	{
+		gCAL_tab[0]++;
 		gCalibrationStatus = RAIL_Calibrate(rail_handle, NULL, RAIL_CAL_ALL_PENDING);
 		if (gCalibrationStatus != RAIL_STATUS_NO_ERROR)
 		{
@@ -948,7 +1052,6 @@ void sl_button_on_change(const sl_button_t *handle)
 
 			gTX_requested = true;
 			gElapsedTime = RAIL_GetTime();
-
 		}
 		else
 		{
@@ -957,9 +1060,9 @@ void sl_button_on_change(const sl_button_t *handle)
 			gPrintStat = true;
 		}
 #else
-	gOldElapsedTime = gElapsedTime;
-	gElapsedTime = RAIL_GetTime();
-	gPrintStat = true;
+		gOldElapsedTime = gElapsedTime;
+		gElapsedTime = RAIL_GetTime();
+		gPrintStat = true;
 
 #endif	// qMaster
 	}
@@ -973,12 +1076,14 @@ void timer_callback(RAIL_MultiTimer_t *tmr, RAIL_Time_t expectedTimeOfEvent, voi
 	(void) expectedTimeOfEvent;		// To avoid warnings
 	(void) cbArg;					// To avoid warnings
 
-/*
+
 	if (tmr == &gStatPeriodTimer)	// No more used, was used to print stat periodically
 	{
 		gStatTimerDone = true;
+		gOldElapsedTime = gElapsedTime;
+		gElapsedTime = RAIL_GetTime();
 	}
-	else*/ if (tmr == &gRX_timeout)	// used with standard StartRx when RAIL_ScheduleRx isn't used
+	else if (tmr == &gRX_timeout)	// used with standard StartRx when RAIL_ScheduleRx isn't used
 	{
 		gRX_timeout_error = true;
 		GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_MISC);
