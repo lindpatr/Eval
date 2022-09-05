@@ -101,8 +101,8 @@ After "ping pong" is started, pressing on BTN0 will display the statistics on LC
 `Slave counter #gap : 5 (max:2)`
 `Rate (loop 100)    : 3442.36 msg/s (29.34 ms)`
 
-> #TX Master is the counter sends by the master
-> #TX Slave is the counter sends by the slave
+> #TX Master is the counter sent by the master
+> #TX Slave is the counter sent by the slave
 > TX Error: #Err is the number of TX Error and #TO is the number of TX timeout
 > RX Error: #Err is the number of RX Error and #TO is the number of RX timeout. Please note that a request to display and print out the statistics will introduce a "freeze" of about 60-70 ms and generate some RX Timeout. This is degrading the subsequent statistics!
 > TX retransmit count is the number of retransmission in case of TX Error or TX Timeout (this counter is increase in case of RX Timeout)
