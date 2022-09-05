@@ -40,34 +40,39 @@
 // -----------------------------------------------------------------------------
 // Compile directives
 #if (SL_MASTER)
-#define qMaster			1
+#define qMaster			1			// Master
 #else
-#define qMaster			0
-#endif
+#define qMaster			0			// Slave
+#endif	// SL_MASTER
 
-#define qUseDisplay     1
-#define qPrintTX        0
-#define qPrintRX        0
-#define qPrintEvents	1
-#define qPrintErrors	0
+#define qUseDisplay     1			// Display statistics
+#define qPrintTX        0			// Print out sent data on serial COM
+#define qPrintRX        0			// Print out received data on serial COM
+#define qPrintEvents	1			// Print out events on serial COM
+#define qPrintErrors	0			// Print out RAIL errors on serial COM
+
+#define qUseScheduleRx	1			// 0 = RAIL_StartRx, 1 = RAIL_ScheduleRx
+#define qUseScheduleTx	0			// 0 = RAIL_StartTx, 1 = RAIL_StartScheduledTx
+#define qUseTimeOutRx	0			// 0 = no timeout with RAIL_StartRx, 1 = use MultiTimer for timeout RAIL_StartRx
+#define qUseTimeOutTx	1			// 0 = no timeout with RAIL_StartTx, 1 = use MultiTimer for timeout RAIL_StartTx
 
 // GPIO debug
-#define DEBUG_PIN_TX    1         // PB01 --> Exp Header 9
-#define DEBUG_PIN_RX    2         // PB02 --> Exp Header 15
-#define DEBUG_PIN_MISC	3		  // PB03 --> Exp Header 16
+#define DEBUG_PIN_TX    1         	// PB01 --> Exp Header 9
+#define DEBUG_PIN_RX    2         	// PB02 --> Exp Header 15
+#define DEBUG_PIN_MISC	3		  	// PB03 --> Exp Header 16
 #define DEBUG_PORT      gpioPortB
-#define SET             1
-#define RESET           0
+#define SET             1			// Set PIN
+#define RESET           0			// Reset PIN
 
-// Timeout for RX
+// Timeout for Start RX and TX RAIL functions
 #if (qMaster)
-#define RX_TIMEOUT	(850U/*1000U*/)							// in us
+#define RX_TIMEOUT	(650U/*850U*/)					// in us
 #define TX_START	(80U)							// in us
-#define TX_TIMEOUT	(850U)							// in us
-#else
-#define RX_TIMEOUT	(850U/*2000U*/)							// in us
+#define TX_TIMEOUT	(2.05*RX_TIMEOUT)				// in us
+#else	// !qMaster
+#define RX_TIMEOUT	(650U/*850U*/)					// in us
 #define TX_START	(80U)							// in us
-#define TX_TIMEOUT	(850U)							// in us
+#define TX_TIMEOUT	(2.05*RX_TIMEOUT)				// in us
 #endif	// qMaster
 
 // -----------------------------------------------------------------------------
@@ -76,10 +81,13 @@
 /// A static handle of a RAIL instance
 extern volatile RAIL_Handle_t gRailHandle;
 /// A static var for RX schedule config
-extern RAIL_ScheduleRxConfig_t	gRailScheduleCfgRX;
+extern RAIL_ScheduleRxConfig_t gRailScheduleCfgRX;
 /// A static var for TX schedule config
-extern RAIL_ScheduleTxConfig_t	gRailScheduleCfgTX;
-
+extern RAIL_ScheduleTxConfig_t gRailScheduleCfgTX;
+/// A static var for RX transition
+extern RAIL_StateTransitions_t gRailTransitionRX;
+/// A static var for TX transition
+extern RAIL_StateTransitions_t gRailTransitionTX;
 
 // -----------------------------------------------------------------------------
 //                          Public Function Declarations
