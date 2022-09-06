@@ -187,9 +187,9 @@ const char *gCB_descr_tab[SIZE_UINT64_IN_BITS] = {
 		  "IEEE802154_MSW_END  ",
 		  "DETECT_RSSI_THRSHOLD"};
 
-static uint32_t gTX_tab[6] = { 0 };    // 0 = #TX_OK	1 = #TX_Err	 	2 = ND	 		3 = #Retransmit		4 = ND					5 = #TX_Invalid
-static uint32_t gRX_tab[6] = { 0 };    // 0 = #RX_OK 	1 = #RX_Err 	2 = #RX_TimeOut	3 = #Gap RX count	4 = Max gap RX count	5 = #RX_Invalid
-static uint32_t gCAL_tab[6] = { 0 };   // 0 = #CAL_REQ 	1 = #CAL_Err	2 = ND			3 = ND				4 = ND					5 = ND
+static uint32_t gTX_tab[7] = { 0 };    // 0 = #TX_OK	1 = #TX_Err	 	2 = ND	 		3 = #Retransmit		4 = ND					5 = #TX_Invalid		6 = ND
+static uint32_t gRX_tab[7] = { 0 };    // 0 = #RX_OK 	1 = #RX_Err 	2 = #RX_TimeOut	3 = #Gap RX count	4 = Max gap RX count	5 = #RX_Invalid		6 = #CRC_Err
+static uint32_t gCAL_tab[7] = { 0 };   // 0 = #CAL_REQ 	1 = #CAL_Err	2 = ND			3 = ND				4 = ND					5 = ND				6 = ND
 
 /// LCD variables
 /// Context used all over the graphics
@@ -201,6 +201,8 @@ static GLIB_Context_t gGlibContext;
 volatile bool gTX_requested = false;
 /// Flag, indicating received packet is forwarded on CLI or not
 volatile bool gRX_requested = true;
+/// Flag, indicating stat period on CLI
+volatile uint32_t gSTAT_period = STAT_PERIOD_us;
 /// Various flags
 #if (!qMaster)
 static bool gRX_first = false;					// Indicate first RX packet received on Slave to start statistics
@@ -416,7 +418,7 @@ void DecodeReceivedMsg(void)
 #endif	// qPrintErrors
 		}
 
-		if (gRX_requested)
+		if (/*gRX_requested &&*/ (packet_info.packetStatus == RAIL_RX_PACKET_READY_SUCCESS))
 		{
 			DisplayReceivedMsg(start_of_packet, packet_size);
 			uint32_t delta = gRX_counter - gRX_counter_prev;
@@ -428,6 +430,9 @@ void DecodeReceivedMsg(void)
 			else
 				gRX_tab[0]++;
 		}
+		else
+			gRX_tab[6]++;
+
 		// Indicate RX in progress on LED0
 		sl_led_toggle(&sl_led_led0);
 		rx_packet_handle = RAIL_GetRxPacketInfo(gRailHandle, RAIL_RX_PACKET_HANDLE_OLDEST_COMPLETE, &packet_info);
@@ -463,7 +468,7 @@ void DisplayStat(void)
 	float localStat = (float)(gTX_counter + gRX_counter - gTX_counter_old - gRX_counter_old) / deltaTime;
 	float localStat2 = (10.0f * 10100.0f) / localStat;
 	float localStat3 = 100.0f * (float) (gTX_tab[1] + gTX_tab[2]) / (float) gTX_counter;
-	float localStat4 = 100.0f * (float) (gRX_tab[1] + gRX_tab[2]) / (float) gRX_counter;
+	float localStat4 = 100.0f * (float) (gRX_tab[1] + gRX_tab[2] + gRX_tab[6]) / (float) gRX_counter;
 
 	// Print on serial COM
 	app_log_info("\n");
@@ -477,11 +482,11 @@ void DisplayStat(void)
 	app_log_info("Count (#TX Slave)  : %lu\n", gTX_tab[0]);
 	app_log_info("Count (#TX Master) : %lu\n", gRX_tab[0]);
 #endif	// qMaster
-	app_log_info("TX Error (#Err/#TO): %0.3f%% (%d/%d)\n", localStat3, gTX_tab[1], gTX_tab[2]);
-	app_log_info("TX Invalid         : %lu\n", gTX_tab[5]);
+	app_log_info("TX Error see below : %0.3f%%\n", localStat3);
+	app_log_info("#Err/#TO/#Inv      : %lu/%lu/%lu\n", gTX_tab[1], gTX_tab[2], gTX_tab[5]);
 	app_log_info("TX retransmit count: %lu\n", gTX_tab[3]);
-	app_log_info("RX Error (#Err/#TO): %0.3f%% (%d/%d)\n", localStat4, gRX_tab[1], gRX_tab[2]);
-	app_log_info("RX Invalid         : %lu\n", gRX_tab[5]);
+	app_log_info("RX Error see below : %0.3f%%\n", localStat4);
+	app_log_info("#Err/#TO/#Inv/#CRC : %lu/%lu/%lu/%lu\n", gRX_tab[1], gRX_tab[2], gRX_tab[5], gRX_tab[6]);
 #if (qMaster)
 	app_log_info("Slave counter #gap : %lu (max:%d)\n", gRX_tab[3], gRX_tab[4]);
 #else	// !qMaster
@@ -610,8 +615,8 @@ void app_process_action(void)
 //#endif  // qUseDisplay
 			gTX_counter_old = gTX_counter;
 			gRX_counter_old = gRX_counter;
-			status = RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_DELAY, &timer_callback, NULL);
-			//gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
+			status = RAIL_SetMultiTimer(&gStatPeriodTimer, gSTAT_period, RAIL_TIME_DELAY, &timer_callback, NULL);
+			//gStatPeriodTimeout = RAIL_GetTime() + gSTAT_period;
 			gElapsedTime = RAIL_GetTime();
 
 			if (status != RAIL_STATUS_NO_ERROR)
@@ -716,8 +721,8 @@ void app_process_action(void)
 		// Force a redraw
 		DMD_updateDisplay();
 #endif  // qUseDisplay
-		//gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
-		status = RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_DELAY, &timer_callback, NULL);
+		//gStatPeriodTimeout = RAIL_GetTime() + gSTAT_period;
+		status = RAIL_SetMultiTimer(&gStatPeriodTimer, gSTAT_period, RAIL_TIME_DELAY, &timer_callback, NULL);
 		gElapsedTime = RAIL_GetTime();
 		gTX_counter_old = gTX_counter;
 
@@ -836,11 +841,10 @@ void app_process_action(void)
 
 	case kErrorTx:
 #if (qMaster)
-		SetState(kSwitchTx);
-		gTX_retry_on_error = true;
+		SetState(kSwitchRx);
+		//gTX_retry_on_error = true;
 #else
-		SetState(kSwitchTx);
-		gTX_retry_on_error = true;
+		SetState(kSwitchRx);
 #endif
 #if (qPrintErrors)
 		if (gErrorCode != gOldErrorCode)
@@ -854,8 +858,8 @@ void app_process_action(void)
 	case kTimeOutTx:
 		// Timeout on TX
 #if (qMaster)
-		SetState(kSwitchTx);
-		gTX_retry_on_error = true;
+		SetState(kSwitchRx);
+		//gTX_retry_on_error = true;
 #else
 		SetState(kSwitchRx);
 #endif
@@ -909,8 +913,8 @@ void app_process_action(void)
 		gStatTimerDone = false;
 		gPrintStat = false;
 		DisplayStat();
-		//gStatPeriodTimeout = RAIL_GetTime() + STAT_PERIOD_us;
-		//status = RAIL_SetMultiTimer(&gStatPeriodTimer, STAT_PERIOD_us, RAIL_TIME_DELAY, &timer_callback, NULL);
+		//gStatPeriodTimeout = RAIL_GetTime() + gSTAT_period;
+		//status = RAIL_SetMultiTimer(&gStatPeriodTimer, gSTAT_period, RAIL_TIME_DELAY, &timer_callback, NULL);
 		//gElapsedTime = RAIL_GetTime();
 
 //		if (status != RAIL_STATUS_NO_ERROR)
