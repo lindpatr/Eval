@@ -232,7 +232,7 @@ static uint16_t unpack_packet(uint8_t *rx_destination, const RAIL_RxPacketInfo_t
  * @param out_data The payload buffer
  * @param length The length of the payload
  *****************************************************************************/
-static void prepare_package(uint8_t *out_data, uint16_t length);
+static void prepare_packet(uint8_t *out_data, uint16_t length);
 
 /******************************************************************************
  * Timer callback, called if any button is pressed or released.
@@ -245,7 +245,7 @@ void timer_callback(RAIL_MultiTimer_t *tmr, RAIL_Time_t expectedTimeOfEvent, voi
 /******************************************************************************
  * SetState : change state machine and backup previous state machine
  *****************************************************************************/
-void SetState(StateEnum state)
+static __INLINE void SetState(StateEnum state)
 {
 	gPrevProtocolState = gProtocolState;
 	gProtocolState = state;
@@ -254,7 +254,7 @@ void SetState(StateEnum state)
 /******************************************************************************
  * CfgRxMode : change to RX mode
  *****************************************************************************/
-void CfgRxMode(void)
+static __INLINE void CfgRxMode(void)
 {
 	// Start RX and check result
 
@@ -295,7 +295,7 @@ void CfgRxMode(void)
 /******************************************************************************
  * CfgTxMode : prepare buffer and change to TX mode
  *****************************************************************************/
-void CfgTxMode(void)
+static __INLINE void CfgTxMode(void)
 {
 	if (!gTX_retry_on_error)
 	{
@@ -315,7 +315,7 @@ void CfgTxMode(void)
 		gTX_tab[3]++;
 	}
 	// Initialize radio buffer
-	prepare_package(gTX_packet, sizeof(gTX_packet));
+	prepare_packet(gTX_packet, sizeof(gTX_packet));
 
 	// For oscillo debug
 	GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
@@ -355,7 +355,7 @@ void CfgTxMode(void)
 /******************************************************************************
  * DisplayReceivedMsg : print received data
  *****************************************************************************/
-void DisplayReceivedMsg(const uint8_t *const rx_buffer, uint16_t length)
+static __INLINE void DisplayReceivedMsg(const uint8_t *const rx_buffer, uint16_t length)
 {
 #if (qPrintRX)
 	// Print received data on serial COM
@@ -377,7 +377,7 @@ void DisplayReceivedMsg(const uint8_t *const rx_buffer, uint16_t length)
 /******************************************************************************
  * DisplaySentMsg : print sent data
  *****************************************************************************/
-void DisplaySentMsg(void)
+static __INLINE void DisplaySentMsg(void)
 {
 #if (qPrintTX)
 	// Print sent data on serial COM
@@ -390,7 +390,7 @@ void DisplaySentMsg(void)
 /******************************************************************************
  * DecodeReceivedMsg : decode received data
  *****************************************************************************/
-void DecodeReceivedMsg(void)
+static __INLINE void DecodeReceivedMsg(void)
 {
 	// RAIL Rx packet handles
 	RAIL_RxPacketHandle_t rx_packet_handle;
@@ -607,16 +607,9 @@ void app_process_action(void)
 		if (!gRX_first)
 		{
 			gRX_first = true;
-//#if (qUseDisplay)
-//			GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
-//			GLIB_drawStringOnLine(&gGlibContext, ">>> RUNNING >>>", 12, GLIB_ALIGN_CENTER, 0, 0, true);
-//			// Force a redraw
-//			DMD_updateDisplay();
-//#endif  // qUseDisplay
 			gTX_counter_old = gTX_counter;
 			gRX_counter_old = gRX_counter;
 			status = RAIL_SetMultiTimer(&gStatPeriodTimer, gSTAT_period, RAIL_TIME_DELAY, &timer_callback, NULL);
-			//gStatPeriodTimeout = RAIL_GetTime() + gSTAT_period;
 			gElapsedTime = RAIL_GetTime();
 
 			if (status != RAIL_STATUS_NO_ERROR)
@@ -696,17 +689,17 @@ void app_process_action(void)
 	// -----------------------------------------
 	case kInit:
 		// Sate after POR, wait until pressing BTN0 on Master or receiving message (on Slave)
-		prepare_package(gTX_packet, sizeof(gTX_packet));
+		prepare_packet(gTX_packet, sizeof(gTX_packet));
 #if (qMaster)
 		SetState(kIdle);
-#else
+#else	// !qMaster
+		SetState(kWaitRx);
 #if (qUseDisplay)
 		GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
 		GLIB_drawStringOnLine(&gGlibContext, ">>> RUNNING >>>", 12, GLIB_ALIGN_CENTER, 0, 0, true);
 		// Force a redraw
 		DMD_updateDisplay();
 #endif  // qUseDisplay
-		SetState(kWaitRx);
 #endif	// qMaster
 		break;
 
@@ -721,7 +714,6 @@ void app_process_action(void)
 		// Force a redraw
 		DMD_updateDisplay();
 #endif  // qUseDisplay
-		//gStatPeriodTimeout = RAIL_GetTime() + gSTAT_period;
 		status = RAIL_SetMultiTimer(&gStatPeriodTimer, gSTAT_period, RAIL_TIME_DELAY, &timer_callback, NULL);
 		gElapsedTime = RAIL_GetTime();
 		gTX_counter_old = gTX_counter;
@@ -761,14 +753,6 @@ void app_process_action(void)
 	case kMsgReceived:
 		// Message received
 		SetState(kSwitchTx);
-//		gRailTransitionRX.success = RAIL_RF_STATE_TX;
-//		status = RAIL_SetRxTransitions(gRailHandle, &gRailTransitionRX);
-//		if (status != RAIL_STATUS_NO_ERROR)
-//		{
-//#if (qPrintErrors)
-//			app_log_warning("Warning RAIL_SetRxTransitions (%d)\n", status);
-//#endif	// qPrintErrors
-//		}
 		DecodeReceivedMsg();
 		break;
 
@@ -828,21 +812,12 @@ void app_process_action(void)
 
 	case kMsgSent:
 		SetState(kSwitchRx);	// bidirectional
-//		gRailTransitionRX.success = RAIL_RF_STATE_RX;
-//		status = RAIL_SetRxTransitions(gRailHandle, &gRailTransitionRX);
-//		if (status != RAIL_STATUS_NO_ERROR)
-//		{
-//#if (qPrintErrors)
-//			app_log_warning("Warning RAIL_SetRxTransitions (%d)\n", status);
-//#endif	// qPrintErrors
-//		}
 		DisplaySentMsg();
 		break;
 
 	case kErrorTx:
 #if (qMaster)
 		SetState(kSwitchRx);
-		//gTX_retry_on_error = true;
 #else
 		SetState(kSwitchRx);
 #endif
@@ -859,7 +834,6 @@ void app_process_action(void)
 		// Timeout on TX
 #if (qMaster)
 		SetState(kSwitchRx);
-		//gTX_retry_on_error = true;
 #else
 		SetState(kSwitchRx);
 #endif
@@ -913,10 +887,11 @@ void app_process_action(void)
 		gStatTimerDone = false;
 		gPrintStat = false;
 		DisplayStat();
-		//gStatPeriodTimeout = RAIL_GetTime() + gSTAT_period;
-		//status = RAIL_SetMultiTimer(&gStatPeriodTimer, gSTAT_period, RAIL_TIME_DELAY, &timer_callback, NULL);
-		//gElapsedTime = RAIL_GetTime();
 
+//		//Activer le code ci-dessous pour impression périodique des statistiques
+//		status = RAIL_SetMultiTimer(&gStatPeriodTimer, gSTAT_period, RAIL_TIME_DELAY, &timer_callback, NULL);
+//		gElapsedTime = RAIL_GetTime();
+//
 //		if (status != RAIL_STATUS_NO_ERROR)
 //		{
 //#if (qPrintErrors)
@@ -980,19 +955,25 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 			gRX_invalid = true;
 	}
 
-	// Handle Rx not included in the full completion
-	if (events & ((1ULL << RAIL_EVENT_RX_PREAMBLE_LOST_SHIFT) /*||
-			      (1ULL << RAIL_EVENT_RX_PREAMBLE_LOST_SHIFT)*/))
-	{
-		// Handle Rx error
-		gRX_error = true;
-	}
+//	// Handle Rx not included in the full completion
+//	if (events & ((1ULL << RAIL_EVENT_RX_PREAMBLE_LOST_SHIFT) /*||
+//			      (1ULL << RAIL_EVENT_RX_PREAMBLE_LOST_SHIFT)*/))
+//	{
+//		// Handle Rx error
+//		gRX_error = true;
+//	}
 
 #if (qUseScheduleRx)
 	// Handle Rx timeout --> needed when RAIL_ScheduleRx used
 	if (events & (1ULL << RAIL_EVENT_RX_SCHEDULED_RX_END_SHIFT))
 	{
-		gRX_timeout_error = true;
+		if (gProtocolState == kWaitRx)
+		{
+			gRX_timeout_error = true;
+		}
+		else		// Inconsistent state machine when RX
+			// Handle Rx error
+			gRX_invalid = true;
 	}
 #endif	// qUseScheduleRx
 
@@ -1021,14 +1002,6 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 			// Handle Tx error
 			gTX_invalid = true;
 	}
-
-#if (qUseScheduleTx)
-	// Handle TX timeout --> needed when RAIL_StartScheduledTx is used insteas an additional MultiTimer
-//	if (events & (1ULL << ???))
-//	{
-//		gTX_timeout_error = true;
-//	}
-#endif	// qUseScheduleTx
 
 	// Perform all calibrations when needed
 	if (events & RAIL_EVENT_CAL_NEEDED)
@@ -1063,7 +1036,7 @@ void sl_button_on_change(const sl_button_t *handle)
 			gElapsedTime = RAIL_GetTime();
 			gPrintStat = true;
 		}
-#else
+#else	// !qMaster
 		gOldElapsedTime = gElapsedTime;
 		gElapsedTime = RAIL_GetTime();
 		gPrintStat = true;
@@ -1081,7 +1054,7 @@ void timer_callback(RAIL_MultiTimer_t *tmr, RAIL_Time_t expectedTimeOfEvent, voi
 	(void) cbArg;					// To avoid warnings
 
 
-	if (tmr == &gStatPeriodTimer)	// No more used, was used to print stat periodically
+	if (tmr == &gStatPeriodTimer)	// used to print stat periodically
 	{
 		gStatTimerDone = true;
 		gOldElapsedTime = gElapsedTime;
@@ -1116,7 +1089,7 @@ void set_up_tx_fifo(void)
 /******************************************************************************
  * The API helps to unpack the received packet, point to the payload and returns the length.
  *****************************************************************************/
-static uint16_t unpack_packet(uint8_t *rx_destination, const RAIL_RxPacketInfo_t *packet_information, uint8_t **start_of_payload)
+static __INLINE uint16_t unpack_packet(uint8_t *rx_destination, const RAIL_RxPacketInfo_t *packet_information, uint8_t **start_of_payload)
 {
 	RAIL_CopyRxPacket(rx_destination, packet_information);
 	*start_of_payload = rx_destination;
@@ -1126,10 +1099,10 @@ static uint16_t unpack_packet(uint8_t *rx_destination, const RAIL_RxPacketInfo_t
 /******************************************************************************
  * The API prepares the packet for sending and load it in the RAIL TX FIFO
  *****************************************************************************/
-static void prepare_package(uint8_t *out_data, uint16_t length)
+static __INLINE void prepare_packet(uint8_t *out_data, uint16_t length)
 {
 	// Check if write fifo has written all bytes
 	uint16_t bytes_writen_in_fifo = 0;
-	bytes_writen_in_fifo = RAIL_WriteTxFifo(gRailHandle, out_data, length, true);
+	bytes_writen_in_fifo = RAIL_WriteTxFifo(gRailHandle, out_data, length, false);
 	app_assert(bytes_writen_in_fifo == TX_PAYLOAD_LENGTH, "RAIL_WriteTxFifo() failed to write in fifo (%d bytes instead of %d bytes)\n", bytes_writen_in_fifo, TX_PAYLOAD_LENGTH);
 }
