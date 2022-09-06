@@ -51,9 +51,17 @@
 #define qPrintEvents	1			// Print out events on serial COM
 #define qPrintErrors	0			// Print out RAIL errors on serial COM
 
+#if (qMaster)
 #define qUseScheduleRx	1			// 0 = RAIL_StartRx, 1 = RAIL_ScheduleRx
+#else
+#define qUseScheduleRx	0			// 0 = RAIL_StartRx, 1 = RAIL_ScheduleRx
+#endif	// qMaster
 #define qUseScheduleTx	0			// 0 = RAIL_StartTx, 1 = RAIL_StartScheduledTx
+#if (qMaster)
 #define qUseTimeOutRx	0			// 0 = no timeout with RAIL_StartRx, 1 = use MultiTimer for timeout RAIL_StartRx
+#else
+#define qUseTimeOutRx	0			// 0 = no timeout with RAIL_StartRx, 1 = use MultiTimer for timeout RAIL_StartRx
+#endif	// qMaster
 #define qUseTimeOutTx	1			// 0 = no timeout with RAIL_StartTx, 1 = use MultiTimer for timeout RAIL_StartTx
 
 // GPIO debug
@@ -70,7 +78,7 @@
 #define TX_START	(80U)							// in us
 #define TX_TIMEOUT	(2.05*RX_TIMEOUT)				// in us
 #else	// !qMaster
-#define RX_TIMEOUT	(650U/*850U*/)					// in us
+#define RX_TIMEOUT	(850U/*850U*/)					// in us
 #define TX_START	(80U)							// in us
 #define TX_TIMEOUT	(2.05*RX_TIMEOUT)				// in us
 #endif	// qMaster
