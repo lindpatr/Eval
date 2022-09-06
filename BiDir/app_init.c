@@ -46,10 +46,6 @@
 #include "rail_chip_specific.h"
 #endif
 
-#if defined(SL_CATALOG_KERNEL_PRESENT)
-#include "app_task_init.h"
-#endif
-
 #include "em_gpio.h"
 #include "app_init.h"
 
@@ -119,6 +115,9 @@ void app_init(void)
 
 	// LCD start
 	graphics_init();
+
+	// User commands add to CLI
+	cli_user_init();
 
 #if (!qMaster)
 	// Enable Start reception (without timeout)

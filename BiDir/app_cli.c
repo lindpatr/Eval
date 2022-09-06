@@ -49,6 +49,7 @@
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
 // -----------------------------------------------------------------------------
+void cli_set_period(sl_cli_command_arg_t *arguments);
 
 // -----------------------------------------------------------------------------
 //                                Global Variables
@@ -57,10 +58,32 @@
 extern volatile bool gTX_requested;
 /// Flag, indicating received packet is forwarded on CLI or not
 extern volatile bool gRX_requested;
+/// Flag, indicating stat period on CLI
+extern volatile uint32_t gSTAT_period;
 
 // -----------------------------------------------------------------------------
 //                                Static Variables
 // -----------------------------------------------------------------------------
+
+// User additional CLI command
+static const sl_cli_command_info_t cli_cmd__period = \
+  SL_CLI_COMMAND(cli_set_period,
+                 "Set statistics period",
+				 "",
+                 {SL_CLI_ARG_UINT16, SL_CLI_ARG_END, });
+
+// User command table
+const sl_cli_command_entry_t cli_my_command_table[] = {
+  { "period", &cli_cmd__period, false },
+  { NULL, NULL, false },
+};
+
+// User CLI grouo
+sl_cli_command_group_t cli_my_command_group = {
+  { NULL },
+  false,
+  cli_my_command_table
+};
 
 // -----------------------------------------------------------------------------
 //                          Public Function Definitions
@@ -88,6 +111,16 @@ void cli_send_packet(sl_cli_command_arg_t *arguments)
 }
 
 /******************************************************************************
+ * CLI - Set period: set the statistics period
+ *****************************************************************************/
+void cli_set_period(sl_cli_command_arg_t *arguments)
+{
+  uint16_t period = sl_cli_get_argument_uint16(arguments, 0);
+  gSTAT_period = 1000000UL * period;
+  app_log_info("Send period stat to %d s\n", period);
+}
+
+/******************************************************************************
  * CLI - receive: Turn on/off received message
  *****************************************************************************/
 void cli_receive_packet(sl_cli_command_arg_t *arguments)
@@ -105,6 +138,10 @@ void cli_receive_packet(sl_cli_command_arg_t *arguments)
   app_log_info("Received packets: %s\n", str_rx_fw);
 }
 
+void cli_user_init(void)
+{
+	sl_cli_command_add_command_group(sl_cli_default_handle, &cli_my_command_group);
+}
 // -----------------------------------------------------------------------------
 //                          Static Function Definitions
 // -----------------------------------------------------------------------------
