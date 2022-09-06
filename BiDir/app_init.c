@@ -61,6 +61,7 @@
  * Checks phy setting to avoid errors at packet sending
  *****************************************************************************/
 static void validation_check(void);
+void cli_user_init(void);
 
 // -----------------------------------------------------------------------------
 //                                Global Variables
@@ -75,6 +76,8 @@ RAIL_ScheduleTxConfig_t gRailScheduleCfgTX;
 RAIL_StateTransitions_t gRailTransitionRX;
 /// A static var for TX transition
 RAIL_StateTransitions_t gRailTransitionTX;
+/// A static var for state timings
+RAIL_StateTiming_t gRailStateTimings;
 
 // -----------------------------------------------------------------------------
 //                          Private Function Definitions
@@ -96,6 +99,8 @@ SL_WEAK void print_sample_app_name(const char *app_name)
  *****************************************************************************/
 void app_init(void)
 {
+	RAIL_Status_t status = RAIL_STATUS_NO_ERROR;
+
 	validation_check();
 
 	// Get RAIL handle, used later by the application
@@ -119,17 +124,7 @@ void app_init(void)
 	// User commands add to CLI
 	cli_user_init();
 
-#if (!qMaster)
-	// Enable Start reception (without timeout)
-	RAIL_Status_t status = RAIL_StartRx(gRailHandle, CHANNEL, NULL);
-	if (status != RAIL_STATUS_NO_ERROR)
-	{
-#if (qDebugPrintErr)
-		app_log_warning("Warning RAIL_StartRx (%d)\n", status);
-#endif	// qDebugPrintErr
-	}
-#endif	// !qMaster
-
+#if (qUseScheduleRx)
 	// Set timeout for scheduled RX
 	gRailScheduleCfgRX.start = 0;
 	gRailScheduleCfgRX.startMode = RAIL_TIME_DELAY;
@@ -137,17 +132,59 @@ void app_init(void)
 	gRailScheduleCfgRX.endMode = RAIL_TIME_DELAY;
 	gRailScheduleCfgRX.hardWindowEnd = false;
 	gRailScheduleCfgRX.rxTransitionEndSchedule = false;
+#endif	// qUseScheduleRx
 
+#if (qUseScheduleTx)
 	// Set timeout for scheduled TX
 	gRailScheduleCfgTX.when = TX_START;
 	gRailScheduleCfgTX.mode = RAIL_TIME_DELAY;
 	gRailScheduleCfgTX.txDuringRx = RAIL_SCHEDULED_TX_DURING_RX_ABORT_TX;		// ou RAIL_SCHEDULED_TX_DURING_RX_POSTPONE_TX --> à voir?
+#endif	// qUseScheduleTx
 
-	// Set RX and TX transition
-	gRailTransitionRX.success = RAIL_RF_STATE_RX;
-	gRailTransitionRX.error = RAIL_RF_STATE_RX;
-	gRailTransitionTX.success = RAIL_RF_STATE_RX;
-	gRailTransitionTX.error = RAIL_RF_STATE_RX;
+//	// Set RX and TX transition
+//	gRailTransitionRX.success = RAIL_RF_STATE_TX;
+//	gRailTransitionRX.error = RAIL_RF_STATE_RX;
+//	gRailTransitionTX.success = RAIL_RF_STATE_RX;
+//	gRailTransitionTX.error = RAIL_RF_STATE_RX;
+//
+//	status = RAIL_SetRxTransitions(gRailHandle, &gRailTransitionRX);
+//	if (status != RAIL_STATUS_NO_ERROR)
+//	{
+//#if (qPrintErrors)
+//				app_log_warning("Warning RAIL_SetRxTransitions (%d)\n", status);
+//	#endif	// qPrintErrors
+//	}
+//	status = RAIL_SetTxTransitions(gRailHandle, &gRailTransitionTX);
+//	if (status != RAIL_STATUS_NO_ERROR)
+//	{
+//#if (qPrintErrors)
+//				app_log_warning("Warning RAIL_SetTxTransitions (%d)\n", status);
+//	#endif	// qPrintErrors
+//	}
+
+//	// State timings
+//	gRailStateTimings.idleToRx = 100;
+//	gRailStateTimings.txToRx = 182;
+//	gRailStateTimings.idleToTx = 100;
+//	gRailStateTimings.rxToTx = 192;
+//	status = RAIL_SetStateTiming(gRailHandle, &gRailStateTimings);
+//	if (status != RAIL_STATUS_NO_ERROR)
+//	{
+//#if (qPrintErrors)
+//		app_log_warning("Warning RAIL_SetStateTiming (%d)\n", status);
+//#endif	// qPrintErrors
+//	}
+
+#if (!qMaster)
+	// Enable Start reception (without timeout)
+	status = RAIL_StartRx(gRailHandle, CHANNEL, NULL);
+	if (status != RAIL_STATUS_NO_ERROR)
+	{
+#if (qDebugPrintErr)
+		app_log_warning("Warning RAIL_StartRx (%d)\n", status);
+#endif	// qDebugPrintErr
+	}
+#endif	// !qMaster
 
 	// Print Id software
 	const char string[] = "\nTest EFR32xG32 - ";
