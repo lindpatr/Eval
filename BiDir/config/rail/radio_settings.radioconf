@@ -54,7 +54,7 @@
         </input>
         <input>
           <key>preamble_length</key>
-          <value>40</value>
+          <value>32</value>
         </input>
         <input>
           <key>preamble_pattern</key>
