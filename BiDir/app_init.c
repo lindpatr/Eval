@@ -197,7 +197,7 @@ void app_init(void)
 	const char string3[] = "BiDir";
 
 	// CLI info message
-	app_log_info("%s (%s)\n", string2, string3);
+	app_log_info("%s (%s) ID: 0x%llx\n", string2, string3, SYSTEM_GetUnique());
 	app_log_info("--------------------------------\n");
 
 	// Set up timers
