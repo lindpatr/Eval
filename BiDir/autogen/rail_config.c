@@ -160,7 +160,7 @@ const uint32_t Protocol_Configuration_modemConfigBase[] = {
   0x01064058UL, 0x00FF0264UL,
   /*    405C */ 0x00000841UL,
   /*    4060 */ 0x00000001UL,
-  /*    4064 */ 0x00100012UL,
+  /*    4064 */ 0x00140012UL,
   /*    4068 */ 0x0000B16FUL,
   /*    406C */ 0x00000000UL,
   0x01114080UL, 0x17800714UL,
