@@ -90,7 +90,7 @@
 
 // Timeout for Start RX and TX RAIL functions
 #if (qMaster)
-#define RX_TIMEOUT	(650U/*850U*/)					// in us
+#define RX_TIMEOUT	(400U/*650U*//*850U*/)					// in us
 #define TX_START	(80U)							// in us	// Not used
 #define TX_TIMEOUT	(2.05*RX_TIMEOUT)				// in us
 #else	// !qMaster
