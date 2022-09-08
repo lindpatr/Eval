@@ -70,3 +70,7 @@ BiDir/- Copie.cproject
 *.bak0
 
 Slot_Slave/GNU ARM v10.3.1 - Default/
+
+Slot_Master/GNU ARM v10.3.1 - Default/
+
+Slot_Slave/Slot_Master.pintool
