@@ -1,0 +1,162 @@
+[
+  {
+    "channel_name": "Protocol_Configuration-Channel_Group_1",
+    "result_code": "0",
+    "error_message": "",
+    "logs": [],
+    "cfg_logs": [
+      {
+        "name": "Preamble Binary Pattern",
+        "value": "0101010101010101010101010101010101010101"
+      },
+      {
+        "name": "Sync Word Binary Pattern",
+        "value": "1111011010001101"
+      },
+      {
+        "name": "Actual Bandwidth",
+        "value": 2392334
+      },
+      {
+        "name": "Desired baudrate",
+        "value": 2000000
+      },
+      {
+        "name": "Actual sample frequency",
+        "value": 10000280.904353203
+      },
+      {
+        "name": "FEC enabled flag",
+        "value": 0
+      },
+      {
+        "name": "Injection side",
+        "value": "LoInjectionSideEnum.HIGH_SIDE"
+      },
+      {
+        "name": "Timing Detection Threshold",
+        "value": 20
+      },
+      {
+        "name": "Timing Samples Threshold",
+        "value": 12
+      },
+      {
+        "name": "Frequency Offset Compensation (AFC) Limit",
+        "value": 0
+      },
+      {
+        "name": "Acquisition Channel Bandwidth",
+        "value": 2400000
+      },
+      {
+        "name": "IF Frequency",
+        "value": 1430000
+      },
+      {
+        "name": "PLL Bandwidth in TX mode",
+        "value": "PLLBandwdithEnum.BW_1500KHz"
+      },
+      {
+        "name": "PLL Bandwidth in RX mode",
+        "value": "PLLBandwdithEnum.BW_250KHz"
+      },
+      {
+        "name": "Number of Symbols in Timing Window",
+        "value": 14
+      },
+      {
+        "name": "Number of Errors Allowed in a Timing Window",
+        "value": 0
+      },
+      {
+        "name": "Number of Timing Windows to Detect",
+        "value": 1
+      },
+      {
+        "name": "Timing Resync Period",
+        "value": 2
+      },
+      {
+        "name": "Frequency Offset Period",
+        "value": 0
+      },
+      {
+        "name": "Frequency Offset Compensation (AFC) Period",
+        "value": 0
+      },
+      {
+        "name": "AGC Power Target",
+        "value": -8
+      },
+      {
+        "name": "RSSI Update Period",
+        "value": null
+      },
+      {
+        "name": "AGC Hysteresis",
+        "value": null
+      },
+      {
+        "name": "AGC Settling Delay",
+        "value": 39
+      },
+      {
+        "name": "Frequency Offset Compensation (AFC) Step Scale",
+        "value": 1.0
+      },
+      {
+        "name": "AGC Period",
+        "value": 0
+      },
+      {
+        "name": "AGC Speed",
+        "value": "AgcMode.FAST"
+      },
+      {
+        "name": "Frequency Compensation Mode",
+        "value": "FreqCompModeEnum.INTERNAL_ALWAYS_ON"
+      },
+      {
+        "name": "SRC Operation",
+        "value": "src_disable.ENABLED"
+      },
+      {
+        "name": "AGC backoff scheme",
+        "value": null
+      },
+      {
+        "name": "ETSI Category 1 Compatibility",
+        "value": "etsi_cat1_compatible.Normal"
+      },
+      {
+        "name": "Target oversampling rate",
+        "value": 7
+      },
+      {
+        "name": "Antenna diversity mode",
+        "value": "AntDivModeEnum.DISABLE"
+      },
+      {
+        "name": "Diversity Select-Best repeat",
+        "value": "AntDivRepeatDisModeEnum.REPEATFIRST"
+      },
+      {
+        "name": "Common RX/TX circuit",
+        "value": "IRCalRXTXPathCommonEnum.SHARED_RX_TX_PATH"
+      },
+      {
+        "name": "IR cal power level (amplitude)",
+        "value": 0
+      },
+      {
+        "name": "Byte position of dynamic length byte",
+        "value": 0
+      },
+      {
+        "name": "Length of the First Word",
+        "value": 8
+      }
+    ]
+  }
+]
