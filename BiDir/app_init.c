@@ -54,7 +54,6 @@
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
 
-
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
 // -----------------------------------------------------------------------------
@@ -154,15 +153,15 @@ void app_init(void)
 	if (status != RAIL_STATUS_NO_ERROR)
 	{
 #if (qPrintErrorsL1)
-				app_log_warning("Warning RAIL_SetRxTransitions (%d)\n", status);
-	#endif	// qPrintErrorsL1
+		app_log_warning("Warning RAIL_SetRxTransitions (%d)\n", status);
+#endif	// qPrintErrorsL1
 	}
 	status = RAIL_SetTxTransitions(gRailHandle, &gRailTransitionTX);
 	if (status != RAIL_STATUS_NO_ERROR)
 	{
 #if (qPrintErrorsL1)
-				app_log_warning("Warning RAIL_SetTxTransitions (%d)\n", status);
-	#endif	// qPrintErrorsL1
+		app_log_warning("Warning RAIL_SetTxTransitions (%d)\n", status);
+#endif	// qPrintErrorsL1
 	}
 
 	// State timings
