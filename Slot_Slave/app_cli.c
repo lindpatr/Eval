@@ -57,7 +57,7 @@ void cli_req_stat(sl_cli_command_arg_t *arguments);
 //                                Global Variables
 // -----------------------------------------------------------------------------
 /// Flag, indicating a start process request (button was pressed / CLI start request has occurred)
-extern volatile bool gStartProcess;
+//extern volatile bool gStartProcess;
 /// Flag, indicating a request to print statistics (button was pressed / CLI statistics request has occurred)
 extern volatile bool gStatReq;
 /// Flag, indicating print stat delay on CLI

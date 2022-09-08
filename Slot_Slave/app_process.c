@@ -142,7 +142,7 @@ volatile uint32_t gRX_counter_old = 0UL;
 uint32_t gRX_counter_prev = 0UL;
 
 /// Various flags
-volatile bool gStartProcess = false;			// Flag, indicating a start process request (button was pressed / CLI start request has occurred)
+//volatile bool gStartProcess = false;			// Flag, indicating a start process request (button was pressed / CLI start request has occurred)
 volatile uint32_t gStatDelay = STAT_PERIOD_us;	// Flag, indicating stat period on CLI
 static volatile bool gBtnPressed = false;   	// Button pressed, start process
 static bool gRX_first = false;					// Indicate first RX packet received on Slave to start statistics
