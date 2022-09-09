@@ -63,8 +63,8 @@
 #define RESET           0           // Reset PIN
 
 // Timeout for Start RX and TX RAIL functions
-#define RX_TIMEOUT  (400U)              // in us
-#define TX_TIMEOUT  (1*SEC)             // in us
+#define RX_TIMEOUT  (500U)              // in us
+#define TX_TIMEOUT  (2.05*RX_TIMEOUT/*1*SEC*/)             // in us
 
 // -----------------------------------------------------------------------------
 //                                Global Variables
