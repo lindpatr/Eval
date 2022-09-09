@@ -168,7 +168,10 @@ static __INLINE void DisplayStat(void)
 	app_log_info("Elapsed time       : %0.2f sec\n", deltaTime);
 
 	app_log_info("#Counter (TX)      : %lu\n", gTX_tab[0]);
-	app_log_info("#Counter (RX)      : %lu\n", gRX_tab[0]);
+	//app_log_info("#Counter (RX)      : %lu\n", gRX_tab[0]);
+    for (int i = 0; i < 5; i++) {
+        app_log_info("#Counter Tab (RX)      : %lu\n", gRX_counter[i]);
+    }
 
 	app_log_info("TX Err (see below) : %0.3f%%\n", localStat3);
 	app_log_info("#Err/#TO/#Inv      : %lu/%lu/%lu\n", gTX_tab[1], gTX_tab[2], gTX_tab[5]);
