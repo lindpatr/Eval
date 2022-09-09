@@ -151,9 +151,14 @@ void cli_set_period(sl_cli_command_arg_t *arguments)
 void cli_start_process(sl_cli_command_arg_t *arguments)
 {
 	(void) arguments;
-	gStartProcess = true;
-	gElapsedTime = RAIL_GetTime();
-	app_log_info("Start process now ...\n");
+	if (!gStartProcess)
+	{
+		gStartProcess = true;
+		gElapsedTime = RAIL_GetTime();
+		app_log_info("Start process now ...\n");
+	}
+	else
+		app_log_info("Process already started!\n");
 }
 
 /******************************************************************************
