@@ -11,8 +11,11 @@
 #include <stdint.h>
 #include "app_process.h"
 #include "app_log.h"
+#include "app_init.h"
+
 
 #define SIZE_UINT64_IN_BITS (int)(8*sizeof(uint64_t))
+
 #define TIMER_TIMEOUT_RX_SHIFT  (RAIL_EVENT_DETECT_RSSI_THRESHOLD_SHIFT+1)
 #define TIMER_TIMEOUT_TX_SHIFT  (TIMER_TIMEOUT_RX_SHIFT+1)
 
@@ -73,9 +76,9 @@ static char *gCB_descr_tab[SIZE_UINT64_IN_BITS ] =
         "TIMER_TIMEOUT_TX    "};
 #endif	// qPrintEvents
 
-extern uint32_t gTX_tab[7];    // 0 = #TX_OK  	1 = #TX_Err   2 = ND      		3 = #Retransmit   	4 = ND          		5 = #TX_Invalid   	6 = ND
-extern uint32_t gRX_tab[7];    // 0 = #RX_OK  	1 = #RX_Err   2 = #RX_TimeOut 	3 = #Gap RX count 	4 = Max gap RX count  	5 = #RX_Invalid   	6 = #CRC_Err
-extern uint32_t gCAL_tab[7];   // 0 = #CAL_REQ  1 = #CAL_Err  2 = ND      		3 = ND        		4 = ND          		5 = ND        		6 = ND
+extern uint32_t gTX_tab[7];                 // 0 = #TX_OK  	1 = #TX_Err   2 = ND      		3 = #Retransmit   	4 = ND          		5 = #TX_Invalid   	6 = ND
+extern uint32_t gRX_tab[MAX_SLAVE][7];      // 0 = #RX_OK  	1 = #RX_Err   2 = #RX_TimeOut 	3 = #Gap RX count 	4 = Max gap RX count  	5 = #RX_Invalid   	6 = #CRC_Err
+extern uint32_t gCAL_tab[7];                // 0 = #CAL_REQ  1 = #CAL_Err  2 = ND      		3 = ND        		4 = ND          		5 = ND        		6 = ND
 
 /// Timeout for printing and displaying the statistics
 extern volatile RAIL_Time_t gElapsedTime;
@@ -149,6 +152,7 @@ static __INLINE void DecodeEvents(RAIL_Events_t *events)
 #endif  // qPrintEvents
 }
 
+#if (qMASTER)
 /******************************************************************************
  * DisplayStat : print and display statistics
  *****************************************************************************/
@@ -156,34 +160,88 @@ static __INLINE void DisplayStat(void)
 {
 	// Statistics
 	float deltaTime = (float) (gElapsedTime - gOldElapsedTime) / 1000000.0f;
-	float localStat = (float) (gTX_counter + gRX_counter - gTX_counter_old - gRX_counter_old) / deltaTime;
+//	float localStat = (float) (gTX_counter + gRX_counter - gTX_counter_old - gRX_counter_old) / deltaTime;
+	uint32_t sumCounter1 = 0U;
+	uint32_t sumCounter2 = 0U;
+    for (int i = 0; i < MAX_SLAVE; i++)
+    {
+        if (gRX_counter[i])
+        {
+            sumCounter1 += (gTX_counter + gRX_counter[i] - gTX_counter_old - gRX_counter_old[i]);
+            sumCounter2 += gRX_counter[i];
+        }
+    }
+    float localStat = (float)(sumCounter1) / deltaTime;
 	float localStat2 = (10.0f * 10100.0f) / localStat;
 	float localStat3 = 100.0f * (float) (gTX_tab[1] + gTX_tab[2] + gTX_tab[5]) / (float) gTX_counter;
-//	float localStat4 = 100.0f * (float) (gRX_tab[1] + gRX_tab[2] + gRX_tab[5] + gRX_tab[6]) / (float) gRX_counter;
+	float localStat4 = 100.0f * (float) (gRX_tab[MASTER_ID][1] + gRX_tab[MASTER_ID][2] + gRX_tab[MASTER_ID][5] + gRX_tab[MASTER_ID][6]) / (float) sumCounter2;
 
 	// Print on serial COM
 	app_log_info("\n");
 	app_log_info("Performance statistics\n");
 	app_log_info("----------------------\n");
-	app_log_info("Elapsed time       : %0.2f sec\n", deltaTime);
+	app_log_info("Elapsed time             : %0.2f sec\n", deltaTime);
 
-	app_log_info("#Counter (TX)      : %lu\n", gTX_tab[0]);
-	//app_log_info("#Counter (RX)      : %lu\n", gRX_tab[0]);
-    for (int i = 0; i < 5; i++) {
-        app_log_info("#Counter Tab (RX)      : %lu\n", gRX_counter[i]);
+	app_log_info("#Counter (Master)        : %lu\n", gTX_tab[0]);
+//	app_log_info("#Counter (RX)            : %lu\n", gRX_tab[0]);
+    for (int i = 0; i < MAX_SLAVE; i++)
+    {
+        if (gRX_counter[i])
+            app_log_info("#Counter (Slave %03d)     : %lu\n", i, gRX_tab[i][0]);
     }
 
-	app_log_info("TX Err (see below) : %0.3f%%\n", localStat3);
-	app_log_info("#Err/#TO/#Inv      : %lu/%lu/%lu\n", gTX_tab[1], gTX_tab[2], gTX_tab[5]);
-	app_log_info("TX retransmit count: %lu\n", gTX_tab[3]);
-//	app_log_info("RX Err (see below) : %0.3f%%\n", localStat4);
-	app_log_info("#Err/#TO/#Inv/#CRC : %lu/%lu/%lu/%lu\n", gRX_tab[1], gRX_tab[2], gRX_tab[5], gRX_tab[6]);
-	app_log_info("Counter #gap (max) : %lu (%d)\n", gRX_tab[3], gRX_tab[4]);
+	app_log_info("TX Err (see below)       : %0.3f%%\n", localStat3);
+	app_log_info("#Err/#TO/#Inv            : %lu/%lu/%lu\n", gTX_tab[1], gTX_tab[2], gTX_tab[5]);
+	app_log_info("TX retransmit count      : %lu\n", gTX_tab[3]);
+	app_log_info("RX Err (see below)       : %0.3f%%\n", localStat4);
+	app_log_info("#Err/#TO/#Inv/#CRC       : %lu/%lu/%lu/%lu\n", gRX_tab[MASTER_ID][1], gRX_tab[MASTER_ID][2], gRX_tab[MASTER_ID][5], gRX_tab[MASTER_ID][6]);
+	//app_log_info("Counter #gap (max) : %lu (%d)\n", gRX_tab[3], gRX_tab[4]);
+    for (int i = 0; i < MAX_SLAVE; i++)
+    {
+        if (gRX_counter[i])
+            app_log_info("Counter #gap (Slave %03d) : %lu\n", i, gRX_tab[i][3]);
+    }
 
-	app_log_info("Cal #request (#Err): %lu (%lu)\n", gCAL_tab[0], gCAL_tab[1]);
-	app_log_info("Rate (loop 100)    : %0.2f msg/s (%0.2f ms)\n", localStat, localStat2);
+	app_log_info("Cal #request (#Err)       : %lu (%lu)\n", gCAL_tab[0], gCAL_tab[1]);
+	app_log_info("Rate (loop 100)           : %0.2f msg/s (%0.2f ms)\n", localStat, localStat2);
 
 	DisplayEvents();
 }
+#endif  // qMASTER
+
+#if (qSLAVE)
+/******************************************************************************
+ * DisplayStat : print and display statistics
+ *****************************************************************************/
+static __INLINE void DisplayStat(void)
+{
+    // Statistics
+    float deltaTime = (float) (gElapsedTime - gOldElapsedTime) / 1000000.0f;
+    float localStat = (float) (gTX_counter + gRX_counter - gTX_counter_old - gRX_counter_old) / deltaTime;
+    float localStat2 = (10.0f * 10100.0f) / localStat;
+    float localStat3 = 100.0f * (float) (gTX_tab[1] + gTX_tab[2] + gTX_tab[5]) / (float) gTX_counter;
+    float localStat4 = 100.0f * (float) (gRX_tab[MASTER_ID][1] + gRX_tab[MASTER_ID][2] + gRX_tab[MASTER_ID][5] + gRX_tab[MASTER_ID][6]) / (float) gRX_counter;
+
+    // Print on serial COM
+    app_log_info("\n");
+    app_log_info("Performance statistics\n");
+    app_log_info("----------------------\n");
+    app_log_info("Elapsed time       : %0.2f sec\n", deltaTime);
+
+    app_log_info("#Counter (Master)  : %lu\n", gTX_tab[0]);
+    app_log_info("#Counter (RX)      : %lu\n", gRX_tab[MASTER_ID][0]);
+    app_log_info("TX Err (see below) : %0.3f%%\n", localStat3);
+    app_log_info("#Err/#TO/#Inv      : %lu/%lu/%lu\n", gTX_tab[1], gTX_tab[2], gTX_tab[5]);
+    app_log_info("TX retransmit count: %lu\n", gTX_tab[3]);
+    app_log_info("RX Err (see below) : %0.3f%%\n", localStat4);
+    app_log_info("#Err/#TO/#Inv/#CRC : %lu/%lu/%lu/%lu\n", gRX_tab[MASTER_ID][1], gRX_tab[MASTER_ID][2], gRX_tab[MASTER_ID][5], gRX_tab[MASTER_ID][6]);
+    app_log_info("Counter #gap (max) : %lu (%d)\n", gRX_tab[3], gRX_tab[4]);
+
+    app_log_info("Cal #request (#Err): %lu (%lu)\n", gCAL_tab[0], gCAL_tab[1]);
+    app_log_info("Rate (loop 100)    : %0.2f msg/s (%0.2f ms)\n", localStat, localStat2);
+
+    DisplayEvents();
+}
+#endif  // qSLAVE
 
 #endif /* APP_STAT_H_ */

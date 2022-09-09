@@ -42,7 +42,6 @@
 #include "rail_config.h"
 #include "sl_flex_packet_asm.h"
 
-#include "app_init.h"
 #include "common_stat.h"
 
 // Specific to LCD display
@@ -136,11 +135,11 @@ static volatile bool gStatTimerDone = false;	// Timeout of the delay for printin
 volatile bool gStatReq = false;					// Flag, indicating a request to print statistics (button was pressed / CLI statistics request has occurred)
 
 /// TX and RX counters
-volatile uint32_t gRX_counter[sizeof(uint8_t)] = {0UL};
+volatile uint32_t gRX_counter[MAX_SLAVE] = {0UL};
 volatile uint32_t gTX_counter = 1UL;
 volatile uint32_t gTX_counter_old = 0UL;
-volatile uint32_t gRX_counter_old[sizeof(uint8_t)] = {0UL};
-uint32_t gRX_counter_prev[sizeof(uint8_t)] = {0UL};
+volatile uint32_t gRX_counter_old[MAX_SLAVE] = {0UL};
+uint32_t gRX_counter_prev[MAX_SLAVE] = {0UL};
 
 /// Various flags
 volatile bool gStartProcess = false;			// Flag, indicating a start process request (button was pressed / CLI start request has occurred)
@@ -177,6 +176,7 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 
         if (events & RAIL_EVENT_RX_PACKET_RECEIVED)
         {
+            GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_RX);
             // Keep the packet in the radio buffer, download it later at the state machine
             RAIL_HoldRxPacket(rail_handle);
             gRX_ok = true;
@@ -275,7 +275,7 @@ void timer_callback(RAIL_MultiTimer_t *tmr, RAIL_Time_t expectedTimeOfEvent, voi
     else if (tmr == &gTX_timeout) // used with standard StartTx when RAIL_StartScheduledTx isn't used
     {
         gTX_timeout_error = true;
-        gCB_tab[TIMER_TIMEOUT_TX_SHIFT]++;
+        //gCB_tab[TIMER_TIMEOUT_TX_SHIFT]++;      // Le timeout cadence les SYNC du Master, ce ne sont pas des erreurs
     }
 }
 
@@ -338,11 +338,11 @@ static __INLINE void StartTimerTO_Stat(void)
 /******************************************************************************
  * StartTimerTO_RX : start timer on RX
  *****************************************************************************/
-static __INLINE void StartTimerTO_RX(void)
-{
-    RAIL_Status_t status = RAIL_SetMultiTimer(&gRX_timeout, RX_TIMEOUT, RAIL_TIME_DELAY, &timer_callback, NULL);
-    PrintStatus(status, "Warning RAIL_SetMultiTimer RX");
-}
+//static __INLINE void StartTimerTO_RX(void)
+//{
+//    RAIL_Status_t status = RAIL_SetMultiTimer(&gRX_timeout, RX_TIMEOUT, RAIL_TIME_DELAY, &timer_callback, NULL);
+//    PrintStatus(status, "Warning RAIL_SetMultiTimer RX");
+//}
 
 /******************************************************************************
  * StartTimerTO_TX : start timer on TX
@@ -450,7 +450,7 @@ static __INLINE void DecodeReceivedMsg(void)
             DisplayReceivedMsg(start_of_packet, packet_size);
             // Backup previous data
             //gRX_counter_prev = gRX_counter;
-            memcpy(gRX_counter_prev, gRX_counter, sizeof(uint8_t));
+            memcpy(gRX_counter_prev, (uint32_t *)gRX_counter, MAX_SLAVE);
             // Extract received data
 
             uint8_t addr = start_of_packet[0];
@@ -460,20 +460,20 @@ static __INLINE void DecodeReceivedMsg(void)
             uint32_t delta = gRX_counter[addr] - gRX_counter_prev[addr];
             if (delta > 1)
             {
-                gRX_tab[3]++;
-                gRX_tab[4] = (delta > gRX_tab[4] ? delta : gRX_tab[4]);
+                gRX_tab[addr][3]++;
+                gRX_tab[addr][4] = (delta > gRX_tab[addr][4] ? delta : gRX_tab[addr][4]);
             }
             else
-                gRX_tab[0]++;
+                gRX_tab[addr][0]++;
         }
         else if (packet_info.packetStatus == RAIL_RX_PACKET_READY_CRC_ERROR)
-            gRX_tab[6]++;
+            gRX_tab[MASTER_ID][6]++;
 
         // Indicate RX in progress on LED0
         sl_led_toggle(&sl_led_led0);
         rx_packet_handle = RAIL_GetRxPacketInfo(gRailHandle, RAIL_RX_PACKET_HANDLE_OLDEST_COMPLETE, &packet_info);
     }
-    GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_RX);
+    //GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_RX);
 }
 
 // -----------------------------------------------------------------------------
@@ -503,7 +503,7 @@ void app_process_action(void)
         //gTX_tab[0]++;
         gTX_tab[0] = gCB_tab[RAIL_EVENT_TX_PACKET_SENT_SHIFT];
         // Increment counter and prepare new data
-        gTX_counter++;    // pas de test over
+        gTX_counter++;    // pas de test overflow
         prepare_packet_to_tx();
 
         SetState(kMsgSent);
@@ -511,8 +511,8 @@ void app_process_action(void)
     else if (gRX_error)
     {
         gRX_error = false;
-        //gRX_tab[1]++;
-        gRX_tab[1] = gCB_tab[RAIL_EVENT_RX_PACKET_ABORTED_SHIFT] + gCB_tab[RAIL_EVENT_RX_FRAME_ERROR_SHIFT] + gCB_tab[RAIL_EVENT_RX_FIFO_OVERFLOW_SHIFT]
+        //gRX_tab[MASTER_ID][1]++;
+        gRX_tab[MASTER_ID][1] = gCB_tab[RAIL_EVENT_RX_PACKET_ABORTED_SHIFT] + gCB_tab[RAIL_EVENT_RX_FRAME_ERROR_SHIFT] + gCB_tab[RAIL_EVENT_RX_FIFO_OVERFLOW_SHIFT]
                 + gCB_tab[RAIL_EVENT_RX_SCHEDULED_RX_MISSED_SHIFT];
 
         SetState(kErrorRx);
@@ -521,7 +521,7 @@ void app_process_action(void)
     {
         gRX_timeout_error = false;
         GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_MISC);
-        gRX_tab[2]++;
+        gRX_tab[MASTER_ID][2]++;
 
         SetState(kTimeOutRx);
     }
@@ -538,9 +538,9 @@ void app_process_action(void)
     else if (gTX_timeout_error)
     {
         gTX_timeout_error = false;
-        gTX_tab[2]++;
+        //gTX_tab[2]++;                 // Fin de cycle, normal
 
-        SetState(kTimeOutTx);
+        SetState(kSwitchTx/*kTimeOutTx*/);
     }
     else if (gCAL_error)
     {
@@ -596,37 +596,30 @@ void app_process_action(void)
 
     case kMsgReceived:
         // Message received
-#if (qRx2TxAutoTransition)
-        SetState(kIdle);    // Auto transition to TX after successfull receive
+        SetState(kIdle);    // Auto transition to RX after successfull receive
 
         // For oscillo debug purposes
-        GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
+        GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
         // StartTimerTO_TX();    // use TX_timeout in order to be sure to restart with TX only on Master if time outs
-#else
-    SetState(kSwitchTx);
-#endif  // qNoRx2TxAutoTransition
+
         DecodeReceivedMsg();
         break;
 
     case kErrorRx:
         // Error on RX
-#if (qAutoTransition)
         SetState(kIdle);    // Auto transition to RX after unsuccessfull receive
 
         // For oscillo debug purposes
         GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
 
         // StartTimerTO_RX();    // use RX_timeout in order to be sure to restart with TX only on Master if time outs
-#else
-    SetState(kSwitchRx);
-#endif  // qAutoTransition
 
         PrintError(gErrorCode, "RX Error");
         break;
 
     case kTimeOutRx:
         // Timeout on RX
-        SetState(kSwitchTx);
+        SetState(kSwitchRx);    // Ne devrait pas arriver
 
         PrintError(gErrorCode, "RX TimeOut");
         break;
@@ -653,44 +646,34 @@ void app_process_action(void)
         break;
 
     case kMsgSent:
-#if (qAutoTransition)
         SetState(kIdle);    // Auto transition to RX after successfull transmit
 
         // For oscillo debug purposes
         GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
         // StartTimerTO_RX();    // use RX_timeout in order to be sure to restart with TX only on Master if time outs
-#else
-    SetState(kSwitchRx);  // bidirectional
-#endif  // qAutoTransition
+
         DisplaySentMsg();
         // Indicate TX in progress on LED1
         sl_led_toggle(&sl_led_led1);
         break;
 
     case kErrorTx:
-        // SetState(kIdle);    // Auto transition to RX after unsuccessfull transmit
+        SetState(kSwitchTx);            // Force to retransmit
 
-        // For oscillo debug purposes
-        GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
         // StartTimerTO_RX();    // use RX_timeout in order to be sure to restart with TX only on Master if time outs
-
-        SetState(kSwitchTx);
 
         PrintError(gErrorCode, "TX Error");
         break;
 
     case kTimeOutTx:
         // Timeout on TX
-#if (qRx2TxAutoTransition)
-        SetState(kSwitchTx);
-#else // !qRx2TxAutoTransition
-    SetState(kSwitchRx);
-#endif  // qRx2TxAutoTransition
+        SetState(kSwitchTx);            // End of cycle
 
         PrintError(gErrorCode, "TX TimeOut");
         break;
 
     case kSwitchTx:
+
         radio_state = RAIL_GetRadioState(gRailHandle);
 
         if ((radio_state != RAIL_RF_STATE_TX_ACTIVE) || (radio_state != RAIL_RF_STATE_RX_ACTIVE))
@@ -735,7 +718,7 @@ void app_process_action(void)
 
         gTX_counter_old = gTX_counter;
         // gRX_counter_old = gRX_counter;
-        memcpy(gRX_counter_old, gRX_counter, sizeof(uint8_t));
+        memcpy((uint32_t *)gRX_counter_old, (uint32_t *)gRX_counter, MAX_SLAVE);
     }
 }
 

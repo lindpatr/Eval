@@ -38,6 +38,10 @@
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
+#define qMASTER 1
+#define MAX_SLAVE 255
+#define MASTER_ID MAX_SLAVE
+
 #define qPrintTX        0     // Print out sent data on serial COM
 #define qPrintRX        0     // Print out received data on serial COM
 #define qPrintEvents    1     // Print out events on serial COM
@@ -61,7 +65,7 @@
 
 // Timeout for Start RX and TX RAIL functions
 #define RX_TIMEOUT  (500U)              // in us
-#define TX_TIMEOUT  ((uint32_t)(0.1f*SEC))             // in us
+#define TX_TIMEOUT  (900U/*(uint32_t)(0.1f*SEC)*/)             // in us
 
 // -----------------------------------------------------------------------------
 //                                Global Variables

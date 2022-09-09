@@ -38,7 +38,9 @@
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
-#define SLAVE_TX_START	500000	// 500 ma, for debug purposes only
+#define qSLAVE 1
+#define MAX_SLAVE 255
+#define MASTER_ID MAX_SLAVE
 
 #define qPrintTX        0     // Print out sent data on serial COM
 #define qPrintRX        0     // Print out received data on serial COM

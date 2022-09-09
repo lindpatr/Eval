@@ -35,6 +35,7 @@
 // -----------------------------------------------------------------------------
 #include <stdint.h>
 #include "rail.h"
+#include "app_init.h"
 
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
@@ -44,11 +45,11 @@
 // -----------------------------------------------------------------------------
 //                                Global Variables
 // -----------------------------------------------------------------------------
-extern volatile uint32_t gRX_counter[sizeof(uint8_t)];
+extern volatile uint32_t gRX_counter[MAX_SLAVE];
 extern volatile uint32_t gTX_counter;
 extern volatile uint32_t gTX_counter_old;
-extern volatile uint32_t gRX_counter_old[sizeof(uint8_t)];
-extern uint32_t gRX_counter_prev[sizeof(uint8_t)];
+extern volatile uint32_t gRX_counter_old[MAX_SLAVE];
+extern uint32_t gRX_counter_prev[MAX_SLAVE];
 
 // -----------------------------------------------------------------------------
 //                          Public Function Declarations
