@@ -51,12 +51,10 @@
 #include "glib.h"
 #include "printf.h"
 
-
 #if defined(RAIL0_CHANNEL_GROUP_1_PROFILE_WISUN_OFDM)
 #include "sl_rail_util_pa_config.h"
 #include "rail_chip_specific.h"
 #endif
-
 
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
@@ -66,9 +64,9 @@
 //                          Static Function Declarations
 // -----------------------------------------------------------------------------
 /*****************************************************************************
-* Checks phy setting to avoid errors at packet sending
-*****************************************************************************/
-static void validation_check(void);
+ * Command line user defined
+ *****************************************************************************/
+void cli_user_init(void);
 
 // -----------------------------------------------------------------------------
 //                                Global Variables
@@ -80,8 +78,6 @@ static void validation_check(void);
 volatile RAIL_Handle_t gRailHandle;
 /// A static var for RX schedule config
 RAIL_ScheduleRxConfig_t gRailScheduleCfgRX;
-/// A static var for TX schedule config
-RAIL_ScheduleTxConfig_t gRailScheduleCfgTX;
 /// A static var for RX transition
 RAIL_StateTransitions_t gRailTransitionRX;
 /// A static var for TX transition
@@ -106,53 +102,77 @@ static GLIB_Context_t gGlibContext;
  ******************************************************************************/
 void graphics_init(void)
 {
-  EMSTATUS status;
+	EMSTATUS status;
+	char textBuf[32];
 
-  /* Initialize the DMD module for the DISPLAY device driver. */
-  status = DMD_init(0);
-  if (DMD_OK != status)
-  {
+	/* Initialize the DMD module for the DISPLAY device driver. */
+	status = DMD_init(0);
+	if (DMD_OK != status)
+	{
 #if (qPrintErrorsL1)
-    app_log_error("Error DMD_init (%d)\n", status);
+		app_log_error("Error DMD_init (%d)\n", status);
 #endif  //qPrintErrorsL1
-    return;
-  }
+		return;
+	}
 
-  status = GLIB_contextInit(&gGlibContext);
-  if (GLIB_OK != status)
-  {
+	status = GLIB_contextInit(&gGlibContext);
+	if (GLIB_OK != status)
+	{
 #if (qPrintErrorsL1)
-    app_log_error("Error GLIB_contextInit (%d)\n", status);
+		app_log_error("Error GLIB_contextInit (%d)\n", status);
 #endif  //qPrintErrorsL1
-    return;
-  }
+		return;
+	}
 
-  gGlibContext.backgroundColor = White;
-  gGlibContext.foregroundColor = Black;
+	gGlibContext.backgroundColor = White;
+	gGlibContext.foregroundColor = Black;
 
-  // Clear what's currently on screen
-  GLIB_clear(&gGlibContext);
+	// Clear what's currently on screen
+	GLIB_clear(&gGlibContext);
 
-  GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
+	GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
 
-  GLIB_drawStringOnLine(&gGlibContext, "****************", 1, GLIB_ALIGN_CENTER, 0, 0, 0);
-  GLIB_drawStringOnLine(&gGlibContext, "* SLOT PROTOCOL*", 2, GLIB_ALIGN_CENTER, 0, 0, 0);
-#if (qMaster)
-  GLIB_drawStringOnLine(&gGlibContext, "*   (Master)   *", 3, GLIB_ALIGN_CENTER, 0, 0, 0);
-#else
-  GLIB_drawStringOnLine(&gGlibContext, "*   (Slave)    *", 3, GLIB_ALIGN_CENTER, 0, 0, 0);
-#endif  // qMaster
-  GLIB_drawStringOnLine(&gGlibContext, "****************", 4, GLIB_ALIGN_CENTER, 0, 0, 0);
-  GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNormal8x8);
-  GLIB_drawStringOnLine(&gGlibContext, "Press BTN0", 6, GLIB_ALIGN_CENTER, 0, 0, 0);
-  GLIB_drawStringOnLine(&gGlibContext, "to display", 7, GLIB_ALIGN_CENTER, 0, 0, 0);
-  GLIB_drawStringOnLine(&gGlibContext, "statistics", 8, GLIB_ALIGN_CENTER, 0, 0, 0);
+	GLIB_drawStringOnLine(&gGlibContext, "******************", 1, GLIB_ALIGN_CENTER, 0, 0, 0);
+	GLIB_drawStringOnLine(&gGlibContext, "* SLOT PROTOCOL  *", 2, GLIB_ALIGN_CENTER, 0, 0, 0);
+	snprintf(textBuf, sizeof(textBuf),   "* Master Adr %03d *", MASTER_ADDR);		// TODO Replace MASTER_ADDR by Addr read in the info structure
+	GLIB_drawStringOnLine(&gGlibContext, textBuf, 3, GLIB_ALIGN_CENTER, 0, 0, 0);
+	GLIB_drawStringOnLine(&gGlibContext, "******************", 4, GLIB_ALIGN_CENTER, 0, 0, 0);
 
-  GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
-  GLIB_drawStringOnLine(&gGlibContext, "*** STOPPED ***", 12, GLIB_ALIGN_CENTER, 0, 0, 0);
+	GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNormal8x8);
+	GLIB_drawStringOnLine(&gGlibContext, "Press BTN0", 6, GLIB_ALIGN_CENTER, 0, 0, 0);
+	GLIB_drawStringOnLine(&gGlibContext, "to start", 7, GLIB_ALIGN_CENTER, 0, 0, 0);
+	GLIB_drawStringOnLine(&gGlibContext, "processing", 8, GLIB_ALIGN_CENTER, 0, 0, 0);
 
-  // Force a redraw
-  DMD_updateDisplay();
+	GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
+	snprintf(textBuf, sizeof(textBuf), "0x%llX", SYSTEM_GetUnique());
+	GLIB_drawStringOnLine(&gGlibContext, textBuf, 12, GLIB_ALIGN_CENTER, 0, 0, 0);
+
+	// Force a redraw
+	DMD_updateDisplay();
+	if (GLIB_OK != status)
+	{
+#if (qPrintErrorsL1)
+		app_log_error("Error DMD_updateDisplay (%d)\n", status);
+#endif  //qPrintErrorsL1
+		return;
+	}
+}
+
+/*****************************************************************************
+ * Checks phy setting to avoid errors at packet sending
+ *****************************************************************************/
+static void validation_check(void)
+{
+	_Static_assert(SL_RAIL_UTIL_INIT_PROTOCOL_INST0_DEFAULT == SL_RAIL_UTIL_PROTOCOL_PROPRIETARY,
+			"Please use the Flex (RAIL) - Simple TRX Standards sample app instead, which is designed to show the protocol usage.");
+#if defined(RAIL0_CHANNEL_GROUP_1_PROFILE_WISUN_OFDM) && !defined(HARDWARE_BOARD_HAS_EFF)
+	_Static_assert(SL_RAIL_UTIL_PA_SELECTION_SUBGHZ == RAIL_TX_POWER_MODE_OFDM_PA,
+			"Please use the OFDM PA settings in the sl_rail_util_pa_config.h for OFDM phys.");
+#endif
+#if defined(RAIL0_CHANNEL_GROUP_1_PROFILE_WISUN_OFDM) && RAIL_SUPPORTS_EFF && defined(HARDWARE_BOARD_HAS_EFF)
+	_Static_assert(SL_RAIL_UTIL_PA_SELECTION_SUBGHZ >= RAIL_TX_POWER_MODE_OFDM_PA_EFF_30DBM,
+			"Please use the OFDM PA for EFF settings in the sl_rail_util_pa_config.h for OFDM phys.");
+#endif
 }
 
 // -----------------------------------------------------------------------------
@@ -164,121 +184,99 @@ void graphics_init(void)
  *****************************************************************************/
 void app_init(void)
 {
-  RAIL_Status_t status = RAIL_STATUS_NO_ERROR;
+	RAIL_Status_t status = RAIL_STATUS_NO_ERROR;
 
-  validation_check();
+	validation_check();
 
-  // Get RAIL handle, used later by the application
-  gRailHandle = sl_rail_util_get_handle(SL_RAIL_UTIL_HANDLE_INST0);
+	// Get RAIL handle, used later by the application
+	gRailHandle = sl_rail_util_get_handle(SL_RAIL_UTIL_HANDLE_INST0);
 
-  // Turn OFF LEDs
-  sl_led_turn_off(&sl_led_led0);
-  sl_led_turn_off(&sl_led_led1);
+	// Turn OFF LEDs
+	sl_led_turn_off(&sl_led_led0);
+	sl_led_turn_off(&sl_led_led1);
 
-  // Debug pins init + set to 0
-  GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_TX, gpioModePushPull, RESET);
-  GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_RX, gpioModePushPull, RESET);
-  GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_MISC, gpioModePushPull, RESET);
+	// Debug pins init + set to 0
+	GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_TX, gpioModePushPull, RESET);
+	GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_RX, gpioModePushPull, RESET);
+	GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_MISC, gpioModePushPull, RESET);
 
-#if (qUseScheduleRx)
-  // Set timeout for scheduled RX
-  gRailScheduleCfgRX.start = 0;
-  gRailScheduleCfgRX.startMode = RAIL_TIME_DELAY;
-  gRailScheduleCfgRX.end = RX_TIMEOUT;
-  gRailScheduleCfgRX.endMode = RAIL_TIME_DELAY;
-  gRailScheduleCfgRX.hardWindowEnd = false;
-  gRailScheduleCfgRX.rxTransitionEndSchedule = false;
-#endif  // qUseScheduleRx
+	// Read Slave address
+	// TODO Read Slave address and replace SLAVE_ADDR const
 
-#if (qUseScheduleTx)
-  // Set timeout for scheduled TX
-  gRailScheduleCfgTX.when = TX_START;
-  gRailScheduleCfgTX.mode = RAIL_TIME_DELAY;
-  gRailScheduleCfgTX.txDuringRx = RAIL_SCHEDULED_TX_DURING_RX_ABORT_TX;   // ou RAIL_SCHEDULED_TX_DURING_RX_POSTPONE_TX --> à voir?
-#endif  // qUseScheduleTx
+	// Set timeout for scheduled RX
+	// TODO Scheduled RX: à voir si utilisé?
+	gRailScheduleCfgRX.start = 0;
+	gRailScheduleCfgRX.startMode = RAIL_TIME_DELAY;
+	gRailScheduleCfgRX.end = RX_TIMEOUT;
+	gRailScheduleCfgRX.endMode = RAIL_TIME_DELAY;
+	gRailScheduleCfgRX.hardWindowEnd = false;
+	gRailScheduleCfgRX.rxTransitionEndSchedule = false;
 
-#if (qAutoTransition)
-  // Set RX and TX transition
-#if (qRx2TxAutoTransition)
-  gRailTransitionRX.success = RAIL_RF_STATE_TX;   // RX Ok  -> TX
-#else
-  gRailTransitionRX.success = RAIL_RF_STATE_RX;   // RX Ok  -> RX
-#endif  // qRx2TxAutoTransition
-  gRailTransitionRX.error = RAIL_RF_STATE_RX;     // RX Err -> RX
-  gRailTransitionTX.success = RAIL_RF_STATE_RX;   // TX Ok  -> RX
-  gRailTransitionTX.error = RAIL_RF_STATE_RX;     // TX Err -> RX
+	// Set RX and TX transition
+	// TODO RX and TX auto transition: à voir si utilisé?
+	gRailTransitionRX.success = RAIL_RF_STATE_TX;   // RX Ok  -> TX
+	gRailTransitionRX.error = RAIL_RF_STATE_RX;     // RX Err -> RX
+	gRailTransitionTX.success = RAIL_RF_STATE_RX;   // TX Ok  -> RX
+	gRailTransitionTX.error = RAIL_RF_STATE_RX;     // TX Err -> RX
 
-  status = RAIL_SetRxTransitions(gRailHandle, &gRailTransitionRX);
-  if (status != RAIL_STATUS_NO_ERROR)
-  {
+	status = RAIL_SetRxTransitions(gRailHandle, &gRailTransitionRX);
+	if (status != RAIL_STATUS_NO_ERROR)
+	{
 #if (qPrintErrorsL1)
-        app_log_warning("Warning RAIL_SetRxTransitions (%d)\n", status);
-  #endif  // qPrintErrorsL1
-  }
-  status = RAIL_SetTxTransitions(gRailHandle, &gRailTransitionTX);
-  if (status != RAIL_STATUS_NO_ERROR)
-  {
-#if (qPrintErrorsL1)
-        app_log_warning("Warning RAIL_SetTxTransitions (%d)\n", status);
-  #endif  // qPrintErrorsL1
-  }
-
-  // State timings
-  gRailStateTimings.idleToRx = (TRANSITION_TIMING_BESTOF ? 0 : 100);
-  gRailStateTimings.txToRx = (TRANSITION_TIMING_BESTOF ? 0 : 182);
-  gRailStateTimings.idleToTx = (TRANSITION_TIMING_BESTOF ? 0 : 100);
-  gRailStateTimings.rxToTx = (TRANSITION_TIMING_BESTOF ? 0 : 192);
-  status = RAIL_SetStateTiming(gRailHandle, &gRailStateTimings);
-  if (status != RAIL_STATUS_NO_ERROR)
-  {
-#if (qPrintErrorsL1)
-    app_log_warning("Warning RAIL_SetStateTiming (%d)\n", status);
+		app_log_warning("Warning RAIL_SetRxTransitions (%d)\n", status);
 #endif  // qPrintErrorsL1
-  }
-#endif  // qAutoTransition
+	}
+	status = RAIL_SetTxTransitions(gRailHandle, &gRailTransitionTX);
+	if (status != RAIL_STATUS_NO_ERROR)
+	{
+#if (qPrintErrorsL1)
+		app_log_warning("Warning RAIL_SetTxTransitions (%d)\n", status);
+#endif  // qPrintErrorsL1
+	}
 
-  graphics_init();
+	// State timings
+	if (TRANSITION_TIMING_BEST_EFFORT)
+	{
+		gRailStateTimings.idleToRx = 0;
+		gRailStateTimings.txToRx = 0;
+		gRailStateTimings.idleToTx = 0;
+		gRailStateTimings.rxToTx = 0;
+		status = RAIL_SetStateTiming(gRailHandle, &gRailStateTimings);
+		if (status != RAIL_STATUS_NO_ERROR)
+		{
+#if (qPrintErrorsL1)
+			app_log_warning("Warning RAIL_SetStateTiming (%d)\n", status);
+#endif  // qPrintErrorsL1
+		}
+	}
+	// else keep value from RAIL configurator!
 
-  // Start reception
-//  status = RAIL_StartRx(gRailHandle, CHANNEL, NULL);
-//  if (status != RAIL_STATUS_NO_ERROR)
-//  {
-//#if (qPrintErrorsL1)
-//    app_log_warning("Warning RAIL_StartRx (%d)\n", status);
-//#endif  // qDebugPrintErr
-//  }
+	graphics_init();
 
-  // Print Id software
-  const char string[] = "\nTest EFR32xG32 - ";
-  app_log_info("%s", string);
+	// User commands add to CLI
+	cli_user_init();
 
-  const char string2[] = "Master";
-  const char string3[] = "SLOT PROTOCOL";
+	// Print Id software
+	const char string[] = "\nTest EFR32xG32 - ";
+	app_log_info("%s", string);
 
-  // CLI info message
-  app_log_info("%s (%s) ID: 0x%llx\n", string2, string3, SYSTEM_GetUnique());
-  app_log_info("--------------------------------\n");
+	const char string2[] = "Master";
+	const char string3[] = "Slot Protocol";
 
-  // Set up timers
-  RAIL_ConfigMultiTimer(true);
+	// CLI info message
+	app_log_info("%s Addr %03d (%s)\n", string2, MASTER_ADDR, string3);		// TODO Replace MASTER_ADDR by Addr read in the info structure
+	app_log_info("------------------------------------------------\n");
+
+	// Set up timers
+	if (!RAIL_ConfigMultiTimer(true))
+	{
+#if (qPrintErrorsL1)
+		app_log_warning("Warning RAIL_ConfigMultiTimer failed\n");
+#endif  // qPrintErrorsL1
+	}
 }
 
 // -----------------------------------------------------------------------------
 //                          Static Function Definitions
 // -----------------------------------------------------------------------------
-/*****************************************************************************
-* Checks phy setting to avoid errors at packet sending
-*****************************************************************************/
-static void validation_check(void)
-{
-  _Static_assert(SL_RAIL_UTIL_INIT_PROTOCOL_INST0_DEFAULT == SL_RAIL_UTIL_PROTOCOL_PROPRIETARY,
-                 "Please use the Flex (RAIL) - Simple TRX Standards sample app instead, which is designed to show the protocol usage.");
-#if defined(RAIL0_CHANNEL_GROUP_1_PROFILE_WISUN_OFDM) && !defined(HARDWARE_BOARD_HAS_EFF)
-  _Static_assert(SL_RAIL_UTIL_PA_SELECTION_SUBGHZ == RAIL_TX_POWER_MODE_OFDM_PA,
-                 "Please use the OFDM PA settings in the sl_rail_util_pa_config.h for OFDM phys.");
-#endif
-#if defined(RAIL0_CHANNEL_GROUP_1_PROFILE_WISUN_OFDM) && RAIL_SUPPORTS_EFF && defined(HARDWARE_BOARD_HAS_EFF)
-  _Static_assert(SL_RAIL_UTIL_PA_SELECTION_SUBGHZ >= RAIL_TX_POWER_MODE_OFDM_PA_EFF_30DBM,
-                 "Please use the OFDM PA for EFF settings in the sl_rail_util_pa_config.h for OFDM phys.");
-#endif
-}
+
