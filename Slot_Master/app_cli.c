@@ -113,7 +113,7 @@ void cli_info(sl_cli_command_arg_t *arguments)
 
 	app_log_info("Info:\n");
 	app_log_info("  MCU Id: 0x%llx\n", SYSTEM_GetUnique());
-	app_log_info("  Role  : %s\n", "Slave");
+	app_log_info("  Role  : %s\n", "Master");
 	app_log_info("  Addr  : %03d\n", MASTER_ADDR);		// TODO Replace MASTER_ADDR by Addr read in the info structure
 }
 
