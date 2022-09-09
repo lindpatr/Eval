@@ -13,6 +13,8 @@
 #include "app_log.h"
 
 #define SIZE_UINT64_IN_BITS (int)(8*sizeof(uint64_t))
+#define TIMER_TIMEOUT_RX_SHIFT  (RAIL_EVENT_DETECT_RSSI_THRESHOLD_SHIFT+1)
+#define TIMER_TIMEOUT_TX_SHIFT  (TIMER_TIMEOUT_RX_SHIFT+1)
 
 /// Tables for error statistics
 static volatile uint32_t gCB_tab[SIZE_UINT64_IN_BITS ] = { 0 };     // index: see RAIL_ENUM_GENERIC(RAIL_Events_t, uint64_t) in rail_types.h
@@ -66,7 +68,9 @@ static char *gCB_descr_tab[SIZE_UINT64_IN_BITS ] =
 		"SIGNAL_DETECTED     ",
 		"IEEE802154_MSW_START",
 		"IEEE802154_MSW_END  ",
-		"DETECT_RSSI_THRSHOLD" };
+		"DETECT_RSSI_THRSHOLD",
+        "TIMER_TIMEOUT_RX    ",
+        "TIMER_TIMEOUT_TX    "};
 #endif	// qPrintEvents
 
 extern uint32_t gTX_tab[7];    // 0 = #TX_OK  	1 = #TX_Err   2 = ND      		3 = #Retransmit   	4 = ND          		5 = #TX_Invalid   	6 = ND

@@ -251,11 +251,13 @@ void timer_callback(RAIL_MultiTimer_t *tmr, RAIL_Time_t expectedTimeOfEvent, voi
 	else if (tmr == &gRX_timeout) // used with standard StartRx when RAIL_ScheduleRx isn't used
 	{
 		gRX_timeout_error = true;
+	    gCB_tab[TIMER_TIMEOUT_RX_SHIFT]++;
 		GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_MISC);
 	}
 	else if (tmr == &gTX_timeout) // used with standard StartTx when RAIL_StartScheduledTx isn't used
 	{
 		gTX_timeout_error = true;
+		gCB_tab[TIMER_TIMEOUT_TX_SHIFT]++;
 	}
 }
 
@@ -509,6 +511,7 @@ void app_process_action(void)
 					 gCB_tab[RAIL_EVENT_TX_UNDERFLOW_SHIFT] +
 					 gCB_tab[RAIL_EVENT_TX_CHANNEL_BUSY_SHIFT] +
 					 gCB_tab[RAIL_EVENT_TX_SCHEDULED_TX_MISSED_SHIFT];
+		prepare_packet_to_tx();
 
 		SetState(kErrorTx);
 	}
