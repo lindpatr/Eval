@@ -10,67 +10,68 @@
 
 #include <stdint.h>
 #include "app_process.h"
+#include "app_log.h"
 
 #define SIZE_UINT64_IN_BITS (int)(8*sizeof(uint64_t))
 
 /// Tables for error statistics
-static volatile uint32_t gCB_tab[SIZE_UINT64_IN_BITS] = {0};     // index: see RAIL_ENUM_GENERIC(RAIL_Events_t, uint64_t) in rail_types.h
+static volatile uint32_t gCB_tab[SIZE_UINT64_IN_BITS ] = { 0 };     // index: see RAIL_ENUM_GENERIC(RAIL_Events_t, uint64_t) in rail_types.h
 
-static char *gCB_descr_tab[SIZE_UINT64_IN_BITS] = {
-      "RSSI_AVERAGE_DONE   ",
-      "RX_ACK_TIMEOUT      ",
-      "RX_FIFO_ALMOST_FULL ",
-      "RX_PACKET_RECEIVED  ",
-      "RX_PREAMBLE_LOST    ",
-      "RX_PREAMBLE_DETECT  ",
-      "RX_SYNC1_DETECT     ",
-      "RX_SYNC2_DETECT     ",
-      "RX_FRAME_ERROR      ",
-      "RX_FIFO_FULL        ",
-      "RX_FIFO_OVERFLOW    ",
-      "RX_ADDRESS_FILTERED ",
-      "RX_TIMEOUT          ",
-      "SCHEDULED_xX_STARTED",
-      "RX_SCHEDULED_RX_END ",
-      "RX_SCHEDULED_RX_MISS",
-      "RX_PACKET_ABORTED   ",
-      "RX_FILTER_PASSED    ",
-      "RX_TIMING_LOST      ",
-      "RX_TIMING_DETECT    ",
-      "RX_DUTY_CYCLE_RX_END",
-      "MFM_TX_BUFFER_DONE  ",
-      "ZWAVE_BEAM          ",
-      "TX_FIFO_ALMOST_EMPTY",
-      "TX_PACKET_SENT      ",
-      "TXACK_PACKET_SENT   ",
-      "TX_ABORTED          ",
-      "TXACK_ABORTED       ",
-      "TX_BLOCKED          ",
-      "TXACK_BLOCKED       ",
-      "TX_UNDERFLOW        ",
-      "TXACK_UNDERFLOW     ",
-      "TX_CHANNEL_CLEAR    ",
-      "TX_CHANNEL_BUSY     ",
-      "TX_CCA_RETRY        ",
-      "TX_START_CCA        ",
-      "TX_STARTED          ",
-      "TX_SCHEDULED_TX_MISS",
-      "CONFIG_UNSCHEDULED  ",
-      "CONFIG_SCHEDULED    ",
-      "SCHEDULER_STATUS    ",
-      "CAL_NEEDED          ",
-      "RF_SENSED           ",
-      "PA_PROTECTION       ",
-      "SIGNAL_DETECTED     ",
-      "IEEE802154_MSW_START",
-      "IEEE802154_MSW_END  ",
-      "DETECT_RSSI_THRSHOLD"};
+#if (qPrintEvents)
+static char *gCB_descr_tab[SIZE_UINT64_IN_BITS ] =
+{ 		"RSSI_AVERAGE_DONE   ",
+		"RX_ACK_TIMEOUT      ",
+		"RX_FIFO_ALMOST_FULL ",
+		"RX_PACKET_RECEIVED  ",
+		"RX_PREAMBLE_LOST    ",
+		"RX_PREAMBLE_DETECT  ",
+		"RX_SYNC1_DETECT     ",
+		"RX_SYNC2_DETECT     ",
+		"RX_FRAME_ERROR      ",
+		"RX_FIFO_FULL        ",
+		"RX_FIFO_OVERFLOW    ",
+		"RX_ADDRESS_FILTERED ",
+		"RX_TIMEOUT          ",
+		"SCHEDULED_xX_STARTED",
+		"RX_SCHEDULED_RX_END ",
+		"RX_SCHEDULED_RX_MISS",
+		"RX_PACKET_ABORTED   ",
+		"RX_FILTER_PASSED    ",
+		"RX_TIMING_LOST      ",
+		"RX_TIMING_DETECT    ",
+		"RX_DUTY_CYCLE_RX_END",
+		"MFM_TX_BUFFER_DONE  ",
+		"ZWAVE_BEAM          ",
+		"TX_FIFO_ALMOST_EMPTY",
+		"TX_PACKET_SENT      ",
+		"TXACK_PACKET_SENT   ",
+		"TX_ABORTED          ",
+		"TXACK_ABORTED       ",
+		"TX_BLOCKED          ",
+		"TXACK_BLOCKED       ",
+		"TX_UNDERFLOW        ",
+		"TXACK_UNDERFLOW     ",
+		"TX_CHANNEL_CLEAR    ",
+		"TX_CHANNEL_BUSY     ",
+		"TX_CCA_RETRY        ",
+		"TX_START_CCA        ",
+		"TX_STARTED          ",
+		"TX_SCHEDULED_TX_MISS",
+		"CONFIG_UNSCHEDULED  ",
+		"CONFIG_SCHEDULED    ",
+		"SCHEDULER_STATUS    ",
+		"CAL_NEEDED          ",
+		"RF_SENSED           ",
+		"PA_PROTECTION       ",
+		"SIGNAL_DETECTED     ",
+		"IEEE802154_MSW_START",
+		"IEEE802154_MSW_END  ",
+		"DETECT_RSSI_THRSHOLD" };
+#endif	// qPrintEvents
 
-
-
-extern uint32_t gTX_tab[7];    // 0 = #TX_OK  1 = #TX_Err   2 = ND      3 = #Retransmit   4 = ND          5 = #TX_Invalid   6 = ND
-extern uint32_t gRX_tab[7];    // 0 = #RX_OK  1 = #RX_Err   2 = #RX_TimeOut 3 = #Gap RX count 4 = Max gap RX count  5 = #RX_Invalid   6 = #CRC_Err
-extern uint32_t gCAL_tab[7];   // 0 = #CAL_REQ  1 = #CAL_Err  2 = ND      3 = ND        4 = ND          5 = ND        6 = ND
+extern uint32_t gTX_tab[7];    // 0 = #TX_OK  	1 = #TX_Err   2 = ND      		3 = #Retransmit   	4 = ND          		5 = #TX_Invalid   	6 = ND
+extern uint32_t gRX_tab[7];    // 0 = #RX_OK  	1 = #RX_Err   2 = #RX_TimeOut 	3 = #Gap RX count 	4 = Max gap RX count  	5 = #RX_Invalid   	6 = #CRC_Err
+extern uint32_t gCAL_tab[7];   // 0 = #CAL_REQ  1 = #CAL_Err  2 = ND      		3 = ND        		4 = ND          		5 = ND        		6 = ND
 
 /// Timeout for printing and displaying the statistics
 extern volatile RAIL_Time_t gElapsedTime;
@@ -88,15 +89,11 @@ static __INLINE void DisplayReceivedMsg(const uint8_t *const rx_buffer, uint16_t
     app_log_info("0x%02X, ", rx_buffer[i]);
   }
   app_log_info("\n");
-#else
-  (void) length;    // To avoid warnings
+#else	// To avoid compile warnings
+  	(void) rx_buffer;
+	(void) length;
 #endif
-  // Backup previous data
-  gRX_counter_prev = gRX_counter;
-  // Extract received data
-  gRX_counter = (uint32_t) ((rx_buffer[0/*2*/] << 0) + (rx_buffer[1/*3*/] << 8) + (rx_buffer[2/*4*/] << 16) + (rx_buffer[3/*5*/] << 24));
 }
-
 
 /******************************************************************************
  * DisplaySentMsg : print sent data
@@ -143,8 +140,8 @@ static __INLINE void DecodeEvents(RAIL_Events_t *events)
 
     ev >>= 1;
   }
-#else
-  (void) events;      // To avoid warnings
+#else	// To avoid compile warnings
+	(void) events;
 #endif  // qPrintEvents
 }
 
@@ -153,34 +150,33 @@ static __INLINE void DecodeEvents(RAIL_Events_t *events)
  *****************************************************************************/
 static __INLINE void DisplayStat(void)
 {
-  // Statistics
-  float deltaTime = (float)(gElapsedTime - gOldElapsedTime) / 1000000.0f;
-  float localStat = (float)(gTX_counter + gRX_counter - gTX_counter_old - gRX_counter_old) / deltaTime;
-  float localStat2 = (10.0f * 10100.0f) / localStat;
-  float localStat3 = 100.0f * (float) (gTX_tab[1] + gTX_tab[2]) / (float) gTX_counter;
-  float localStat4 = 100.0f * (float) (gRX_tab[1] + gRX_tab[2] + gRX_tab[6]) / (float) gRX_counter;
+	// Statistics
+	float deltaTime = (float) (gElapsedTime - gOldElapsedTime) / 1000000.0f;
+	float localStat = (float) (gTX_counter + gRX_counter - gTX_counter_old - gRX_counter_old) / deltaTime;
+	float localStat2 = (10.0f * 10100.0f) / localStat;
+	float localStat3 = 100.0f * (float) (gTX_tab[1] + gTX_tab[2] + gTX_tab[5]) / (float) gTX_counter;
+	float localStat4 = 100.0f * (float) (gRX_tab[1] + gRX_tab[2] + gRX_tab[5] + gRX_tab[6]) / (float) gRX_counter;
 
-  // Print on serial COM
-  app_log_info("\n");
-  app_log_info("Performance statistics\n");
-  app_log_info("----------------------\n");
-  app_log_info("Elapsed time       : %0.2f sec\n", deltaTime);
+	// Print on serial COM
+	app_log_info("\n");
+	app_log_info("Performance statistics\n");
+	app_log_info("----------------------\n");
+	app_log_info("Elapsed time       : %0.2f sec\n", deltaTime);
 
-  app_log_info("Count (#TX)        : %lu\n", gTX_tab[0]);
-  app_log_info("Count (#RX)        : %lu\n", gRX_tab[0]);
+	app_log_info("#Counter (TX)      : %lu\n", gTX_tab[0]);
+	app_log_info("#Counter (RX)      : %lu\n", gRX_tab[0]);
 
-  app_log_info("TX Error see below : %0.3f%%\n", localStat3);
-  app_log_info("#Err/#TO/#Inv      : %lu/%lu/%lu\n", gTX_tab[1], gTX_tab[2], gTX_tab[5]);
-  app_log_info("TX retransmit count: %lu\n", gTX_tab[3]);
-  app_log_info("RX Error see below : %0.3f%%\n", localStat4);
-  app_log_info("#Err/#TO/#Inv/#CRC : %lu/%lu/%lu/%lu\n", gRX_tab[1], gRX_tab[2], gRX_tab[5], gRX_tab[6]);
-  app_log_info("Counter #gap       : %lu (max:%d)\n", gRX_tab[3], gRX_tab[4]);
+	app_log_info("TX Err (see below) : %0.3f%%\n", localStat3);
+	app_log_info("#Err/#TO/#Inv      : %lu/%lu/%lu\n", gTX_tab[1], gTX_tab[2], gTX_tab[5]);
+	app_log_info("TX retransmit count: %lu\n", gTX_tab[3]);
+	app_log_info("RX Err (see below) : %0.3f%%\n", localStat4);
+	app_log_info("#Err/#TO/#Inv/#CRC : %lu/%lu/%lu/%lu\n", gRX_tab[1], gRX_tab[2], gRX_tab[5], gRX_tab[6]);
+	app_log_info("Counter #gap (max) : %lu (%d)\n", gRX_tab[3], gRX_tab[4]);
 
-  app_log_info("Cal request (#Err) : %lu (%lu)\n", gCAL_tab[0], gCAL_tab[1]);
-  app_log_info("Rate (loop 100)    : %0.2f msg/s (%0.2f ms)\n", localStat, localStat2);
+	app_log_info("Cal #request (#Err): %lu (%lu)\n", gCAL_tab[0], gCAL_tab[1]);
+	app_log_info("Rate (loop 100)    : %0.2f msg/s (%0.2f ms)\n", localStat, localStat2);
 
-  DisplayEvents();
+	DisplayEvents();
 }
-
 
 #endif /* APP_STAT_H_ */
