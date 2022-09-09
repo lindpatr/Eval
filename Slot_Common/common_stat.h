@@ -5,8 +5,8 @@
  *      Author: BEL-LinPat
  */
 
-#ifndef APP_STAT_H_
-#define APP_STAT_H_
+#ifndef COMMON_STAT_H_
+#define COMMON_STAT_H_
 
 #include <stdint.h>
 #include "app_process.h"
@@ -68,7 +68,7 @@ static char *gCB_descr_tab[SIZE_UINT64_IN_BITS ] =
 		"SIGNAL_DETECTED     ",
 		"IEEE802154_MSW_START",
 		"IEEE802154_MSW_END  ",
-        "DETECT_RSSI_THRSHOLD",
+		"DETECT_RSSI_THRSHOLD",
         "TIMER_TIMEOUT_RX    ",
         "TIMER_TIMEOUT_TX    "};
 #endif	// qPrintEvents

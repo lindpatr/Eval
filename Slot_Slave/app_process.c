@@ -43,7 +43,7 @@
 #include "sl_flex_packet_asm.h"
 
 #include "app_init.h"
-#include "app_stat.h"
+#include "common_stat.h"
 
 // Specific to LCD display
 #include "dmd.h"
@@ -141,10 +141,10 @@ volatile uint32_t gRX_counter_old = 0UL;
 uint32_t gRX_counter_prev = 0UL;
 
 /// Various flags
-//volatile bool gStartProcess = false;			// Flag, indicating a start process request (button was pressed / CLI start request has occurred)
+volatile bool gStartProcess = false;			// Flag, indicating a start process request (button was pressed / CLI start request has occurred)
 volatile uint32_t gStatDelay = STAT_PERIOD_us;	// Flag, indicating stat period on CLI
 static bool gRX_first = false;					// Indicate first RX packet received on Slave to start statistics
-
+volatile bool gBtnPressed;                      // Button pressed simulation with CLI, start process
 
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations

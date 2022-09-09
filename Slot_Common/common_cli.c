@@ -38,7 +38,7 @@
 #include "sl_cli.h"
 
 #include "app_init.h"
-#include "app_stat.h"
+#include "common_stat.h"
 
 
 // -----------------------------------------------------------------------------
@@ -57,11 +57,13 @@ void cli_req_stat(sl_cli_command_arg_t *arguments);
 //                                Global Variables
 // -----------------------------------------------------------------------------
 /// Flag, indicating a start process request (button was pressed / CLI start request has occurred)
-//extern volatile bool gStartProcess;
+extern volatile bool gStartProcess;
 /// Flag, indicating a request to print statistics (button was pressed / CLI statistics request has occurred)
 extern volatile bool gStatReq;
 /// Flag, indicating print stat delay on CLI
 extern volatile uint32_t gStatDelay;
+/// Button pressed simulation with CLI, start process
+extern volatile bool gBtnPressed;
 
 // -----------------------------------------------------------------------------
 //                                Static Variables
@@ -109,10 +111,11 @@ void cli_info(sl_cli_command_arg_t *arguments)
 {
 	(void) arguments;
 
-	app_log_info("Info:\n");
-	app_log_info("  MCU Id: 0x%llx\n", SYSTEM_GetUnique());
-	app_log_info("  Role  : %s\n", "Slave");
-	app_log_info("  Addr  : %03d\n", SLAVE_ADDR);		// TODO Replace SLAVE_ADDR by Addr read in the info structure
+    app_log_info("Info:\n");
+    app_log_info("  MCU Id     : 0x%llx\n", SYSTEM_GetUnique());
+    app_log_info("  Role       : %s\n", gDeviceCfgAddr->name);
+    app_log_info("  Addr       : %03d\n", gDeviceCfgAddr->internalAddr);
+    app_log_info("  Slot [us]  : %06d\n", gDeviceCfgAddr->slotTime);
 }
 
 /******************************************************************************
@@ -151,11 +154,22 @@ void cli_set_period(sl_cli_command_arg_t *arguments)
 void cli_start_process(sl_cli_command_arg_t *arguments)
 {
 	(void) arguments;
-//	gStartProcess = true;
-//	gElapsedTime = RAIL_GetTime();
-//	app_log_info("Start process now ...\n");
-
-	app_log_info("Only available on Master\n");
+	if (gDeviceCfgAddr->ismaster)
+	{
+        if (!gStartProcess)
+        {
+            gBtnPressed = true;
+            gStartProcess = true;
+            gElapsedTime = RAIL_GetTime();
+            app_log_info("Start process now ...\n");
+        }
+        else
+            app_log_info("Process already started!\n");
+	}
+	else
+    {
+        app_log_info("Only available on Master\n");
+    }
 }
 
 /******************************************************************************

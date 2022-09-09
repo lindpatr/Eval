@@ -43,7 +43,7 @@
 #include "sl_flex_packet_asm.h"
 
 #include "app_init.h"
-#include "app_stat.h"
+#include "common_stat.h"
 
 // Specific to LCD display
 #include "dmd.h"

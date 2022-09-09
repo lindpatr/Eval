@@ -41,6 +41,7 @@
 #include "sl_rail_util_init_inst0_config.h"
 #include "sl_rail_util_protocol_types.h"
 #include "rail_config.h"
+#include "app_assert.h"
 
 #include "em_gpio.h"
 #include "app_init.h"
@@ -83,7 +84,8 @@ RAIL_StateTransitions_t gRailTransitionRX;
 RAIL_StateTransitions_t gRailTransitionTX;
 /// A static var for state timings
 RAIL_StateTiming_t gRailStateTimings;
-
+/// A static var that contains config data for the device
+PROT_AddrMap_t* gDeviceCfgAddr;
 // -----------------------------------------------------------------------------
 //                                Static Variables
 // -----------------------------------------------------------------------------
@@ -133,7 +135,7 @@ void graphics_init(void)
 
 	GLIB_drawStringOnLine(&gGlibContext, "******************", 1, GLIB_ALIGN_CENTER, 0, 0, 0);
 	GLIB_drawStringOnLine(&gGlibContext, "* SLOT PROTOCOL  *", 2, GLIB_ALIGN_CENTER, 0, 0, 0);
-	snprintf(textBuf, sizeof(textBuf),   "* Slave Addr %03d *", SLAVE_ADDR);		// TODO Replace SLAVE_ADDR by Addr read in the info structure
+    snprintf(textBuf, sizeof(textBuf),   "* %s Adr %03d *", gDeviceCfgAddr->name, gDeviceCfgAddr->internalAddr);
 	GLIB_drawStringOnLine(&gGlibContext, textBuf, 3, GLIB_ALIGN_CENTER, 0, 0, 0);
 	GLIB_drawStringOnLine(&gGlibContext, "******************", 4, GLIB_ALIGN_CENTER, 0, 0, 0);
 
@@ -186,6 +188,11 @@ void app_init(void)
 	RAIL_Status_t status = RAIL_STATUS_NO_ERROR;
 
 	validation_check();
+
+    /* Get configuration data for my device */
+    gDeviceCfgAddr = common_getConfig(SYSTEM_GetUnique());
+    app_assert(gDeviceCfgAddr != NULL, "Invalid device configuration data (0x%llX)\n", SYSTEM_GetUnique());
+    app_assert(gDeviceCfgAddr->ismaster == false, "Error Master device with Slave software (0x%llX)\n", SYSTEM_GetUnique());
 
 	// Get RAIL handle, used later by the application
 	gRailHandle = sl_rail_util_get_handle(SL_RAIL_UTIL_HANDLE_INST0);
@@ -275,11 +282,10 @@ void app_init(void)
 	const char string[] = "\nTest EFR32xG32 - ";
 	app_log_info("%s", string);
 
-	const char string2[] = "Slave";
 	const char string3[] = "Slot Protocol";
 
 	// CLI info message
-	app_log_info("%s Addr %03d (%s)\n", string2, SLAVE_ADDR, string3);		// TODO Replace SLAVE_ADDR by Addr read in the info structure
+	app_log_info("%s Addr %03d (%s)\n", gDeviceCfgAddr->name, gDeviceCfgAddr->internalAddr, string3);
 	app_log_info("-----------------------------------------------\n");
 
 	// Set up timers

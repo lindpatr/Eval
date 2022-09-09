@@ -34,11 +34,10 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include "rail.h"
-
+#include "common_config.h"
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
-#define SLAVE_ADDR		5	  	// For debug purposes only
 #define SLAVE_TX_START	500000	// 500 ma, for debug purposes only
 
 #define qPrintTX        0     // Print out sent data on serial COM
@@ -79,7 +78,8 @@ extern RAIL_ScheduleTxConfig_t gRailScheduleCfgTX;
 extern RAIL_StateTransitions_t gRailTransitionRX;
 /// A static var for TX transition
 extern RAIL_StateTransitions_t gRailTransitionTX;
-
+/// A static var that contains config data for the device
+extern PROT_AddrMap_t* gDeviceCfgAddr;
 // -----------------------------------------------------------------------------
 //                          Public Function Declarations
 // -----------------------------------------------------------------------------

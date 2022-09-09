@@ -31,6 +31,36 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>Slot_Common</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>Slot_Common/common_cli.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_cli.c</locationURI>
+		</link>
+		<link>
+			<name>Slot_Common/common_config.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_config.c</locationURI>
+		</link>
+		<link>
+			<name>Slot_Common/common_config.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_config.h</locationURI>
+		</link>
+		<link>
+			<name>Slot_Common/common_stat.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_stat.c</locationURI>
+		</link>
+		<link>
+			<name>Slot_Common/common_stat.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_stat.h</locationURI>
+		</link>
+		<link>
 			<name>gecko_sdk_4.1.1/hardware/board/inc/sl_board_control.h</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/hardware/board/inc/sl_board_control.h</locationURI>

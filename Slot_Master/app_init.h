@@ -34,12 +34,10 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include "rail.h"
-
+#include "common_config.h"
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
-#define MASTER_ADDR		255	  // For debug purposes only
-
 #define qPrintTX        0     // Print out sent data on serial COM
 #define qPrintRX        0     // Print out received data on serial COM
 #define qPrintEvents    1     // Print out events on serial COM
@@ -76,7 +74,8 @@ extern RAIL_ScheduleRxConfig_t gRailScheduleCfgRX;
 extern RAIL_StateTransitions_t gRailTransitionRX;
 /// A static var for TX transition
 extern RAIL_StateTransitions_t gRailTransitionTX;
-
+/// A static var that contains config data for the device
+extern PROT_AddrMap_t* gDeviceCfgAddr;
 // -----------------------------------------------------------------------------
 //                          Public Function Declarations
 // -----------------------------------------------------------------------------

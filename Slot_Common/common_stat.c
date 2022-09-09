@@ -5,8 +5,8 @@
  *      Author: BEL-LinPat
  */
 
-#ifndef APP_STAT_H_
-#include "app_stat.h"
+#ifndef COMMON_STAT_H_
+#include "common_stat.h"
 #endif
 
 uint32_t gTX_tab[7] = { 0 };    // 0 = #TX_OK  		1 = #TX_Err   2 = ND      		3 = #Retransmit   	4 = ND          		5 = ND   6 = ND
