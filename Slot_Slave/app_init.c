@@ -136,10 +136,12 @@ void graphics_init(void)
 	snprintf(textBuf, sizeof(textBuf),   "* Slave Addr %03d *", SLAVE_ADDR);		// TODO Replace SLAVE_ADDR by Addr read in the info structure
 	GLIB_drawStringOnLine(&gGlibContext, textBuf, 3, GLIB_ALIGN_CENTER, 0, 0, 0);
 	GLIB_drawStringOnLine(&gGlibContext, "******************", 4, GLIB_ALIGN_CENTER, 0, 0, 0);
+
 	GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNormal8x8);
 	GLIB_drawStringOnLine(&gGlibContext, "Press BTN0 on", 6, GLIB_ALIGN_CENTER, 0, 0, 0);
 	GLIB_drawStringOnLine(&gGlibContext, "Master to start", 7, GLIB_ALIGN_CENTER, 0, 0, 0);
 	GLIB_drawStringOnLine(&gGlibContext, "processing", 8, GLIB_ALIGN_CENTER, 0, 0, 0);
+
 	GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
 	snprintf(textBuf, sizeof(textBuf), "0x%llX", SYSTEM_GetUnique());
 	GLIB_drawStringOnLine(&gGlibContext, textBuf, 12, GLIB_ALIGN_CENTER, 0, 0, 0);

@@ -15,8 +15,7 @@
 #define SIZE_UINT64_IN_BITS (int)(8*sizeof(uint64_t))
 
 /// Tables for error statistics
-static volatile uint32_t gCB_tab[SIZE_UINT64_IN_BITS ] =
-{ 0 };     // index: see RAIL_ENUM_GENERIC(RAIL_Events_t, uint64_t) in rail_types.h
+static volatile uint32_t gCB_tab[SIZE_UINT64_IN_BITS ] = { 0 };     // index: see RAIL_ENUM_GENERIC(RAIL_Events_t, uint64_t) in rail_types.h
 
 #if (qPrintEvents)
 static char *gCB_descr_tab[SIZE_UINT64_IN_BITS ] =
