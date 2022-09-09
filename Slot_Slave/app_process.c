@@ -67,7 +67,6 @@
 typedef enum
 {
 	kInit = 0,
-	kStart,
 	kIdle,
 //  ------------
 //	RX
@@ -144,7 +143,6 @@ uint32_t gRX_counter_prev = 0UL;
 /// Various flags
 //volatile bool gStartProcess = false;			// Flag, indicating a start process request (button was pressed / CLI start request has occurred)
 volatile uint32_t gStatDelay = STAT_PERIOD_us;	// Flag, indicating stat period on CLI
-static volatile bool gBtnPressed = false;   	// Button pressed, start process
 static bool gRX_first = false;					// Indicate first RX packet received on Slave to start statistics
 
 
@@ -433,7 +431,7 @@ static __INLINE void DecodeReceivedMsg(void)
 			else
 				gRX_tab[0]++;
 		}
-		else
+		else if (packet_info.packetStatus == RAIL_RX_PACKET_READY_CRC_ERROR)
 			gRX_tab[6]++;
 
 		// Indicate RX in progress on LED0
@@ -475,7 +473,8 @@ void app_process_action(void)
 	{
 		gTX_ok = false;
 		GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_TX);
-		gTX_tab[0]++;
+		//gTX_tab[0]++;
+		gTX_tab[0] = gCB_tab[RAIL_EVENT_TX_PACKET_SENT_SHIFT];
 		// Increment counter and prepare new data
 		gTX_counter++;    // pas de test over
 		prepare_packet_to_tx();
@@ -485,7 +484,11 @@ void app_process_action(void)
 	else if (gRX_error)
 	{
 		gRX_error = false;
-		gRX_tab[1]++;
+		//gRX_tab[1]++;
+		gRX_tab[1] = gCB_tab[RAIL_EVENT_RX_PACKET_ABORTED_SHIFT] +
+				 	 gCB_tab[RAIL_EVENT_RX_FRAME_ERROR_SHIFT] +
+					 gCB_tab[RAIL_EVENT_RX_FIFO_OVERFLOW_SHIFT] +
+					 gCB_tab[RAIL_EVENT_RX_SCHEDULED_RX_MISSED_SHIFT];
 
 		SetState(kErrorRx);
 	}
@@ -500,7 +503,12 @@ void app_process_action(void)
 	else if (gTX_error)
 	{
 		gTX_error = false;
-		gTX_tab[1]++;
+		//gTX_tab[1]++;
+		gTX_tab[1] = gCB_tab[RAIL_EVENT_TX_ABORTED_SHIFT] +
+				 	 gCB_tab[RAIL_EVENT_TX_BLOCKED_SHIFT] +
+					 gCB_tab[RAIL_EVENT_TX_UNDERFLOW_SHIFT] +
+					 gCB_tab[RAIL_EVENT_TX_CHANNEL_BUSY_SHIFT] +
+					 gCB_tab[RAIL_EVENT_TX_SCHEDULED_TX_MISSED_SHIFT];
 
 		SetState(kErrorTx);
 	}
@@ -518,12 +526,6 @@ void app_process_action(void)
 
 		SetState(kErrorCal);
 	}
-	else if (gBtnPressed)
-	{
-		gBtnPressed = false;
-
-		SetState(kStart);
-	}
 
 	/// -----------------------------------------
 	/// State machine
@@ -538,16 +540,6 @@ void app_process_action(void)
 		prepare_packet_to_tx();
 
 		SetState(kWaitRx);
-		break;
-
-	case kStart:
-		// TX started by pressing BTN0
-		SetState(kSwitchTx);
-
-		app_log_info("Start\n");
-		sl_led_turn_on(&sl_led_led1);
-		StartTimerTO_Stat();
-		gTX_counter_old = gTX_counter;
 		break;
 
 	case kIdle:
@@ -568,10 +560,11 @@ void app_process_action(void)
 
 		// For oscillo debug purposes
 		GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
-		StartTimerTO_TX();    // use TX_timeout in order to be sure to restart with TX only on Master if time outs
+		// No timeout --> use TX_timeout only in Master
 #else
 		SetState(kSwitchTx);
 #endif  // qNoRx2TxAutoTransition
+
 		DecodeReceivedMsg();
 		break;
 
@@ -582,15 +575,18 @@ void app_process_action(void)
 
 		// For oscillo debug purposes
 		GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
-		StartTimerTO_RX();    // use RX_timeout in order to be sure to restart with TX only on Master if time outs
+
+		// No timeout --> use RX_timeout only in Master
+#else
 		SetState(kSwitchRx);
 #endif  // qAutoTransition
+
 		PrintError(gErrorCode, "RX Error");
 		break;
 
 	case kTimeOutRx:
 		// Timeout on RX
-		SetState(kSwitchTx);
+		SetState(kSwitchRx);
 
 		PrintError(gErrorCode, "RX TimeOut");
 		break;
@@ -622,7 +618,7 @@ void app_process_action(void)
 
 		// For oscillo debug purposes
 		GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
-		StartTimerTO_RX();    // use RX_timeout in order to be sure to restart with TX only on Master if time outs
+		// No timeout --> use RX_timeout in Master only
 #else
 		SetState(kSwitchRx);  // bidirectional
 #endif  // qAutoTransition
@@ -637,7 +633,7 @@ void app_process_action(void)
 
 		// For oscillo debug purposes
 		GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
-		StartTimerTO_RX();    // use RX_timeout in order to be sure to restart with TX only on Master if time outs
+		// No timeout --> use RX_timeout only in Master
 #else
 		SetState(kSwitchRx);
 #endif  // qAutoTransition
