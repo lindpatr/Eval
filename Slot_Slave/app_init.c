@@ -270,6 +270,7 @@ void app_init(void)
 	cli_user_init();
 
 	// Start reception without timeout
+	GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
 	status = RAIL_StartRx(gRailHandle, CHANNEL, NULL);
 	if (status != RAIL_STATUS_NO_ERROR)
 	{
