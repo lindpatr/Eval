@@ -38,14 +38,18 @@
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
+#define MASTER_ADDR		255	  // For debug purposes only
+
 #define qPrintTX        0     // Print out sent data on serial COM
 #define qPrintRX        0     // Print out received data on serial COM
-#define qPrintEvents    0     // Print out events on serial COM
+#define qPrintEvents    1     // Print out events on serial COM
 #define qPrintErrorsL1  1     // Print out RAIL errors on serial COM (generally return of RAIL_functions)
 #define qPrintErrorsL2  0     // Print out RAIL errors on serial COM (kTimeOutTx, kTimeOutRx, kErrorTx, kErrorRx)
 
+// TODO A enlever pour le projet Slot
 #define qAutoTransition 1       // 0 = Transition to IDLE  1 = On RX/TX success/no success, transition to RX
 #define qRx2TxAutoTransition 1  // 0 = On RX success, transition to RX 1 = On RX success, transition to TX
+#define TRANSITION_TIMING_BEST_EFFORT  1
 
 #define SEC (1000000U)
 
@@ -61,7 +65,6 @@
 #define RX_TIMEOUT  (400U)              // in us
 #define TX_TIMEOUT  (1*SEC)             // in us
 
-#define TRANSITION_TIMING_BESTOF  1
 // -----------------------------------------------------------------------------
 //                                Global Variables
 // -----------------------------------------------------------------------------
@@ -69,8 +72,6 @@
 extern volatile RAIL_Handle_t gRailHandle;
 /// A static var for RX schedule config
 extern RAIL_ScheduleRxConfig_t gRailScheduleCfgRX;
-/// A static var for TX schedule config
-extern RAIL_ScheduleTxConfig_t gRailScheduleCfgTX;
 /// A static var for RX transition
 extern RAIL_StateTransitions_t gRailTransitionRX;
 /// A static var for TX transition
