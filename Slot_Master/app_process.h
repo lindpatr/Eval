@@ -44,11 +44,11 @@
 // -----------------------------------------------------------------------------
 //                                Global Variables
 // -----------------------------------------------------------------------------
-extern volatile uint32_t gRX_counter;
+extern volatile uint32_t gRX_counter[sizeof(uint8_t)];
 extern volatile uint32_t gTX_counter;
 extern volatile uint32_t gTX_counter_old;
-extern volatile uint32_t gRX_counter_old;
-extern uint32_t gRX_counter_prev;
+extern volatile uint32_t gRX_counter_old[sizeof(uint8_t)];
+extern uint32_t gRX_counter_prev[sizeof(uint8_t)];
 
 // -----------------------------------------------------------------------------
 //                          Public Function Declarations

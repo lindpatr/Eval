@@ -61,7 +61,7 @@
 
 // Timeout for Start RX and TX RAIL functions
 #define RX_TIMEOUT  (500U)              // in us
-#define TX_TIMEOUT  (2.05*RX_TIMEOUT/*1*SEC*/)             // in us
+#define TX_TIMEOUT  ((uint32_t)(0.1f*SEC))             // in us
 
 // -----------------------------------------------------------------------------
 //                                Global Variables

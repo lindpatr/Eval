@@ -86,6 +86,9 @@ RAIL_StateTransitions_t gRailTransitionTX;
 RAIL_StateTiming_t gRailStateTimings;
 /// A static var that contains config data for the device
 PROT_AddrMap_t* gDeviceCfgAddr;
+
+// Filtrage sur 1 byte avec un offset de 0 byte depuis le débute de la trame.
+const RAIL_AddrConfig_t addrConfig = { .offsets = { 0, 0 }, .sizes = { 1, 0 },.matchTable = ADDRCONFIG_MATCH_TABLE_SINGLE_FIELD };
 // -----------------------------------------------------------------------------
 //                                Static Variables
 // -----------------------------------------------------------------------------
@@ -220,13 +223,13 @@ void app_init(void)
 
 	// Set timeout for scheduled TX
 	// TODO Scheduled TX: à voir si utilisé?
-	gRailScheduleCfgTX.when = SLAVE_TX_START;
+	gRailScheduleCfgTX.when = gDeviceCfgAddr->slotTime;
 	gRailScheduleCfgTX.mode = RAIL_TIME_DELAY;
 	gRailScheduleCfgTX.txDuringRx = RAIL_SCHEDULED_TX_DURING_RX_POSTPONE_TX; // TODO Scheduled TX: RAIL_SCHEDULED_TX_DURING_RX_POSTPONE_TX: Risque d'être problématique: SLAVE devrait plutôt être en IDLE (mais commutation prend du temps) à voir / analyser / tester?
 
 	// Set RX and TX transition
 	// TODO RX and TX auto transition: à voir si utilisé?
-	gRailTransitionRX.success = RAIL_RF_STATE_TX;   // RX Ok  -> TX
+	gRailTransitionRX.success = RAIL_RF_STATE_RX;   // RX Ok  -> RX
 	gRailTransitionRX.error = RAIL_RF_STATE_RX;     // RX Err -> RX
 	gRailTransitionTX.success = RAIL_RF_STATE_RX;   // TX Ok  -> RX
 	gRailTransitionTX.error = RAIL_RF_STATE_RX;     // TX Err -> RX
@@ -262,6 +265,20 @@ void app_init(void)
 		}
 	}
 	// else keep value from RAIL configurator!
+
+	  // Le filtage est hardware.
+	  // Configuration : RAIL Utility, Initialization (inst0) -> Radio Event Configuration -> RX Address Filtered = true/false
+	  // Si Filtered = true, on recevra un event dans le callback pour indiquer que l'adresse a été filtrée et le message annulé.
+	  // Si Filtered = false on NE recevra pas d'event dans le callback pour indiquer que l'adresse a été filtrée et le message annulé.
+	  uint8_t addr = 0xFF;
+
+	  // Configuration du filtrage des adresses
+	  // Filtrage sur 1 byte avec un offset de 0 byte depuis le débute de la trame.
+	  RAIL_ConfigAddressFilter(gRailHandle, &addrConfig);
+	  // set de la valeur d'adresse à filtrer
+	  RAIL_SetAddressFilterAddress(gRailHandle, 0, 1, &addr, 1);
+	  // activation
+	  RAIL_EnableAddressFilter(gRailHandle, true);
 
 	// Init display
 	graphics_init();

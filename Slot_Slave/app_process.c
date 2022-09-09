@@ -350,7 +350,13 @@ static __INLINE uint16_t unpack_packet_from_rx(uint8_t *rx_destination, const RA
  *****************************************************************************/
 static __INLINE void prepare_packet_to_tx(void)
 {
-	gTX_fifo.align[0] = gTX_counter;
+	//gTX_fifo.align[0] = gTX_counter;
+
+	gTX_fifo.fifo[2] = (gTX_counter & 0x000000FF) >> 0;
+	gTX_fifo.fifo[3] = (gTX_counter & 0x0000FF00) >> 8;
+	gTX_fifo.fifo[4] = (gTX_counter & 0x00FF0000) >> 16;
+	gTX_fifo.fifo[5] = (gTX_counter & 0xFF000000) >> 24;
+
 	uint16_t allocated_tx_fifo_size = RAIL_SetTxFifo(gRailHandle, gTX_fifo.fifo, TX_PAYLOAD_LENGTH, RAIL_FIFO_TX_SIZE);
 	app_assert(allocated_tx_fifo_size == RAIL_FIFO_TX_SIZE, "RAIL_SetTxFifo() failed to allocate a large enough fifo (%d bytes instead of %d bytes)\n", allocated_tx_fifo_size, RAIL_FIFO_TX_SIZE);
 }
@@ -385,7 +391,8 @@ static __INLINE void CfgTxMode(void)
 	// For oscillo debug purposes
 	GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
 
-	RAIL_Status_t status = RAIL_StartTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, NULL);
+	RAIL_Status_t status = RAIL_StartScheduledTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, &gRailScheduleCfgTX, NULL);
+	//RAIL_Status_t status = RAIL_StartTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, NULL);
 	PrintStatus(status, "Warning RAIL_StartTx");
 
 	// No TX timeout in Slave!
@@ -422,7 +429,7 @@ static __INLINE void DecodeReceivedMsg(void)
 			// Backup previous data
 			gRX_counter_prev = gRX_counter;
 			// Extract received data
-			gRX_counter = (uint32_t) ((start_of_packet[0] << 0) + (start_of_packet[1] << 8) + (start_of_packet[2] << 16) + (start_of_packet[3] << 24));
+			gRX_counter = (uint32_t) ((start_of_packet[2] << 0) + (start_of_packet[3] << 8) + (start_of_packet[4] << 16) + (start_of_packet[5] << 24));
 
 			uint32_t delta = gRX_counter - gRX_counter_prev;
 			if (delta > 1)
@@ -540,6 +547,8 @@ void app_process_action(void)
 	// -----------------------------------------
 	case kInit:
 		// State after POR, wait until pressing BTN0 on Master
+	    gTX_fifo.fifo[0] = gDeviceCfgAddr->internalAddr;
+
 		prepare_packet_to_tx();
 
 		SetState(kWaitRx);
@@ -558,15 +567,7 @@ void app_process_action(void)
 
 	case kMsgReceived:
 		// Message received
-#if (qRx2TxAutoTransition)
-		SetState(kIdle);    // Auto transition to TX after successfull receive
-
-		// For oscillo debug purposes
-		GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
-		// No timeout --> use TX_timeout only in Master
-#else
 		SetState(kSwitchTx);
-#endif  // qNoRx2TxAutoTransition
 
 		DecodeReceivedMsg();
 		break;

@@ -221,7 +221,7 @@ void app_init(void)
 
 	// Set RX and TX transition
 	// TODO RX and TX auto transition: à voir si utilisé?
-	gRailTransitionRX.success = RAIL_RF_STATE_TX;   // RX Ok  -> TX
+	gRailTransitionRX.success = RAIL_RF_STATE_RX;   // RX Ok  -> RX
 	gRailTransitionRX.error = RAIL_RF_STATE_RX;     // RX Err -> RX
 	gRailTransitionTX.success = RAIL_RF_STATE_RX;   // TX Ok  -> RX
 	gRailTransitionTX.error = RAIL_RF_STATE_RX;     // TX Err -> RX

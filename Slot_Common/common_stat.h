@@ -159,7 +159,7 @@ static __INLINE void DisplayStat(void)
 	float localStat = (float) (gTX_counter + gRX_counter - gTX_counter_old - gRX_counter_old) / deltaTime;
 	float localStat2 = (10.0f * 10100.0f) / localStat;
 	float localStat3 = 100.0f * (float) (gTX_tab[1] + gTX_tab[2] + gTX_tab[5]) / (float) gTX_counter;
-	float localStat4 = 100.0f * (float) (gRX_tab[1] + gRX_tab[2] + gRX_tab[5] + gRX_tab[6]) / (float) gRX_counter;
+//	float localStat4 = 100.0f * (float) (gRX_tab[1] + gRX_tab[2] + gRX_tab[5] + gRX_tab[6]) / (float) gRX_counter;
 
 	// Print on serial COM
 	app_log_info("\n");
@@ -173,7 +173,7 @@ static __INLINE void DisplayStat(void)
 	app_log_info("TX Err (see below) : %0.3f%%\n", localStat3);
 	app_log_info("#Err/#TO/#Inv      : %lu/%lu/%lu\n", gTX_tab[1], gTX_tab[2], gTX_tab[5]);
 	app_log_info("TX retransmit count: %lu\n", gTX_tab[3]);
-	app_log_info("RX Err (see below) : %0.3f%%\n", localStat4);
+//	app_log_info("RX Err (see below) : %0.3f%%\n", localStat4);
 	app_log_info("#Err/#TO/#Inv/#CRC : %lu/%lu/%lu/%lu\n", gRX_tab[1], gRX_tab[2], gRX_tab[5], gRX_tab[6]);
 	app_log_info("Counter #gap (max) : %lu (%d)\n", gRX_tab[3], gRX_tab[4]);
 
