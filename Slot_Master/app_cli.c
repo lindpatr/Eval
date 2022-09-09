@@ -62,6 +62,8 @@ extern volatile bool gStartProcess;
 extern volatile bool gStatReq;
 /// Flag, indicating print stat delay on CLI
 extern volatile uint32_t gStatDelay;
+/// Button pressed simulation with CLI, start process
+extern volatile bool gBtnPressed;
 
 // -----------------------------------------------------------------------------
 //                                Static Variables
@@ -153,6 +155,7 @@ void cli_start_process(sl_cli_command_arg_t *arguments)
 	(void) arguments;
 	if (!gStartProcess)
 	{
+		gBtnPressed = true;
 		gStartProcess = true;
 		gElapsedTime = RAIL_GetTime();
 		app_log_info("Start process now ...\n");
