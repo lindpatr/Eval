@@ -134,15 +134,6 @@ static volatile bool gStartProcess = false;   // Start ping pong
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
 // -----------------------------------------------------------------------------
-/**************************************************************************//**
- * The function printfs the received rx message.
- *
- * @param rx_buffer Msg buffer
- * @param length How many bytes should be printed out
- * @returns None
- *****************************************************************************/
-static void printf_rx_packet(const uint8_t * const rx_buffer, uint16_t length);
-
 /******************************************************************************
  * The API helps to unpack the received packet, point to the payload and returns the length.
  *
@@ -408,13 +399,6 @@ static __INLINE void StartTimerTO_TX(void)
  * @param rail_handle Which rail handler should be updated
  *****************************************************************************/
 void set_up_tx_fifo(RAIL_Handle_t rail_handle)
-{
-}
-
-/******************************************************************************
- * The API forwards the received rx packet on CLI
- *****************************************************************************/
-static void printf_rx_packet(const uint8_t * const rx_buffer, uint16_t length)
 {
 }
 

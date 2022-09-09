@@ -64,10 +64,4 @@ extern uint32_t gRX_counter_prev;
  *****************************************************************************/
 void app_process_action(void);
 
-/******************************************************************************
- * Set up the rail TX fifo for later usage
- * @param rail_handle Which rail handler should be updated
- *****************************************************************************/
-void set_up_tx_fifo(RAIL_Handle_t rail_handle);
-
 #endif  // APP_PROCESS_H
