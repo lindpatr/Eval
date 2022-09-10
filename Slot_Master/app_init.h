@@ -38,10 +38,6 @@
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
-#define qMASTER 1
-#define MAX_SLAVE 255
-#define MASTER_ID MAX_SLAVE
-
 #define qPrintTX        0     // Print out sent data on serial COM
 #define qPrintRX        0     // Print out received data on serial COM
 #define qPrintEvents    1     // Print out events on serial COM
@@ -56,16 +52,15 @@
 #define SEC (1000000U)
 
 // GPIO debug
-#define DEBUG_PIN_TX    1           // PB01 --> Exp Header 9
-#define DEBUG_PIN_RX    2           // PB02 --> Exp Header 15
-#define DEBUG_PIN_MISC  3           // PB03 --> Exp Header 16
+#define DEBUG_PIN_TX    (1)           // PB01 --> Exp Header 9
+#define DEBUG_PIN_RX    (2)           // PB02 --> Exp Header 15
+#define DEBUG_PIN_MISC  (3)           // PB03 --> Exp Header 16
 #define DEBUG_PORT      gpioPortB
-#define SET             1           // Set PIN
-#define RESET           0           // Reset PIN
+#define SET             (1)           // Set PIN
+#define RESET           (0)           // Reset PIN
 
-// Timeout for Start RX and TX RAIL functions
-#define RX_TIMEOUT  (500U)              // in us
-#define TX_TIMEOUT  (900U/*(uint32_t)(0.1f*SEC)*/)             // in us
+// Master cycle
+#define SYNC_PERIOD  (SLAVE_IN_SYSTEM*TIME_SLOT/*(uint32_t)(0.1f*SEC)*/)             // in us
 
 // -----------------------------------------------------------------------------
 //                                Global Variables

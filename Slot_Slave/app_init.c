@@ -75,7 +75,7 @@ void cli_user_init(void);
 /// A static handle of a RAIL instance
 volatile RAIL_Handle_t gRailHandle;
 /// A static var for RX schedule config
-RAIL_ScheduleRxConfig_t gRailScheduleCfgRX;
+//RAIL_ScheduleRxConfig_t gRailScheduleCfgRX;
 /// A static var for TX schedule config
 RAIL_ScheduleTxConfig_t gRailScheduleCfgTX;
 /// A static var for RX transition
@@ -213,22 +213,19 @@ void app_init(void)
 	// TODO Read Slave address and replace SLAVE_ADDR const
 
 	// Set timeout for scheduled RX
-	// TODO Scheduled RX: à voir si utilisé?
-	gRailScheduleCfgRX.start = 0;
-	gRailScheduleCfgRX.startMode = RAIL_TIME_DELAY;
-	gRailScheduleCfgRX.end = RX_TIMEOUT;
-	gRailScheduleCfgRX.endMode = RAIL_TIME_DELAY;
-	gRailScheduleCfgRX.hardWindowEnd = false;
-	gRailScheduleCfgRX.rxTransitionEndSchedule = false;
+//	gRailScheduleCfgRX.start = 0;
+//	gRailScheduleCfgRX.startMode = RAIL_TIME_DELAY;
+//	gRailScheduleCfgRX.end = RX_TIMEOUT;
+//	gRailScheduleCfgRX.endMode = RAIL_TIME_DELAY;
+//	gRailScheduleCfgRX.hardWindowEnd = false;
+//	gRailScheduleCfgRX.rxTransitionEndSchedule = false;
 
 	// Set timeout for scheduled TX
-	// TODO Scheduled TX: à voir si utilisé?
 	gRailScheduleCfgTX.when = gDeviceCfgAddr->slotTime;
 	gRailScheduleCfgTX.mode = RAIL_TIME_DELAY;
-	gRailScheduleCfgTX.txDuringRx = RAIL_SCHEDULED_TX_DURING_RX_POSTPONE_TX; // TODO Scheduled TX: RAIL_SCHEDULED_TX_DURING_RX_POSTPONE_TX: Risque d'être problématique: SLAVE devrait plutôt être en IDLE (mais commutation prend du temps) à voir / analyser / tester?
+	gRailScheduleCfgTX.txDuringRx = RAIL_SCHEDULED_TX_DURING_RX_ABORT_TX; // RAIL_SCHEDULED_TX_DURING_RX_POSTPONE_TX: Risque d'être problématique
 
 	// Set RX and TX transition
-	// TODO RX and TX auto transition: à voir si utilisé?
 	gRailTransitionRX.success = RAIL_RF_STATE_RX;   // RX Ok  -> RX
 	gRailTransitionRX.error = RAIL_RF_STATE_RX;     // RX Err -> RX
 	gRailTransitionTX.success = RAIL_RF_STATE_RX;   // TX Ok  -> RX
@@ -266,19 +263,19 @@ void app_init(void)
 	}
 	// else keep value from RAIL configurator!
 
-	  // Le filtage est hardware.
-	  // Configuration : RAIL Utility, Initialization (inst0) -> Radio Event Configuration -> RX Address Filtered = true/false
-	  // Si Filtered = true, on recevra un event dans le callback pour indiquer que l'adresse a été filtrée et le message annulé.
-	  // Si Filtered = false on NE recevra pas d'event dans le callback pour indiquer que l'adresse a été filtrée et le message annulé.
-	  uint8_t addr = 0xFF;
+	// Le filtage est hardware.
+	// Configuration : RAIL Utility, Initialization (inst0) -> Radio Event Configuration -> RX Address Filtered = true/false
+	// Si Filtered = true, on recevra un event dans le callback pour indiquer que l'adresse a été filtrée et le message annulé.
+	// Si Filtered = false on NE recevra pas d'event dans le callback pour indiquer que l'adresse a été filtrée et le message annulé.
+	uint8_t addr = 0xFF;
 
-	  // Configuration du filtrage des adresses
-	  // Filtrage sur 1 byte avec un offset de 0 byte depuis le débute de la trame.
-	  RAIL_ConfigAddressFilter(gRailHandle, &addrConfig);
-	  // set de la valeur d'adresse à filtrer
-	  RAIL_SetAddressFilterAddress(gRailHandle, 0, 1, &addr, 1);
-	  // activation
-	  RAIL_EnableAddressFilter(gRailHandle, true);
+	// Configuration du filtrage des adresses
+	// Filtrage sur 1 byte avec un offset de 0 byte depuis le débute de la trame.
+	RAIL_ConfigAddressFilter(gRailHandle, &addrConfig);
+	// set de la valeur d'adresse à filtrer
+	RAIL_SetAddressFilterAddress(gRailHandle, 0, 1, &addr, 1);
+	// activation
+	RAIL_EnableAddressFilter(gRailHandle, true);
 
 	// Init display
 	graphics_init();
@@ -286,25 +283,15 @@ void app_init(void)
 	// User commands add to CLI
 	cli_user_init();
 
-	// Start reception without timeout
-	GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
-	status = RAIL_StartRx(gRailHandle, CHANNEL, NULL);
-	if (status != RAIL_STATUS_NO_ERROR)
-	{
-#if (qPrintErrorsL1)
-		app_log_warning("Warning RAIL_StartRx (%d)\n", status);
-#endif  // qPrintErrorsL1
-	}
+    // Print Id software
+    const char string[] = "\nSlot Protocol";
 
-	// Print Id software
-	const char string[] = "\nTest EFR32xG32 - ";
-	app_log_info("%s", string);
-
-	const char string3[] = "Slot Protocol";
-
-	// CLI info message
-	app_log_info("%s Addr %03d (%s)\n", gDeviceCfgAddr->name, gDeviceCfgAddr->internalAddr, string3);
-	app_log_info("-----------------------------------------------\n");
+    // CLI info message
+    app_log_info("%s (slot time %lu us) - %s (Addr #%03d)\n", string,
+                                                               TIME_SLOT,
+                                                               gDeviceCfgAddr->name,
+                                                               gDeviceCfgAddr->internalAddr);
+    app_log_info("----------------------------------------------------\n");
 
 	// Set up timers
 	if (!RAIL_ConfigMultiTimer(true))

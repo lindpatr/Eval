@@ -78,7 +78,7 @@ void cli_user_init(void);
 /// A static handle of a RAIL instance
 volatile RAIL_Handle_t gRailHandle;
 /// A static var for RX schedule config
-RAIL_ScheduleRxConfig_t gRailScheduleCfgRX;
+//RAIL_ScheduleRxConfig_t gRailScheduleCfgRX;
 /// A static var for RX transition
 RAIL_StateTransitions_t gRailTransitionRX;
 /// A static var for TX transition
@@ -207,20 +207,15 @@ void app_init(void)
 	GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_RX, gpioModePushPull, RESET);
 	GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_MISC, gpioModePushPull, RESET);
 
-	// Read Slave address
-	// TODO Read Slave address and replace SLAVE_ADDR const
-
 	// Set timeout for scheduled RX
-	// TODO Scheduled RX: à voir si utilisé?
-	gRailScheduleCfgRX.start = 0;
-	gRailScheduleCfgRX.startMode = RAIL_TIME_DELAY;
-	gRailScheduleCfgRX.end = RX_TIMEOUT;
-	gRailScheduleCfgRX.endMode = RAIL_TIME_DELAY;
-	gRailScheduleCfgRX.hardWindowEnd = false;
-	gRailScheduleCfgRX.rxTransitionEndSchedule = false;
+//	gRailScheduleCfgRX.start = 0;
+//	gRailScheduleCfgRX.startMode = RAIL_TIME_DELAY;
+//	gRailScheduleCfgRX.end = RX_TIMEOUT;
+//	gRailScheduleCfgRX.endMode = RAIL_TIME_DELAY;
+//	gRailScheduleCfgRX.hardWindowEnd = false;
+//	gRailScheduleCfgRX.rxTransitionEndSchedule = false;
 
 	// Set RX and TX transition
-	// TODO RX and TX auto transition: à voir si utilisé?
 	gRailTransitionRX.success = RAIL_RF_STATE_RX;   // RX Ok  -> RX
 	gRailTransitionRX.error = RAIL_RF_STATE_RX;     // RX Err -> RX
 	gRailTransitionTX.success = RAIL_RF_STATE_RX;   // TX Ok  -> RX
@@ -263,15 +258,15 @@ void app_init(void)
 	// User commands add to CLI
 	cli_user_init();
 
-	// Print Id software
-	const char string[] = "\nTest EFR32xG32 - ";
-	app_log_info("%s", string);
+    // Print Id software
+    const char string[] = "\nSlot Protocol";
 
-	const char string3[] = "Slot Protocol";
-
-	// CLI info message
-	app_log_info("%s Addr %03d (%s)\n", gDeviceCfgAddr->name, gDeviceCfgAddr->internalAddr, string3);
-	app_log_info("------------------------------------------------\n");
+    // CLI info message
+    app_log_info("%s (slot time %lu us) - %s (Addr #%03d)\n", string,
+                                                               TIME_SLOT,
+                                                               gDeviceCfgAddr->name,
+                                                               gDeviceCfgAddr->internalAddr);
+    app_log_info("-----------------------------------------------------\n");
 
 	// Set up timers
 	if (!RAIL_ConfigMultiTimer(true))
