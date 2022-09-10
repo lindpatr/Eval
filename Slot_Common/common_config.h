@@ -13,7 +13,16 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#define ADDR_TRANSLATION_TABLE_SIZE	(5)
+
+#define SLAVE_IN_SYSTEM (3)                     // Netowrk is composed of X slaves
+#define TIME_SLOT       (290U)                  // in us
+
+#define MAX_SLAVE       (100)                   // Max. nbr of slaves in network
+#define MAX_NODE        (MAX_SLAVE+1)           // Max nodes in network (master + slaves)
+#define MASTER_ID       (255)                   // Master ID; Slaves ID [1..MAX_SLAVE]
+
+
+#define ADDR_TRANSLATION_TABLE_SIZE	(MAX_NODE)
 #define ADDR_INTERNAL_NAME_STRING_SIZE (10)
 
 /**
@@ -24,6 +33,7 @@
 typedef struct
 {
     uint64_t uinqueId;                           // Unique device ID
+    uint8_t posTab;                              // Position in tab (in order to handle Master ID and avoid tab of Master ID size)
     uint8_t internalAddr;                        // Internal address
     uint32_t slotTime;                           // Slot time in uS
     bool ismaster;                               // true if master device

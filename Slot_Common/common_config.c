@@ -16,12 +16,12 @@
  */
 PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
 {
-    /* ID                Addr slot [us]   Is master   Name          */
-	{0x385B44FFFEC085D3, 255, 0,          true,       "MASTER\0"},
-	{0x385b44fffec0862b, 1	, 0/*10000*/,  	  false,      "SLAVE\0"},
-	{0x385b44fffe5f5af2, 2	, 900/*20000*/,      false,      "SLAVE\0"},
-    {0x385b44fffe5f5b23, 3  , 300/*30000*/,      false,      "SLAVE\0"},
-    {0x385b44fffec08638, 4  , 600/*40000*/,      false,      "SLAVE\0"}
+    /* ID                Pos    Addr    slot [us]         Is master   Name          */
+	{0x385B44FFFEC085D3, 0,     255,    0,                true,       "MASTER\0"},
+	{0x385b44fffec0862b, 1,     1,      (0*TIME_SLOT),    false,      "SLAVE\0"},
+	{0x385b44fffe5f5af2, 2,     2,      (3*TIME_SLOT),    false,      "SLAVE\0"},
+    {0x385b44fffe5f5b23, 3,     3,      (1*TIME_SLOT),    false,      "SLAVE\0"},
+    {0x385b44fffec08638, 4,     4,      (2*TIME_SLOT),    false,      "SLAVE\0"}
 };
 
 /**
@@ -40,7 +40,7 @@ uint8_t common_getAddr(uint64_t uniqueId)
 		}
 	}
 
-	return 255;
+	return 0;
 }
 
 /**
