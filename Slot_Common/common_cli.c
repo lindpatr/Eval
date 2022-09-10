@@ -61,7 +61,7 @@ extern volatile bool gStartProcess;
 /// Flag, indicating a request to print statistics (button was pressed / CLI statistics request has occurred)
 extern volatile bool gStatReq;
 /// Flag, indicating print stat delay on CLI
-extern volatile uint32_t gStatDelay;
+extern volatile RAIL_Time_t gStatDelay;
 /// Button pressed simulation with CLI, start process
 extern volatile bool gBtnPressed;
 
@@ -72,7 +72,7 @@ extern volatile bool gBtnPressed;
 static const sl_cli_command_info_t cli_cmd__delay =
 SL_CLI_COMMAND(cli_set_period,
 		"Set statistics print delay",
-		"",
+		"1 - 3220 sec",
 		{	SL_CLI_ARG_UINT16, SL_CLI_ARG_END,});
 
 static const sl_cli_command_info_t cli_cmd__start_process =
@@ -83,7 +83,7 @@ SL_CLI_COMMAND(cli_start_process,
 
 static const sl_cli_command_info_t cli_cmd__req_stat =
 SL_CLI_COMMAND(cli_req_stat,
-		"Request statistics print",
+		"Print statistics",
 		"",
         {SL_CLI_ARG_END, });
 
@@ -144,7 +144,7 @@ void cli_receive_packet(sl_cli_command_arg_t *arguments)
 void cli_set_period(sl_cli_command_arg_t *arguments)
 {
 	uint16_t delay = sl_cli_get_argument_uint16(arguments, 0);
-	gStatDelay = delay * SEC;
+	gStatDelay = (RAIL_Time_t)(delay * SEC);
 	app_log_info("Print automatic statistics after %d sec\n", delay);
 }
 
