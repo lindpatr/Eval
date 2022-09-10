@@ -76,9 +76,26 @@ static char *gCB_descr_tab[SIZE_UINT64_IN_BITS ] =
         "TIMER_TIMEOUT_TX    "};
 #endif	// qPrintEvents
 
-extern uint32_t gTX_tab[7];                 // 0 = #TX_OK  	1 = #TX_Err   2 = ND      		3 = #Retransmit   	4 = ND          		5 = #TX_Invalid   	6 = ND
-extern uint32_t gRX_tab[MAX_SLAVE][7];      // 0 = #RX_OK  	1 = #RX_Err   2 = #RX_TimeOut 	3 = #Gap RX count 	4 = Max gap RX count  	5 = #RX_Invalid   	6 = #CRC_Err
-extern uint32_t gCAL_tab[7];                // 0 = #CAL_REQ  1 = #CAL_Err  2 = ND      		3 = ND        		4 = ND          		5 = ND        		6 = ND
+// Position in the gTX_tab / gRX_tab / gCAL_tab
+typedef enum
+{
+    TAB_POS_TX_OK       = 0,
+    TAB_POS_RX_OK       = 0,
+    TAB_POS_CAL_REQ     = 0,
+    TAB_POS_TX_ERR      = 1,                            // RAIL_EVENT_TX_ABORTED + RAIL_EVENT_TX_BLOCKED + RAIL_EVENT_TX_UNDERFLOW + RAIL_EVENT_TX_CHANNEL_BUSY + RAIL_EVENT_TX_SCHEDULED_TX_MISSED
+    TAB_POS_RX_ERR      = 1,                            // RAIL_EVENT_RX_PACKET_ABORTED + RAIL_EVENT_RX_FRAME_ERROR + RAIL_EVENT_RX_FIFO_OVERFLOW + RAIL_EVENT_RX_ADDRESS_FILTERED (don't activate it!) + RAIL_EVENT_RX_SCHEDULED_RX_MISSED
+    TAB_POS_CAL_ERR     = 1,
+    TAB_POS_RX_TIMEOUT  = 2,
+    TAB_POS_TX_TIMEOUT  = 2,
+    TAB_POS_RX_GAP      = 3,
+    TAB_POS_RX_GAP_MAX  = 4,
+    TAB_POS_RX_CRC_ERR  = 5,
+    TAB_POS_LAST
+} TabPosEnum;
+
+extern uint32_t gTX_tab[TAB_POS_LAST];                 // 0 = #TX_OK  	1 = #TX_Err   2 = #TX_TimeOut 	3 = ND             	4 = ND          		5 = ND
+extern uint32_t gRX_tab[MAX_NODE][TAB_POS_LAST];      // 0 = #RX_OK  	1 = #RX_Err   2 = #RX_TimeOut 	3 = #Gap RX count 	4 = Max gap RX count  	5 = #CRC_Err
+extern uint32_t gCAL_tab[TAB_POS_LAST];                // 0 = #CAL_REQ  1 = #CAL_Err 2 = ND      		3 = ND        		4 = ND          		5 = ND
 
 /// Timeout for printing and displaying the statistics
 extern volatile RAIL_Time_t gElapsedTime;
@@ -152,96 +169,116 @@ static __INLINE void DecodeEvents(RAIL_Events_t *events)
 #endif  // qPrintEvents
 }
 
-#if (qMASTER)
 /******************************************************************************
  * DisplayStat : print and display statistics
  *****************************************************************************/
 static __INLINE void DisplayStat(void)
 {
 	// Statistics
-	float deltaTime = (float) (gElapsedTime - gOldElapsedTime) / 1000000.0f;
-//	float localStat = (float) (gTX_counter + gRX_counter - gTX_counter_old - gRX_counter_old) / deltaTime;
-	uint32_t sumCounter1 = 0U;
-	uint32_t sumCounter2 = 0U;
-    for (int i = 0; i < MAX_SLAVE; i++)
-    {
-        if (gRX_counter[i])
-        {
-            sumCounter1 += (gTX_counter + gRX_counter[i] - gTX_counter_old - gRX_counter_old[i]);
-            sumCounter2 += gRX_counter[i];
-        }
-    }
-    float localStat = (float)(sumCounter1) / deltaTime;
-	float localStat2 = (10.0f * 10100.0f) / localStat;
-	float localStat3 = 100.0f * (float) (gTX_tab[1] + gTX_tab[2] + gTX_tab[5]) / (float) gTX_counter;
-	float localStat4 = 100.0f * (float) (gRX_tab[MASTER_ID][1] + gRX_tab[MASTER_ID][2] + gRX_tab[MASTER_ID][5] + gRX_tab[MASTER_ID][6]) / (float) sumCounter2;
+    float deltaTime, localStat, localStat2, localStat3, localStat4;
+    uint32_t sumRelativeCounter = (gTX_counter - gTX_counter_old);
+    uint32_t sumRXCounter = 0U;
+    uint32_t sumRXGap = 0U;
+    uint32_t sumRXOk = 0U;
+    uint32_t deltaRXGap = 0U;
+
+    // Elapsed time since last stat
+    deltaTime = (float) (gElapsedTime - gOldElapsedTime) / 1000000.0f;
+
+    // Compute sum of absolute RX (from Slave) counters and sum of relative (since last stat) RX (from Slave) counters
+	if (gDeviceCfgAddr->ismaster)
+	{
+	    // Master node --> take in account all slaves
+	    for (int i = 1; i < MAX_NODE; i++)
+	    {
+	        if (gRX_counter[i])
+	        {
+	            sumRXCounter += gRX_counter[i];                               // Sum of absolute RX (from Slave) counters
+	            sumRelativeCounter += (gRX_counter[i] - gRX_counter_old[i]);  // Sum of absolute RX (from Slave) "old" counters
+	            sumRXGap += gRX_tab[i][TAB_POS_RX_GAP];                       // Sum of absolute RX (from Slave) gap occurences
+	            sumRXOk += gRX_tab[i][TAB_POS_RX_OK];                         // Sum of TX Ok (from Slave) counters
+	        }
+	    }
+	}
+	else    // Slave node -> take in account only the concerned slave
+	{
+	    sumRXCounter = gRX_counter[gDeviceCfgAddr->posTab];
+	    sumRelativeCounter = ((gTX_counter - gTX_counter_old) + (gRX_counter[gDeviceCfgAddr->posTab] - gRX_counter_old[gDeviceCfgAddr->posTab]));
+	    sumRXGap = gRX_tab[gDeviceCfgAddr->posTab][TAB_POS_RX_GAP];
+	    sumRXOk = gRX_tab[gDeviceCfgAddr->posTab][TAB_POS_RX_OK];
+	}
+
+	deltaRXGap = ((sumRXGap > gRX_tab[gDeviceCfgAddr->posTab][TAB_POS_RX_ERR]) ? (sumRXGap - gRX_tab[gDeviceCfgAddr->posTab][TAB_POS_RX_ERR]) : 0);
+
+    // Relative (since last stat) Slave TX and Master TX pro second
+    localStat = (float)(sumRelativeCounter) / deltaTime;
+	// Then compare to the key transmission rate of 1 master + 100 slaves @10ms
+	localStat2 = (10.0f * 10100.0f) / localStat;
+	// Cumulative TX error rate
+	localStat3 = 100.0f * (float) (gTX_tab[TAB_POS_TX_ERR] + gTX_tab[TAB_POS_TX_TIMEOUT]) / (float) gTX_counter;
+	// Cumulative RX error rate
+	localStat4 = 100.0f * (float) (gRX_tab[gDeviceCfgAddr->posTab][TAB_POS_RX_ERR] + gRX_tab[gDeviceCfgAddr->posTab][TAB_POS_RX_TIMEOUT] + gRX_tab[gDeviceCfgAddr->posTab][TAB_POS_RX_CRC_ERR] + deltaRXGap) / (float) sumRXCounter;
 
 	// Print on serial COM
 	app_log_info("\n");
-	app_log_info("Performance statistics\n");
+	app_log_info("%s #%03d statistics\n", (gDeviceCfgAddr->ismaster ? "MASTER" : "SLAVE"), gDeviceCfgAddr->internalAddr);
 	app_log_info("----------------------\n");
-	app_log_info("Elapsed time             : %0.2f sec\n", deltaTime);
+	app_log_info("Elapsed time               : %0.2f sec\n", deltaTime);
 
-	app_log_info("#Counter (Master)        : %lu\n", gTX_tab[0]);
-//	app_log_info("#Counter (RX)            : %lu\n", gRX_tab[0]);
-    for (int i = 0; i < MAX_SLAVE; i++)
+	// Counters TX and RX
+	app_log_info("#Counter %s            : %lu\n", (gDeviceCfgAddr->ismaster ? "      " : "      "), gTX_tab[TAB_POS_TX_OK]);
+    app_log_info("#Counter (%s)          : %lu\n", (gDeviceCfgAddr->ismaster ? "Slaves" : "Master"), sumRXOk);
+
+    // Errors TX and RX
+	app_log_info("TX Err (#err/#TO)          : %0.3f%% (%lu/%lu)\n", localStat3, gTX_tab[TAB_POS_TX_ERR], gTX_tab[TAB_POS_TX_TIMEOUT]);
+	app_log_info("RX Err (#err/#TO/#CRC/#gap): %0.3f%% (%lu/%lu/%lu/%lu)\n", localStat4,
+	                                                                         gRX_tab[gDeviceCfgAddr->posTab][TAB_POS_RX_ERR],
+	                                                                         gRX_tab[gDeviceCfgAddr->posTab][TAB_POS_RX_TIMEOUT],
+	                                                                         gRX_tab[gDeviceCfgAddr->posTab][TAB_POS_RX_CRC_ERR],
+	                                                                         deltaRXGap);
+    // Transmission rate
+    if (gDeviceCfgAddr->ismaster)
     {
-        if (gRX_counter[i])
-            app_log_info("#Counter (Slave %03d)     : %lu\n", i, gRX_tab[i][0]);
+        app_log_info("Rate (loop 100)            : %0.2f msg/s (%0.2f ms)\n", localStat, localStat2);
+    }
+    else
+    {
+        app_log_info("Rate                       : %0.2f msg/s\n", localStat);
     }
 
-	app_log_info("TX Err (see below)       : %0.3f%%\n", localStat3);
-	app_log_info("#Err/#TO/#Inv            : %lu/%lu/%lu\n", gTX_tab[1], gTX_tab[2], gTX_tab[5]);
-	app_log_info("TX retransmit count      : %lu\n", gTX_tab[3]);
-	app_log_info("RX Err (see below)       : %0.3f%%\n", localStat4);
-	app_log_info("#Err/#TO/#Inv/#CRC       : %lu/%lu/%lu/%lu\n", gRX_tab[MASTER_ID][1], gRX_tab[MASTER_ID][2], gRX_tab[MASTER_ID][5], gRX_tab[MASTER_ID][6]);
-	//app_log_info("Counter #gap (max) : %lu (%d)\n", gRX_tab[3], gRX_tab[4]);
-    for (int i = 0; i < MAX_SLAVE; i++)
+    // Calibration
+    app_log_info("Cal #request (#err)        : %lu (%lu)\n", gCAL_tab[TAB_POS_CAL_REQ], gCAL_tab[TAB_POS_CAL_ERR]);
+
+	// Slave detail
+	app_log_info("\n");
+	app_log_info("%s detail\n", (gDeviceCfgAddr->ismaster ? "Slaves" : "Slave"));
+	app_log_info("-------------\n");
+    if (gDeviceCfgAddr->ismaster)
     {
-        if (gRX_counter[i])
-            app_log_info("Counter #gap (Slave %03d) : %lu\n", i, gRX_tab[i][3]);
+        // Master node --> take in account all slaves
+        for (int i = 1; i < MAX_NODE; i++)
+        {
+            if (gRX_counter[i])
+            {
+                app_log_info("Slave #%03d #cnt (#gap/max) : %lu (%lu/%lu)\n",
+                        i,
+                        gRX_tab[i][TAB_POS_RX_OK],
+                        gRX_tab[i][TAB_POS_RX_GAP],
+                        gRX_tab[i][TAB_POS_RX_GAP_MAX]);
+            }
+        }
+    }
+    else    // Slave node -> take in account only the concerned slave
+    {
+        app_log_info("#Counter (#gap/max)        : %lu (%lu=%lu-%lu#fr.err / max: %lu)\n", gRX_tab[gDeviceCfgAddr->posTab][TAB_POS_RX_OK],
+                                                                   deltaRXGap,
+                                                                   gRX_tab[gDeviceCfgAddr->posTab][TAB_POS_RX_GAP],
+                                                                   gRX_tab[gDeviceCfgAddr->posTab][TAB_POS_RX_ERR],
+                                                                   gRX_tab[gDeviceCfgAddr->posTab][TAB_POS_RX_GAP_MAX]);
     }
 
-	app_log_info("Cal #request (#Err)       : %lu (%lu)\n", gCAL_tab[0], gCAL_tab[1]);
-	app_log_info("Rate (loop 100)           : %0.2f msg/s (%0.2f ms)\n", localStat, localStat2);
-
+    // Detail of callback events
 	DisplayEvents();
 }
-#endif  // qMASTER
-
-#if (qSLAVE)
-/******************************************************************************
- * DisplayStat : print and display statistics
- *****************************************************************************/
-static __INLINE void DisplayStat(void)
-{
-    // Statistics
-    float deltaTime = (float) (gElapsedTime - gOldElapsedTime) / 1000000.0f;
-    float localStat = (float) (gTX_counter + gRX_counter - gTX_counter_old - gRX_counter_old) / deltaTime;
-    float localStat2 = (10.0f * 10100.0f) / localStat;
-    float localStat3 = 100.0f * (float) (gTX_tab[1] + gTX_tab[2] + gTX_tab[5]) / (float) gTX_counter;
-    float localStat4 = 100.0f * (float) (gRX_tab[MASTER_ID][1] + gRX_tab[MASTER_ID][2] + gRX_tab[MASTER_ID][5] + gRX_tab[MASTER_ID][6]) / (float) gRX_counter;
-
-    // Print on serial COM
-    app_log_info("\n");
-    app_log_info("Performance statistics\n");
-    app_log_info("----------------------\n");
-    app_log_info("Elapsed time       : %0.2f sec\n", deltaTime);
-
-    app_log_info("#Counter (Master)  : %lu\n", gTX_tab[0]);
-    app_log_info("#Counter (RX)      : %lu\n", gRX_tab[MASTER_ID][0]);
-    app_log_info("TX Err (see below) : %0.3f%%\n", localStat3);
-    app_log_info("#Err/#TO/#Inv      : %lu/%lu/%lu\n", gTX_tab[1], gTX_tab[2], gTX_tab[5]);
-    app_log_info("TX retransmit count: %lu\n", gTX_tab[3]);
-    app_log_info("RX Err (see below) : %0.3f%%\n", localStat4);
-    app_log_info("#Err/#TO/#Inv/#CRC : %lu/%lu/%lu/%lu\n", gRX_tab[MASTER_ID][1], gRX_tab[MASTER_ID][2], gRX_tab[MASTER_ID][5], gRX_tab[MASTER_ID][6]);
-    app_log_info("Counter #gap (max) : %lu (%d)\n", gRX_tab[3], gRX_tab[4]);
-
-    app_log_info("Cal #request (#Err): %lu (%lu)\n", gCAL_tab[0], gCAL_tab[1]);
-    app_log_info("Rate (loop 100)    : %0.2f msg/s (%0.2f ms)\n", localStat, localStat2);
-
-    DisplayEvents();
-}
-#endif  // qSLAVE
 
 #endif /* APP_STAT_H_ */
