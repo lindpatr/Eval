@@ -45,11 +45,11 @@
 // -----------------------------------------------------------------------------
 //                                Global Variables
 // -----------------------------------------------------------------------------
-extern volatile uint32_t gRX_counter[MAX_SLAVE];
+extern volatile uint32_t gRX_counter[MAX_NODE];
 extern volatile uint32_t gTX_counter;
 extern volatile uint32_t gTX_counter_old;
-extern volatile uint32_t gRX_counter_old[MAX_SLAVE];
-extern uint32_t gRX_counter_prev[MAX_SLAVE];
+extern volatile uint32_t gRX_counter_old[MAX_NODE];
+extern uint32_t gRX_counter_prev[MAX_NODE];
 
 // -----------------------------------------------------------------------------
 //                          Public Function Declarations
