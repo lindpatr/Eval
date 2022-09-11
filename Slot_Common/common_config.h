@@ -15,7 +15,20 @@
 
 
 #define SLAVE_IN_SYSTEM (3)                     // Netowrk is composed of X slaves
-#define TIME_SLOT       (290U)                  // in us
+#define TIME_SLOT       (240U)                  // in us
+
+// Master cycle of collecting data from Slaves
+// Slot 0   : Master
+// Slot 0   : Slave 1
+// Slot 1   : Slave 2
+// ...
+// Slot N-1 : Slave N
+#define SYNC_PERIOD  ((SLAVE_IN_SYSTEM*TIME_SLOT)+(uint32_t)(0.25f*(float)TIME_SLOT)/*(uint32_t)(0.1f*SEC)*/)             // in us, TODO Nb slave + 0.5 car Slave 1 et Master communique dans slot 0 mais ce dernier dure plus long, à contrôler / analyser
+
+// In Slave, considering if no Sync from Master after 5 times SYNC_PERIOD that Master stop its process -> restart state machine from Slaves
+#define SYNC_TIMEOUT (5*SYNC_PERIOD)
+
+#define SEC (1000000U)
 
 #define MAX_SLAVE       (100)                   // Max. nbr of slaves in network
 #define MAX_NODE        (MAX_SLAVE+1)           // Max nodes in network (master + slaves)
