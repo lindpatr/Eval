@@ -44,7 +44,8 @@
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
-
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
 
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
@@ -52,6 +53,10 @@
 void cli_set_period(sl_cli_command_arg_t *arguments);
 void cli_start_process(sl_cli_command_arg_t *arguments);
 void cli_req_stat(sl_cli_command_arg_t *arguments);
+void cli_set_slot_time(sl_cli_command_arg_t *arguments);
+void cli_set_sync_fact(sl_cli_command_arg_t *arguments);
+void cli_set_sync_timeout(sl_cli_command_arg_t *arguments);
+
 
 // -----------------------------------------------------------------------------
 //                                Global Variables
@@ -60,10 +65,28 @@ void cli_req_stat(sl_cli_command_arg_t *arguments);
 extern volatile bool gStartProcess;
 /// Flag, indicating a request to print statistics (button was pressed / CLI statistics request has occurred)
 extern volatile bool gStatReq;
-/// Flag, indicating print stat delay on CLI
-extern volatile RAIL_Time_t gStatDelay;
 /// Button pressed simulation with CLI, start process
 extern volatile bool gBtnPressed;
+
+/// Value, indicating print stat delay on CLI
+extern volatile RAIL_Time_t gStatDelay;
+/// Value, indicating time of a slot in the protocol on CLI
+extern volatile uint16_t gTimeSlot;
+/// Value, indicating sync period for Master on CLI
+extern volatile RAIL_Time_t gSyncPeriod;
+/// Value, indicating sync timeout for Slave on CLI
+extern volatile RAIL_Time_t gSyncTimeOut;
+
+/// A static var for TX schedule config
+extern RAIL_ScheduleTxConfig_t gRailScheduleCfgTX;
+/// A static var that contains config data for the device
+extern PROT_AddrMap_t* gDeviceCfgAddr;
+
+/// Value, indicating sync period factor for Master on CLI
+static float gSyncPeriodFact = SYNC_PERIOD_FACT;
+/// Value, indicating sync timeout multiple of gSyncPeriod on CLI
+static uint8_t gSyncTimeOutNb = SYNC_TIMEOUT_NB;
+
 
 // -----------------------------------------------------------------------------
 //                                Static Variables
@@ -71,9 +94,27 @@ extern volatile bool gBtnPressed;
 // User additional CLI command
 static const sl_cli_command_info_t cli_cmd__delay =
 SL_CLI_COMMAND(cli_set_period,
-		"Set statistics print delay",
-		"1 - 3220 sec",
+		"Set statistics print period (s)",
+		"1 - 3600 / 0 = default",
 		{	SL_CLI_ARG_UINT16, SL_CLI_ARG_END,});
+
+static const sl_cli_command_info_t cli_cmd__slot_time =
+SL_CLI_COMMAND(cli_set_slot_time,
+        "Set slot time (us)",
+        "100 - 40000 / 0 = default",
+        {   SL_CLI_ARG_UINT16, SL_CLI_ARG_END,});
+
+static const sl_cli_command_info_t cli_cmd__sync_fact =
+SL_CLI_COMMAND(cli_set_sync_fact,
+        "Set sync fact (%%)",
+        "1 - 100 / 0 = default",
+        {   SL_CLI_ARG_UINT8, SL_CLI_ARG_END,});
+
+static const sl_cli_command_info_t cli_cmd__sync_timeout =
+SL_CLI_COMMAND(cli_set_sync_timeout,
+        "Set sync timeout (#sync period)",
+        "1 - 20  / 0 = default",
+        {   SL_CLI_ARG_UINT8, SL_CLI_ARG_END,});
 
 static const sl_cli_command_info_t cli_cmd__start_process =
 SL_CLI_COMMAND(cli_start_process,
@@ -83,7 +124,7 @@ SL_CLI_COMMAND(cli_start_process,
 
 static const sl_cli_command_info_t cli_cmd__req_stat =
 SL_CLI_COMMAND(cli_req_stat,
-		"Print statistics",
+		"Show statistics",
 		"",
         {SL_CLI_ARG_END, });
 
@@ -91,6 +132,9 @@ SL_CLI_COMMAND(cli_req_stat,
 const sl_cli_command_entry_t cli_my_command_table[] =
 {
 { "delay", &cli_cmd__delay, false },
+{ "slot", &cli_cmd__slot_time, false },
+{ "sync_fact", &cli_cmd__sync_fact, false },
+{ "sync_to", &cli_cmd__sync_timeout, false },
 { "start", &cli_cmd__start_process, false },
 { "stat", &cli_cmd__req_stat, false },
 { NULL, NULL, false }, };
@@ -100,6 +144,9 @@ sl_cli_command_group_t cli_my_command_group =
 {
 { NULL },
 false, cli_my_command_table };
+
+char *strNew = "NEW";
+char *strDefault = "DEFAULT";
 
 // -----------------------------------------------------------------------------
 //                          Public Function Definitions
@@ -113,9 +160,21 @@ void cli_info(sl_cli_command_arg_t *arguments)
 
     app_log_info("Info:\n");
     app_log_info("  MCU Id     : 0x%llx\n", SYSTEM_GetUnique());
+    app_log_info("  Enable     : %s\n", (gDeviceCfgAddr->enable ? "true" : "false"));
     app_log_info("  Role       : %s\n", gDeviceCfgAddr->name);
     app_log_info("  Addr       : %03d\n", gDeviceCfgAddr->internalAddr);
-    app_log_info("  Slot [us]  : %06d\n", gDeviceCfgAddr->slotTime);
+    app_log_info("  Slot pos   : %03d\n", gDeviceCfgAddr->slotPos);
+    app_log_info("  Slot time  : %d us\n", gTimeSlot);
+    if (gDeviceCfgAddr->ismaster)
+    {
+        app_log_info("  Sync period: %d us\n", gSyncPeriod);
+
+    }
+    else
+    {
+        app_log_info("  Slot start : %d us\n", (gDeviceCfgAddr->ismaster ? 0 : gRailScheduleCfgTX.when));
+        app_log_info("  Sync timout: %d us\n", gSyncTimeOut);
+    }
 }
 
 /******************************************************************************
@@ -125,7 +184,7 @@ void cli_send_packet(sl_cli_command_arg_t *arguments)
 {
 	(void) arguments;
 
-	app_log_info("No more supported!\n");
+	app_log_warning("Warning No more supported!\n");
 }
 
 /******************************************************************************
@@ -135,7 +194,7 @@ void cli_receive_packet(sl_cli_command_arg_t *arguments)
 {
 	(void) arguments;
 
-	app_log_info("No more supported!\n");
+	app_log_warning("Warning No more supported!\n");
 }
 
 /******************************************************************************
@@ -143,9 +202,158 @@ void cli_receive_packet(sl_cli_command_arg_t *arguments)
  *****************************************************************************/
 void cli_set_period(sl_cli_command_arg_t *arguments)
 {
-	uint16_t delay = sl_cli_get_argument_uint16(arguments, 0);
-	gStatDelay = (RAIL_Time_t)(delay * SEC);
-	app_log_info("Print automatic statistics after %d sec\n", delay);
+	uint16_t arg = sl_cli_get_argument_uint16(arguments, 0);
+	char *str;
+
+	if (arg > 0)
+	{
+	    arg = MIN(arg, STAT_PERIOD_MAX);
+	    arg = MAX(arg, 1);
+
+	    gStatDelay = (RAIL_Time_t)(arg * SEC);
+
+	    str = strNew;
+	}
+	else    // Default value
+	{
+	    gStatDelay = (RAIL_Time_t)STAT_PERIOD_us;
+        str = strDefault;
+	}
+	app_log_info("Info Set automatic print statistics period to %d sec (%s)\n", (gStatDelay / SEC), str);
+}
+
+/******************************************************************************
+ * CLI - Set slot time: set schedule TX after N slot time
+ *****************************************************************************/
+void cli_set_slot_time(sl_cli_command_arg_t *arguments)
+{
+    uint16_t arg = sl_cli_get_argument_uint16(arguments, 0);
+    char *str;
+
+    if (!gStartProcess)
+    {
+        if (arg > 0)
+        {
+            arg = MIN(arg, TIME_SLOT_MAX);
+            arg = MAX(arg, TIME_SLOT_MIN);
+
+            gTimeSlot = arg;
+
+            str = strNew;
+        }
+        else    // Default value
+        {
+            gTimeSlot = TIME_SLOT;
+
+            str = strDefault;
+        }
+
+        gRailScheduleCfgTX.when = (gDeviceCfgAddr->slotPos * gTimeSlot);
+        gSyncPeriod = (RAIL_Time_t)((SLAVE_IN_SYSTEM*gTimeSlot)+(uint32_t)((float)(gSyncPeriodFact*(float)gTimeSlot)));
+        gSyncTimeOut = (RAIL_Time_t)(gSyncTimeOutNb * gSyncPeriod);
+
+        app_log_info("Info Set slot time to %d us (%s)\n", gTimeSlot, str);
+
+        app_log_info("Info Update SYNC_PERIOD to %d us (N_SLAVE = %d, TIME_SLOT = %d us, FACT = %0.2f)\n", gSyncPeriod, common_getNbrDeviceOfType(SLAVE_TYPE), gTimeSlot, gSyncPeriodFact);
+        if (!gDeviceCfgAddr->ismaster)
+        {
+            app_log_info("Info Update TIME_SLOT for scheduledTX to %d us\n", gRailScheduleCfgTX.when);
+        }
+        else
+        {
+            app_log_info("Info Update SYNC_TIMEOUT to %d us (%d x SYNC_PERIOD)\n", gSyncTimeOut, gSyncTimeOutNb);
+        }
+    }
+    else
+    {
+        app_log_warning("Warning Only available before starting process -> do a reset to use it!\n");
+    }
+
+}
+
+/******************************************************************************
+ * CLI - Set sync period: set the factor in the sync period formula in Master
+ *****************************************************************************/
+void cli_set_sync_fact(sl_cli_command_arg_t *arguments)
+{
+    uint8_t arg = sl_cli_get_argument_uint8(arguments, 0);
+    char *str;
+
+    if (!gStartProcess)
+    {
+        if (gDeviceCfgAddr->ismaster)
+        {
+            if (arg > 0)
+            {
+                arg = MIN(arg, SYNC_PERIOD_FACT_MAX);
+                arg = MAX(arg, SYNC_PERIOD_FACT_MIN);
+
+                gSyncPeriodFact = (float)arg / 100.0f;
+
+                str = strNew;
+            }
+            else    // Default value
+            {
+                gSyncPeriodFact = SYNC_PERIOD_FACT;
+
+                str = strDefault;
+            }
+
+            gSyncPeriod = (RAIL_Time_t)((common_getNbrDeviceOfType(SLAVE_TYPE)*gTimeSlot)+(uint32_t)((float)(gSyncPeriodFact*(float)gTimeSlot)));
+            app_log_info("Info Set SYNC_PERIOD to %d us (N_SLAVE = %d, TIME_SLOT = %d us, FACT = %0.2f) (%s)\n", gSyncPeriod, common_getNbrDeviceOfType(SLAVE_TYPE), gTimeSlot, gSyncPeriodFact, str);
+        }
+        else
+        {
+            app_log_warning("Warning Only available on Master\n");
+        }
+    }
+    else
+    {
+        app_log_warning("Warning Only available before starting process -> do a reset to use it!\n");
+    }
+}
+
+/******************************************************************************
+ * CLI - Set sync period timeout: set the sync period timeout in Slave
+ *****************************************************************************/
+void cli_set_sync_timeout(sl_cli_command_arg_t *arguments)
+{
+    uint8_t arg = sl_cli_get_argument_uint8(arguments, 0);
+    char *str;
+
+    if (!gStartProcess)
+    {
+        if (!gDeviceCfgAddr->ismaster)
+        {
+            if (arg > 0)
+            {
+                arg = MIN(arg, SYNC_TIMOUT_MAX);
+                arg = MAX(arg, SYNC_TIMOUT_MIN);
+
+                gSyncTimeOutNb = arg;
+
+                str = strNew;
+            }
+            else     // Default value
+            {
+                gSyncTimeOutNb = SYNC_TIMEOUT_NB;
+
+                str = strDefault;
+            }
+
+            gSyncTimeOut = (RAIL_Time_t)(gSyncTimeOutNb * gSyncPeriod);
+
+            app_log_info("Info Set SYNC_TIMEOUT to %d us (%d x SYNC_PERIOD) (%s)\n", gSyncTimeOut, gSyncTimeOutNb, str);
+        }
+        else
+        {
+            app_log_warning("Warning Only available on Slave\n");
+        }
+    }
+    else
+    {
+        app_log_warning("Warning Only available before starting process -> do a reset to use it!\n");
+    }
 }
 
 /******************************************************************************
@@ -154,6 +362,7 @@ void cli_set_period(sl_cli_command_arg_t *arguments)
 void cli_start_process(sl_cli_command_arg_t *arguments)
 {
 	(void) arguments;
+
 	if (gDeviceCfgAddr->ismaster)
 	{
         if (!gStartProcess)
@@ -161,14 +370,13 @@ void cli_start_process(sl_cli_command_arg_t *arguments)
             gBtnPressed = true;
             gStartProcess = true;
             gElapsedTime = RAIL_GetTime();
-            app_log_info("Start process now ...\n");
         }
         else
-            app_log_info("Process already started!\n");
+            app_log_warning("Warning Process already started!\n");
 	}
 	else
     {
-        app_log_info("Only available on Master\n");
+        app_log_warning("Warning Only available on Master\n");
     }
 }
 
@@ -178,10 +386,11 @@ void cli_start_process(sl_cli_command_arg_t *arguments)
 void cli_req_stat(sl_cli_command_arg_t *arguments)
 {
 	(void) arguments;
+
 	gStatReq = true;
 	gOldElapsedTime = gElapsedTime;
 	gElapsedTime = RAIL_GetTime();
-	app_log_info("Statistics print requested\n");
+	app_log_info("Info Statistics print requested\n");
 }
 
 // -----------------------------------------------------------------------------
