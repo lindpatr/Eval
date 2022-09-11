@@ -158,7 +158,6 @@ static uint8_t me;                                              // Position in t
 /// Value, indicating print stat delay on CLI
 extern volatile RAIL_Time_t gStatDelay;
 
-
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
 // -----------------------------------------------------------------------------
@@ -166,6 +165,7 @@ extern volatile RAIL_Time_t gStatDelay;
  * StartTimerSync : start sync cycle timer
  *****************************************************************************/
 static __INLINE void StartTimerSync(void);
+
 
 // -----------------------------------------------------------------------------
 //                          Callback Function Definitions
@@ -207,6 +207,8 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
         if (events & RAIL_EVENT_TX_PACKET_SENT)
         {
             // Handle next step
+            GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_TX);
+
             gTX_ok = true;
         }
         else  //  | RAIL_EVENT_TX_ABORTED
@@ -510,7 +512,7 @@ void app_process_action(void)
     else if (gTX_ok)
     {
         gTX_ok = false;
-        GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_TX);
+        //GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_TX);
         //gTX_tab[TAB_POS_TX_OK]++;
         gTX_tab[TAB_POS_TX_OK] = gCB_tab[RAIL_EVENT_TX_PACKET_SENT_SHIFT];
         // Increment counter and prepare new data

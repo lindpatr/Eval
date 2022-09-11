@@ -206,6 +206,8 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 		if (events & RAIL_EVENT_TX_PACKET_SENT)
 		{
 			// Handle next step
+		    GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_TX);
+		    GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_MISC);
 			gTX_ok = true;
 
 			if (gPauseCycleReq)
@@ -226,7 +228,7 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 	if (events & (1ULL << RAIL_EVENT_SCHEDULED_TX_STARTED_SHIFT))
 	{
 	    // For oscillo debug purposes
-	    GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
+	    GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_MISC);
 	}
 
 	// Perform all calibrations when needed
@@ -411,7 +413,7 @@ static __INLINE void ScheduleTransmit(void)
 	prepare_packet_to_tx();
 
 	// For oscillo debug purposes
-//	GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
+	GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
 
 	RAIL_Status_t status = RAIL_StartScheduledTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, &gRailScheduleCfgTX, NULL);
 	PrintStatus(status, "Warning RAIL_StartScheduledTx");
@@ -506,7 +508,7 @@ void app_process_action(void)
 	else if (gTX_ok)
 	{
 		gTX_ok = false;
-		GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_TX);
+		//GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_TX);
 		//gTX_tab[TAB_POS_TX_OK]++;
 		gTX_tab[TAB_POS_TX_OK] = gCB_tab[RAIL_EVENT_TX_PACKET_SENT_SHIFT];
 		// Increment counter and prepare new data
