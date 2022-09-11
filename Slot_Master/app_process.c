@@ -144,7 +144,7 @@ volatile bool gStatReq = false;					// Flag, indicating a request to print stati
 
 /// TX and RX counters
 volatile uint32_t gRX_counter[MAX_NODE] = {0UL};
-volatile uint32_t gTX_counter = 1UL;
+volatile union32_t gTX_counter = {.u32 = 1UL};
 volatile uint32_t gTX_counter_old = 0UL;
 volatile uint32_t gRX_counter_old[MAX_NODE] = {0UL};
 uint32_t gRX_counter_prev[MAX_NODE] = {0UL};
@@ -153,11 +153,19 @@ uint32_t gRX_counter_prev[MAX_NODE] = {0UL};
 volatile bool gStartProcess = false;			// Flag, indicating a start process request (button was pressed / CLI start request has occurred)
 volatile RAIL_Time_t gStatDelay = (RAIL_Time_t)STAT_PERIOD_us;  // Flag, indicating stat period on CLI
 volatile bool gBtnPressed = false;   			// Button pressed, start process
+static bool gPauseCycleConf = false;            // Flag to indicate a end of cycle of transmission with the slaves in order to avoid side effect of the print statistics
+static bool gPauseCycleReq = false;             // Flag to indicate that a print stat is pending and request to pause the cycle at the next occasion (end of cycle)
+
+// Various var
+static uint8_t me;
 
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
 // -----------------------------------------------------------------------------
-
+/******************************************************************************
+ * StartTimerSync : start sync cycle timer
+ *****************************************************************************/
+static __INLINE void StartTimerSync(void);
 
 // -----------------------------------------------------------------------------
 //                          Callback Function Definitions
@@ -264,6 +272,17 @@ void timer_callback(RAIL_MultiTimer_t *tmr, RAIL_Time_t expectedTimeOfEvent, voi
     else if (tmr == &gSync_period) // used with standard StartTx when RAIL_StartScheduledTx isn't used
     {
         gSyncTimerDone = true;
+
+        if (!gPauseCycleReq)       // If no request to print stat is pending, restart cycle with the slaves
+        {
+            // In order to be the most accurate as possible, start StartTX directly from here
+            /*RAIL_Status_t status = */RAIL_StartTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, NULL);
+            StartTimerSync();
+        }
+        else
+        {
+            gPauseCycleConf = true;// Cycle ended, permit a print stat
+        }
     }
 }
 
@@ -333,6 +352,29 @@ static __INLINE void StartTimerSync(void)
 }
 
 /******************************************************************************
+ * StopRadio : stop radio and clear all flags
+ *****************************************************************************/
+static __INLINE void StopRadio(void)
+{
+    RAIL_Idle(gRailHandle, RAIL_IDLE_FORCE_SHUTDOWN_CLEAR_FLAGS, true);
+
+    gRX_ok = false;
+    gTX_ok = false;
+    gRX_error = false;
+    gTX_error = false;
+    gSyncTimerDone = false;
+    gCAL_error = false;
+}
+
+/******************************************************************************
+ * RestartRadio : start radio
+ *****************************************************************************/
+static __INLINE void RestartRadio(void)
+{
+    RAIL_Idle(gRailHandle, RAIL_IDLE, true);
+}
+
+/******************************************************************************
  * The API helps to unpack the received packet, point to the payload and returns the length.
  *****************************************************************************/
 static __INLINE uint16_t unpack_packet_from_rx(uint8_t *rx_destination, const RAIL_RxPacketInfo_t *packet_information, uint8_t **start_of_payload)
@@ -347,12 +389,10 @@ static __INLINE uint16_t unpack_packet_from_rx(uint8_t *rx_destination, const RA
  *****************************************************************************/
 static __INLINE void prepare_packet_to_tx(void)
 {
-    //gTX_fifo.align[0] = gTX_counter;
-
-    gTX_fifo.fifo[kCounter0] = (gTX_counter & 0x000000FF) >> 0;
-    gTX_fifo.fifo[kCounter1] = (gTX_counter & 0x0000FF00) >> 8;
-    gTX_fifo.fifo[kCounter2] = (gTX_counter & 0x00FF0000) >> 16;
-    gTX_fifo.fifo[kCounter3] = (gTX_counter & 0xFF000000) >> 24;
+    gTX_fifo.fifo[kCounter0] = gTX_counter.u8[0];
+    gTX_fifo.fifo[kCounter1] = gTX_counter.u8[1];
+    gTX_fifo.fifo[kCounter2] = gTX_counter.u8[2];
+    gTX_fifo.fifo[kCounter3] = gTX_counter.u8[3];
 
     uint16_t allocated_tx_fifo_size = RAIL_SetTxFifo(gRailHandle, gTX_fifo.fifo, TX_PAYLOAD_LENGTH, RAIL_FIFO_TX_SIZE);
     app_assert(allocated_tx_fifo_size == RAIL_FIFO_TX_SIZE, "RAIL_SetTxFifo() failed to allocate a large enough fifo (%d bytes instead of %d bytes)\n", allocated_tx_fifo_size, RAIL_FIFO_TX_SIZE);
@@ -413,7 +453,7 @@ static __INLINE void DecodeReceivedMsg(void)
         uint8_t *start_of_packet = 0;
         uint16_t packet_size = unpack_packet_from_rx(gRX_fifo, &packet_info, &start_of_packet);
         status = RAIL_ReleaseRxPacket(gRailHandle, rx_packet_handle);
-        PrintStatus(status, "Error ReleaseRxPacket");
+        PrintStatus(status, "Warning ReleaseRxPacket");
 
         if (packet_info.packetStatus == RAIL_RX_PACKET_READY_SUCCESS)
         {
@@ -437,7 +477,7 @@ static __INLINE void DecodeReceivedMsg(void)
         }
         else if (packet_info.packetStatus == RAIL_RX_PACKET_READY_CRC_ERROR)
         {
-            gRX_tab[gDeviceCfgAddr->posTab][TAB_POS_RX_CRC_ERR]++;
+            gRX_tab[me][TAB_POS_RX_CRC_ERR]++;
         }
 
         // Indicate RX in progress on LED0
@@ -474,7 +514,7 @@ void app_process_action(void)
         //gTX_tab[TAB_POS_TX_OK]++;
         gTX_tab[TAB_POS_TX_OK] = gCB_tab[RAIL_EVENT_TX_PACKET_SENT_SHIFT];
         // Increment counter and prepare new data
-        gTX_counter++;    // pas de test overflow
+        gTX_counter.u32++;    // pas de test overflow
         prepare_packet_to_tx();
 
         SetState(kMsgSent);
@@ -482,11 +522,12 @@ void app_process_action(void)
     else if (gRX_error)
     {
         gRX_error = false;
-        //gRX_tab[gDeviceCfgAddr->posTab][TAB_POS_RX_ERR]++;
-        gRX_tab[gDeviceCfgAddr->posTab][TAB_POS_RX_ERR] = gCB_tab[RAIL_EVENT_RX_PACKET_ABORTED_SHIFT] +
+        //gRX_tab[me][TAB_POS_RX_ERR]++;
+        gRX_tab[me][TAB_POS_RX_ERR] = gCB_tab[RAIL_EVENT_RX_PACKET_ABORTED_SHIFT] +
                                                           gCB_tab[RAIL_EVENT_RX_FRAME_ERROR_SHIFT] +
                                                           gCB_tab[RAIL_EVENT_RX_FIFO_OVERFLOW_SHIFT] +
                                                           gCB_tab[RAIL_EVENT_RX_SCHEDULED_RX_MISSED_SHIFT];
+
         SetState(kErrorRx);
     }
     else if (gTX_error)
@@ -498,6 +539,7 @@ void app_process_action(void)
                                   gCB_tab[RAIL_EVENT_TX_UNDERFLOW_SHIFT] +
                                   gCB_tab[RAIL_EVENT_TX_CHANNEL_BUSY_SHIFT] +
                                   gCB_tab[RAIL_EVENT_TX_SCHEDULED_TX_MISSED_SHIFT];
+
         prepare_packet_to_tx();
 
         SetState(kErrorTx);
@@ -506,7 +548,8 @@ void app_process_action(void)
     {
         gSyncTimerDone = false;
 
-        SetState(kSendSync);
+        //SetState(kSendSync);
+        SetState(kSendingMsg);            // instead kSendSync because StarTX called directly in the timer callback
     }
     else if (gCAL_error)
     {
@@ -535,9 +578,12 @@ void app_process_action(void)
 
         // Set node address
         gTX_fifo.fifo[kAddr] = gDeviceCfgAddr->internalAddr;
+        me = gDeviceCfgAddr->posTab;
 
         // TX fifo ready
         prepare_packet_to_tx();
+
+        app_log_info("\nInfo Ready ...\n");
 
         // Wait event
         SetState(kIdle);
@@ -547,10 +593,11 @@ void app_process_action(void)
         // TX started by pressing BTN0
         SetState(kSendSync);
 
-        app_log_info("Start process ...\n");
+        app_log_info("\nInfo Start process ...\n");
+
         sl_led_turn_on(&sl_led_led1);
         StartTimerStat();
-        gTX_counter_old = gTX_counter;
+        gTX_counter_old = gTX_counter.u32;
         break;
 
     case kIdle:
@@ -583,13 +630,13 @@ void app_process_action(void)
         GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
 
         // Abnormal event
-        PrintError(gErrorCode, "RX Error");
+        PrintError(gErrorCode, "Error RX");
         break;
 
     case kListen:
         radio_state = RAIL_GetRadioState(gRailHandle);
 
-        if ((radio_state != RAIL_RF_STATE_TX_ACTIVE) || (radio_state != RAIL_RF_STATE_RX_ACTIVE))
+        if ((radio_state != RAIL_RF_STATE_TX_ACTIVE) && (radio_state != RAIL_RF_STATE_RX_ACTIVE))
         {
             SetState(kWaitMsg);
             StartReceive();
@@ -621,14 +668,14 @@ void app_process_action(void)
     case kErrorTx:
         SetState(kSendSync);            // Force to retransmit
 
-        PrintError(gErrorCode, "TX Error");
+        PrintError(gErrorCode, "Error TX");
         break;
 
     case kSendSync:
 
         radio_state = RAIL_GetRadioState(gRailHandle);
 
-        if ((radio_state != RAIL_RF_STATE_TX_ACTIVE) || (radio_state != RAIL_RF_STATE_RX_ACTIVE))
+        if ((radio_state != RAIL_RF_STATE_TX_ACTIVE) && (radio_state != RAIL_RF_STATE_RX_ACTIVE))
         {
             SetState(kSendingMsg);
             StartTransmit();
@@ -646,7 +693,7 @@ void app_process_action(void)
 #if (qPrintErrorsL1)
         if (gErrorCode != gPrevErrorCode)
         {
-            app_log_error("CAL Error (0x%llX / %d)\n", gErrorCode, gCalibrationStatus);
+            app_log_error("Error CAL (0x%llX / %d)\n", gErrorCode, gCalibrationStatus);
             gPrevErrorCode = gErrorCode;
         }
 #endif  // qPrintErrorsL1
@@ -662,14 +709,31 @@ void app_process_action(void)
     /// -----------------------------------------
     if (gStatTimerDone || gPrintStat || gStatReq)		// On timeout delay || Button pressed || CLI command
     {
-        gStatTimerDone = false;
-        gPrintStat = false;
-        gStatReq = false;
+        gPauseCycleReq = true;      // Request to print stat
 
-        DisplayStat();
+        if (gPauseCycleConf)        // Permission to print stat
+        {
+            gStatTimerDone = false;
+            gPrintStat = false;
+            gStatReq = false;
 
-        gTX_counter_old = gTX_counter;
-        memcpy((uint32_t *)gRX_counter_old, (uint32_t *)gRX_counter, MAX_NODE);
+            StopRadio();
+
+            DisplayStat();
+
+            RestartRadio();
+
+            gTX_counter_old = gTX_counter.u32;
+            memcpy((uint32_t *)gRX_counter_old, (uint32_t *)gRX_counter, MAX_NODE);
+
+            gPauseCycleReq = false;
+            gPauseCycleConf = false;
+
+            SetState(kStart);       // Restart the cycle
+
+            gElapsedTime = RAIL_GetTime();
+            gOldElapsedTime = gElapsedTime;
+        }
     }
 }
 
