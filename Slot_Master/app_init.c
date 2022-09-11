@@ -262,7 +262,7 @@ void app_init(void)
     const char string[] = "\nSlot Protocol";
 
     // CLI info message
-    app_log_info("%s (slot time %lu us) - %s (Addr #%03d)\n", string,
+    app_log_info("%s (slot time %d us) - %s (Addr #%03d)\n", string,
                                                                TIME_SLOT,
                                                                gDeviceCfgAddr->name,
                                                                gDeviceCfgAddr->internalAddr);

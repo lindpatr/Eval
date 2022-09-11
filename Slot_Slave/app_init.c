@@ -223,7 +223,7 @@ void app_init(void)
 	// Set timeout for scheduled TX
 	gRailScheduleCfgTX.when = gDeviceCfgAddr->slotTime;
 	gRailScheduleCfgTX.mode = RAIL_TIME_DELAY;
-	gRailScheduleCfgTX.txDuringRx = RAIL_SCHEDULED_TX_DURING_RX_ABORT_TX; // RAIL_SCHEDULED_TX_DURING_RX_POSTPONE_TX: Risque d'être problématique
+	gRailScheduleCfgTX.txDuringRx = RAIL_SCHEDULED_TX_DURING_RX_POSTPONE_TX;
 
 	// Set RX and TX transition
 	gRailTransitionRX.success = RAIL_RF_STATE_RX;   // RX Ok  -> RX
@@ -287,7 +287,7 @@ void app_init(void)
     const char string[] = "\nSlot Protocol";
 
     // CLI info message
-    app_log_info("%s (slot time %lu us) - %s (Addr #%03d)\n", string,
+    app_log_info("%s (slot time %d us) - %s (Addr #%03d)\n", string,
                                                                TIME_SLOT,
                                                                gDeviceCfgAddr->name,
                                                                gDeviceCfgAddr->internalAddr);
