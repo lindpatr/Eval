@@ -43,6 +43,7 @@
 #include "sl_flex_packet_asm.h"
 
 #include "common_stat.h"
+#include "app_init.h"
 
 // Specific to LCD display
 #include "dmd.h"
@@ -58,9 +59,6 @@
 /// Transmit data length (fixed payload --> see Radio Configurator)
 #define TX_PAYLOAD_LENGTH (6U)            // in bytes
 
-// Period to print statistics
-#define STAT_PERIOD_s (60U)                // Default value, in us --> CLI command delay xx for other value (not stored! ... yet)
-#define STAT_PERIOD_us (STAT_PERIOD_s * SEC) // in sec
 
 /// State machine
 typedef enum
@@ -116,7 +114,7 @@ static uint64_t gPrevErrorCode = RAIL_EVENTS_NONE;
 static volatile RAIL_Status_t gCalibrationStatus = RAIL_STATUS_NO_ERROR;
 
 /// A static handle of a RAIL timers
-static RAIL_MultiTimer_t gStatDelayTimer, gSync_period;
+static RAIL_MultiTimer_t gStatDelayTimer, gSyncPeriodTimer;
 
 /// Receive and Send FIFO
 /// RX
@@ -151,13 +149,15 @@ uint32_t gRX_counter_prev[MAX_NODE] = {0UL};
 
 /// Various flags
 volatile bool gStartProcess = false;			// Flag, indicating a start process request (button was pressed / CLI start request has occurred)
-volatile RAIL_Time_t gStatDelay = (RAIL_Time_t)STAT_PERIOD_us;  // Flag, indicating stat period on CLI
 volatile bool gBtnPressed = false;   			// Button pressed, start process
 static bool gPauseCycleConf = false;            // Flag to indicate a end of cycle of transmission with the slaves in order to avoid side effect of the print statistics
 static bool gPauseCycleReq = false;             // Flag to indicate that a print stat is pending and request to pause the cycle at the next occasion (end of cycle)
 
 // Various var
-static uint8_t me;
+static uint8_t me;                                              // Position in the config file (for address, time slot, ...)
+/// Value, indicating print stat delay on CLI
+extern volatile RAIL_Time_t gStatDelay;
+
 
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
@@ -269,7 +269,7 @@ void timer_callback(RAIL_MultiTimer_t *tmr, RAIL_Time_t expectedTimeOfEvent, voi
         gOldElapsedTime = gElapsedTime;
         gElapsedTime = RAIL_GetTime();
     }
-    else if (tmr == &gSync_period) // used with standard StartTx when RAIL_StartScheduledTx isn't used
+    else if (tmr == &gSyncPeriodTimer) // used with standard StartTx when RAIL_StartScheduledTx isn't used
     {
         gSyncTimerDone = true;
 
@@ -339,7 +339,7 @@ static __INLINE void StartTimerStat(void)
 {
     RAIL_Status_t status = RAIL_SetMultiTimer(&gStatDelayTimer, gStatDelay, RAIL_TIME_DELAY, &timer_callback, NULL);
     gElapsedTime = RAIL_GetTime();
-    PrintStatus(status, "Warning RAIL_SetMultiTimer STAT");
+    PrintStatus(status, "Warning RAIL_SetMultiTimer STAT PERIOD");
 }
 
 /******************************************************************************
@@ -347,8 +347,8 @@ static __INLINE void StartTimerStat(void)
  *****************************************************************************/
 static __INLINE void StartTimerSync(void)
 {
-    RAIL_Status_t status = RAIL_SetMultiTimer(&gSync_period, SYNC_PERIOD, RAIL_TIME_DELAY, &timer_callback, NULL);
-    PrintStatus(status, "Warning RAIL_SetMultiTimer TX");
+    RAIL_Status_t status = RAIL_SetMultiTimer(&gSyncPeriodTimer, gSyncPeriod, RAIL_TIME_DELAY, &timer_callback, NULL);
+    PrintStatus(status, "Warning RAIL_SetMultiTimer SYNC PERIOD");
 }
 
 /******************************************************************************
@@ -716,6 +716,7 @@ void app_process_action(void)
             gStatTimerDone = false;
             gPrintStat = false;
             gStatReq = false;
+            gCountPrintStat++;
 
             StopRadio();
 

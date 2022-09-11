@@ -77,8 +77,8 @@ void cli_user_init(void);
 // -----------------------------------------------------------------------------
 /// A static handle of a RAIL instance
 volatile RAIL_Handle_t gRailHandle;
-/// A static var for RX schedule config
-//RAIL_ScheduleRxConfig_t gRailScheduleCfgRX;
+/// A static var for TX schedule config
+RAIL_ScheduleTxConfig_t gRailScheduleCfgTX;
 /// A static var for RX transition
 RAIL_StateTransitions_t gRailTransitionRX;
 /// A static var for TX transition
@@ -87,6 +87,11 @@ RAIL_StateTransitions_t gRailTransitionTX;
 RAIL_StateTiming_t gRailStateTimings;
 /// A static var that contains config data for the device
 PROT_AddrMap_t* gDeviceCfgAddr;
+volatile RAIL_Time_t gSyncPeriod = (RAIL_Time_t)SYNC_PERIOD;    // Value, indicating sync period on CLI
+volatile RAIL_Time_t gSyncTimeOut = (RAIL_Time_t)SYNC_TIMEOUT;  // Value, indicating sync timeout for Slave on CLI
+volatile uint16_t gTimeSlot = TIME_SLOT;                        // Value, indicating time of a slot in the protocol on CLI
+
+
 // -----------------------------------------------------------------------------
 //                                Static Variables
 // -----------------------------------------------------------------------------
@@ -134,20 +139,22 @@ void graphics_init(void)
 
 	GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
 
-	GLIB_drawStringOnLine(&gGlibContext, "******************", 1, GLIB_ALIGN_CENTER, 0, 0, 0);
-	GLIB_drawStringOnLine(&gGlibContext, "* SLOT PROTOCOL  *", 2, GLIB_ALIGN_CENTER, 0, 0, 0);
-	snprintf(textBuf, sizeof(textBuf),   "* %s Adr %03d *", gDeviceCfgAddr->name, gDeviceCfgAddr->internalAddr);
-	GLIB_drawStringOnLine(&gGlibContext, textBuf, 3, GLIB_ALIGN_CENTER, 0, 0, 0);
-	GLIB_drawStringOnLine(&gGlibContext, "******************", 4, GLIB_ALIGN_CENTER, 0, 0, 0);
+    GLIB_drawStringOnLine(&gGlibContext, "******************", 1, GLIB_ALIGN_CENTER, 0, 0, 0);
+    GLIB_drawStringOnLine(&gGlibContext, "* SLOT PROTOCOL  *", 2, GLIB_ALIGN_CENTER, 0, 0, 0);
+    GLIB_drawStringOnLine(&gGlibContext, "******************", 3, GLIB_ALIGN_CENTER, 0, 0, 0);
 
-	GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNormal8x8);
-	GLIB_drawStringOnLine(&gGlibContext, "Press BTN0", 6, GLIB_ALIGN_CENTER, 0, 0, 0);
-	GLIB_drawStringOnLine(&gGlibContext, "to start", 7, GLIB_ALIGN_CENTER, 0, 0, 0);
-	GLIB_drawStringOnLine(&gGlibContext, "processing", 8, GLIB_ALIGN_CENTER, 0, 0, 0);
+    GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNormal8x8);
 
-	GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
-	snprintf(textBuf, sizeof(textBuf), "0x%llX", SYSTEM_GetUnique());
-	GLIB_drawStringOnLine(&gGlibContext, textBuf, 12, GLIB_ALIGN_CENTER, 0, 0, 0);
+    snprintf(textBuf, sizeof(textBuf),   "%s Adr %03d", gDeviceCfgAddr->name, gDeviceCfgAddr->internalAddr);
+    GLIB_drawStringOnLine(&gGlibContext, textBuf, 5, GLIB_ALIGN_CENTER, 0, 0, 0);
+
+    GLIB_drawStringOnLine(&gGlibContext, "Press BTN0 on", 7, GLIB_ALIGN_CENTER, 0, 0, 0);
+    GLIB_drawStringOnLine(&gGlibContext, "Master to start", 8, GLIB_ALIGN_CENTER, 0, 0, 0);
+    GLIB_drawStringOnLine(&gGlibContext, "processing", 9, GLIB_ALIGN_CENTER, 0, 0, 0);
+
+    GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
+    snprintf(textBuf, sizeof(textBuf), "0x%llX", SYSTEM_GetUnique());
+    GLIB_drawStringOnLine(&gGlibContext, textBuf, 12, GLIB_ALIGN_CENTER, 0, 0, 0);
 
 	// Force a redraw
 	DMD_updateDisplay();
@@ -262,11 +269,17 @@ void app_init(void)
     const char string[] = "\nSlot Protocol";
 
     // CLI info message
-    app_log_info("%s (slot time %d us) - %s (Addr #%03d)\n", string,
-                                                               TIME_SLOT,
-                                                               gDeviceCfgAddr->name,
-                                                               gDeviceCfgAddr->internalAddr);
-    app_log_info("-----------------------------------------------------\n");
+    app_log_info("%s - %s (Addr #%03d)\n", string,
+                                           gDeviceCfgAddr->name,
+                                           gDeviceCfgAddr->internalAddr);
+    app_log_info("---------------------------------\n");
+    app_log_info("Protocol (slot = %d us, sync period = %d us, sync to = %d us)\n", gTimeSlot, gSyncPeriod, gSyncTimeOut);
+
+    app_assert((gDeviceCfgAddr->enable), "Device disabled in network (enable = %d in addr_table)\n", gDeviceCfgAddr->enable);
+    app_assert((common_getNbrDeviceOfType(MASTER_TYPE) == 1), "More than one Master (%d) enabled in network (isMaster is true in addr_table)\n", common_getNbrDeviceOfType(MASTER_TYPE));
+    app_assert((common_getNbrDeviceOfType(SLAVE_TYPE) > 0), "No Slave (%d) enabled in network (isMaster is false in addr_table)\n", common_getNbrDeviceOfType(SLAVE_TYPE));
+
+    gSyncPeriod = (RAIL_Time_t)((common_getNbrDeviceOfType(SLAVE_TYPE)*gTimeSlot)+(uint32_t)((float)(SYNC_PERIOD_FACT*(float)gTimeSlot)));
 
 	// Set up timers
 	if (!RAIL_ConfigMultiTimer(true))

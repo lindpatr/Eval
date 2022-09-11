@@ -46,7 +46,6 @@
 
 #define TRANSITION_TIMING_BEST_EFFORT  1
 
-
 // GPIO debug
 #define DEBUG_PIN_TX    (1)           // PB01 --> Exp Header 9
 #define DEBUG_PIN_RX    (2)           // PB02 --> Exp Header 15
@@ -60,14 +59,21 @@
 // -----------------------------------------------------------------------------
 /// A static handle of a RAIL instance
 extern volatile RAIL_Handle_t gRailHandle;
-/// A static var for RX schedule config
-extern RAIL_ScheduleRxConfig_t gRailScheduleCfgRX;
+/// A static var for TX schedule config
+extern RAIL_ScheduleTxConfig_t gRailScheduleCfgTX;
 /// A static var for RX transition
 extern RAIL_StateTransitions_t gRailTransitionRX;
 /// A static var for TX transition
 extern RAIL_StateTransitions_t gRailTransitionTX;
 /// A static var that contains config data for the device
 extern PROT_AddrMap_t* gDeviceCfgAddr;
+// Value, indicating sync period on CLI
+extern volatile RAIL_Time_t gSyncPeriod;
+// Value, indicating sync timeout for Slave on CLI
+extern volatile RAIL_Time_t gSyncTimeOut;
+// Value, indicating time of a slot in the protocol on CLI
+extern volatile uint16_t gTimeSlot;
+
 // -----------------------------------------------------------------------------
 //                          Public Function Declarations
 // -----------------------------------------------------------------------------
