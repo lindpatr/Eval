@@ -474,7 +474,6 @@
   <file name="main.c" linked="false" uri="studio:/project/main.c"/>
   <file name="app_init.c" linked="false" uri="studio:/project/app_init.c"/>
   <file name="app_process.c" linked="false" uri="studio:/project/app_process.c"/>
-  <file name="app_cli.c" linked="false" uri="studio:/project/app_cli.c"/>
   <file name="app_init.h" linked="false" uri="studio:/project/app_init.h"/>
   <file name="app_process.h" linked="false" uri="studio:/project/app_process.h"/>
   <file name="readme.md" linked="false" uri="studio:/project/readme.md"/>
