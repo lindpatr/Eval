@@ -44,12 +44,8 @@
 #define qPrintErrorsL1  1     // Print out RAIL errors on serial COM (generally return of RAIL_functions)
 #define qPrintErrorsL2  0     // Print out RAIL errors on serial COM (kTimeOutTx, kTimeOutRx, kErrorTx, kErrorRx)
 
-// TODO A enlever pour le projet Slot
-#define qAutoTransition 1       // 0 = Transition to IDLE  1 = On RX/TX success/no success, transition to RX
-#define qRx2TxAutoTransition 1  // 0 = On RX success, transition to RX 1 = On RX success, transition to TX
 #define TRANSITION_TIMING_BEST_EFFORT  1
 
-#define SEC (1000000U)
 
 // GPIO debug
 #define DEBUG_PIN_TX    (1)           // PB01 --> Exp Header 9
@@ -58,9 +54,6 @@
 #define DEBUG_PORT      gpioPortB
 #define SET             (1)           // Set PIN
 #define RESET           (0)           // Reset PIN
-
-// Master cycle
-#define SYNC_PERIOD  (SLAVE_IN_SYSTEM*TIME_SLOT/*(uint32_t)(0.1f*SEC)*/)             // in us
 
 // -----------------------------------------------------------------------------
 //                                Global Variables
