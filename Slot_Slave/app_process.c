@@ -58,9 +58,6 @@
 /// Transmit data length (fixed payload --> see Radio Configurator)
 #define TX_PAYLOAD_LENGTH (6U)            // in bytes
 
-/// Period to print statistics
-#define STAT_PERIOD_s (60U)                // Default value, in us --> CLI command delay xx for other value (not stored! ... yet)
-#define STAT_PERIOD_us (STAT_PERIOD_s * SEC) // in sec
 
 /// State machine
 typedef enum
@@ -132,7 +129,7 @@ static volatile bool gTX_ok = false;
 static volatile bool gRX_error = false;
 static volatile bool gTX_error = false;
 static volatile bool gCAL_error = false;
-static volatile bool gSyncTimeOut = false;
+static volatile bool gSYNC_timeout = false;
 
 /// Flags to update strat print statistics
 static volatile bool gPrintStat = false;    	// Print and display statistics
@@ -148,14 +145,17 @@ uint32_t gRX_counter_prev[MAX_NODE] = {0UL};
 
 /// Various flags
 volatile bool gStartProcess = false;			// Flag, indicating a start process request (button was pressed / CLI start request has occurred)
-volatile RAIL_Time_t gStatDelay = (RAIL_Time_t)STAT_PERIOD_us;	// Flag, indicating stat period on CLI
 static bool gRX_first = false;					// Indicate first RX packet received on Slave to start statistics
 volatile bool gBtnPressed = false;              // Button pressed simulation with CLI, start process
 static bool gPauseCycleConf = false;            // Flag to indicate a end of cycle of transmission with the slaves in order to avoid side effect of the print statistics
 static bool gPauseCycleReq = false;             // Flag to indicate that a print stat is pending and request to pause the cycle at the next occasion (end of cycle)
 
 // Various var
-static uint8_t me;
+static uint8_t me;                                                  // Position in the config file (for address, time slot, ...)
+/// Value, indicating print stat delay on CLI
+extern volatile RAIL_Time_t gStatDelay;
+/// Value, indicating sync timeout for Slave on CLI
+extern volatile RAIL_Time_t gSyncTimeOut;
 
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
@@ -270,7 +270,7 @@ void timer_callback(RAIL_MultiTimer_t *tmr, RAIL_Time_t expectedTimeOfEvent, voi
 	}
 	else if (tmr == &gSyncTimeOutTimer) // used to test if Master is still alive
 	{
-	    gSyncTimeOut = true;
+	    gSYNC_timeout = true;
 	    gRX_first = false;
 	}
 }
@@ -328,7 +328,7 @@ static __INLINE void StartTimerStat(void)
 {
 	RAIL_Status_t status = RAIL_SetMultiTimer(&gStatDelayTimer, gStatDelay, RAIL_TIME_DELAY, &timer_callback, NULL);
 	gElapsedTime = RAIL_GetTime();
-	PrintStatus(status, "Warning RAIL_SetMultiTimer STAT");
+	PrintStatus(status, "Warning RAIL_SetMultiTimer STAT PERIOD");
 }
 
 /******************************************************************************
@@ -336,7 +336,7 @@ static __INLINE void StartTimerStat(void)
  *****************************************************************************/
 static __INLINE void StartTimerSyncTO(void)
 {
-    RAIL_Status_t status = RAIL_SetMultiTimer(&gSyncTimeOutTimer, SYNC_TIMEOUT, RAIL_TIME_DELAY, &timer_callback, NULL);
+    RAIL_Status_t status = RAIL_SetMultiTimer(&gSyncTimeOutTimer, gSyncTimeOut, RAIL_TIME_DELAY, &timer_callback, NULL);
     PrintStatus(status, "Warning RAIL_SetMultiTimer SYNC TIMEOUT");
 }
 
@@ -351,7 +351,7 @@ static __INLINE void StopRadio(void)
     gTX_ok = false;
     gRX_error = false;
     gTX_error = false;
-    gSyncTimeOut = false;
+    gSYNC_timeout = false;
     gCAL_error = false;
 }
 
@@ -547,9 +547,9 @@ void app_process_action(void)
 
 		SetState(kErrorCal);
 	}
-	else if (gSyncTimeOut)
+	else if (gSYNC_timeout)
 	{
-	    gSyncTimeOut = false;
+	    gSYNC_timeout = false;
 	    gRX_tab[me][TAB_POS_RX_SYNC_LOST]++;
 
 	    app_log_warning("\nWarning Master sync lost!\n");
@@ -694,6 +694,7 @@ void app_process_action(void)
 	        gStatTimerDone = false;
 	        gPrintStat = false;
 	        gStatReq = false;
+	        gCountPrintStat++;
 
             StopRadio();
 
