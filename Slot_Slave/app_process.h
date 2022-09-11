@@ -42,11 +42,20 @@
 // -----------------------------------------------------------------------------
 /// RAIL channel number
 #define CHANNEL ((uint8_t) 0)
+
+typedef union
+{
+    uint32_t u32;
+    uint16_t u16[2];
+    uint8_t  u8[4];
+
+} union32_t;
+
 // -----------------------------------------------------------------------------
 //                                Global Variables
 // -----------------------------------------------------------------------------
 extern volatile uint32_t gRX_counter[MAX_NODE];
-extern volatile uint32_t gTX_counter;
+extern volatile union32_t gTX_counter;
 extern volatile uint32_t gTX_counter_old;
 extern volatile uint32_t gRX_counter_old[MAX_NODE];
 extern uint32_t gRX_counter_prev[MAX_NODE];
