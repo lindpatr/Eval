@@ -278,6 +278,7 @@ void timer_callback(RAIL_MultiTimer_t *tmr, RAIL_Time_t expectedTimeOfEvent, voi
         if (!gPauseCycleReq)       // If no request to print stat is pending, restart cycle with the slaves
         {
             // In order to be the most accurate as possible, start StartTX directly from here
+            GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
             /*RAIL_Status_t status = */RAIL_StartTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, NULL);
             StartTimerSync();
         }
