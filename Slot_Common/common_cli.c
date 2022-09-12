@@ -168,7 +168,7 @@ void cli_info(sl_cli_command_arg_t *arguments)
     if (gDeviceCfgAddr->ismaster)
     {
         app_log_info("  Sync period: %d us\n", gSyncPeriod);
-
+        app_log_info("  Nbr slaves : %dslo\n", common_getNbrDeviceOfType(SLAVE_TYPE));
     }
     else
     {
