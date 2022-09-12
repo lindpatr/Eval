@@ -270,7 +270,7 @@ void app_init(void)
 	// Configuration : RAIL Utility, Initialization (inst0) -> Radio Event Configuration -> RX Address Filtered = true/false
 	// Si Filtered = true, on recevra un event dans le callback pour indiquer que l'adresse a été filtrée et le message annulé.
 	// Si Filtered = false on NE recevra pas d'event dans le callback pour indiquer que l'adresse a été filtrée et le message annulé.
-	uint8_t addr = 0xFF;
+	uint8_t addr = common_getMasterAddr();
 
 	// Configuration du filtrage des adresses
 	// Filtrage sur 1 byte avec un offset de 0 byte depuis le débute de la trame.

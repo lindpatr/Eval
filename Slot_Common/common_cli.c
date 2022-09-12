@@ -281,31 +281,27 @@ void cli_set_sync_fact(sl_cli_command_arg_t *arguments)
 
     if (!gStartProcess)
     {
-        if (gDeviceCfgAddr->ismaster)
+        if (arg > 0)
         {
-            if (arg > 0)
-            {
-                arg = MIN(arg, SYNC_PERIOD_FACT_MAX);
-                arg = MAX(arg, SYNC_PERIOD_FACT_MIN);
+            arg = MIN(arg, SYNC_PERIOD_FACT_MAX);
+            arg = MAX(arg, SYNC_PERIOD_FACT_MIN);
 
-                gSyncPeriodFact = (float)arg / 100.0f;
+            gSyncPeriodFact = (float) arg / 100.0f;
 
-                str = strNew;
-            }
-            else    // Default value
-            {
-                gSyncPeriodFact = SYNC_PERIOD_FACT;
-
-                str = strDefault;
-            }
-
-            gSyncPeriod = (RAIL_Time_t)((common_getNbrDeviceOfType(SLAVE_TYPE)*gTimeSlot)+(uint32_t)((float)(gSyncPeriodFact*(float)gTimeSlot)));
-            app_log_info("Info Set SYNC_PERIOD to %d us (N_SLAVE = %d, TIME_SLOT = %d us, FACT = %0.2f) (%s)\n", gSyncPeriod, common_getNbrDeviceOfType(SLAVE_TYPE), gTimeSlot, gSyncPeriodFact, str);
+            str = strNew;
         }
-        else
+        else    // Default value
         {
-            app_log_warning("Warning Only available on Master\n");
+            gSyncPeriodFact = SYNC_PERIOD_FACT;
+
+            str = strDefault;
         }
+
+        gSyncPeriod = (RAIL_Time_t) ((common_getNbrDeviceOfType(SLAVE_TYPE) * gTimeSlot) + (uint32_t) ((float) (gSyncPeriodFact * (float) gTimeSlot)));
+        app_log_info("Info Set SYNC_PERIOD to %d us (N_SLAVE = %d, TIME_SLOT = %d us, FACT = %0.2f) (%s)\n", gSyncPeriod, common_getNbrDeviceOfType(SLAVE_TYPE), gTimeSlot, gSyncPeriodFact, str);
+
+        gSyncTimeOut = (RAIL_Time_t)(gSyncTimeOutNb * gSyncPeriod);
+        app_log_info("Info Update SYNC_TIMEOUT to %d us (%d x SYNC_PERIOD) (%s)\n", gSyncTimeOut, gSyncTimeOutNb, str);
     }
     else
     {

@@ -41,7 +41,6 @@
 
 #define MAX_SLAVE       (100)                   // Max. nbr of slaves in network
 #define MAX_NODE        (MAX_SLAVE+1)           // Max nodes in network (master + slaves)
-#define MASTER_ID       (255)                   // Master ID; Slaves ID [1..MAX_SLAVE]
 
 
 #define ADDR_TRANSLATION_TABLE_SIZE	(MAX_NODE)
@@ -66,6 +65,13 @@ typedef struct
     bool ismaster;                               // true if master device
     char name[ADDR_INTERNAL_NAME_STRING_SIZE];   // Device name
 } PROT_AddrMap_t;
+
+/**
+ * Return the Master internal address.
+ *
+ * @return  Master device internal address or 0 (not found).
+ */
+uint8_t common_getMasterAddr(void);
 
 /**
  * Return the device internal address according to the unique ID.

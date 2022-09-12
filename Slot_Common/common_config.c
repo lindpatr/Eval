@@ -35,6 +35,24 @@ PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
 };
 
 /**
+ * Return the Master internal address.
+ *
+ * @return  Master device internal address or 0 (not found).
+ */
+uint8_t common_getMasterAddr(void)
+{
+    for (int i = 0; i < ADDR_TRANSLATION_TABLE_SIZE; i++)
+    {
+        if (addr_table[i].ismaster == MASTER_TYPE)
+        {
+            return addr_table[i].internalAddr;
+        }
+    }
+
+    return 0;
+}
+
+/**
  * Return the device internal address according to the unique ID.
  *
  * @param[in] device unique ID.
