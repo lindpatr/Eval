@@ -225,6 +225,7 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 		}
 	}
 
+	// TODO To remove and disable RX_TX_SCHEDULED_RX_TX_STARTE events (if not additional code is required)
 	// Scheduled transmission is starting
 	if (events & (1ULL << RAIL_EVENT_SCHEDULED_TX_STARTED_SHIFT))
 	{
