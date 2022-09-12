@@ -845,7 +845,7 @@ void app_process_action(void)
 	case kSwitchRx:
 		radio_state = RAIL_GetRadioState(gRailHandle);
 
-		if ((radio_state != RAIL_RF_STATE_TX_ACTIVE) ||
+		if ((radio_state != RAIL_RF_STATE_TX_ACTIVE) &&
 			(radio_state != RAIL_RF_STATE_RX_ACTIVE))
 		{
 			SetState(kWaitRx);
@@ -922,7 +922,7 @@ void app_process_action(void)
 	case kSwitchTx:
 		radio_state = RAIL_GetRadioState(gRailHandle);
 
-		if ((radio_state != RAIL_RF_STATE_TX_ACTIVE) ||
+		if ((radio_state != RAIL_RF_STATE_TX_ACTIVE) &&
 			(radio_state != RAIL_RF_STATE_RX_ACTIVE))
 		{
 			SetState(kSendMsg);
