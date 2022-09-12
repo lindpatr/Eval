@@ -31,7 +31,7 @@ PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
     {0x385b44fffec0862b, 1,     true,   1,      0,                false,      "SLAVE\0"},
     {0x385b44fffe5f5b23, 2,     true,   3,      1,                false,      "SLAVE\0"},
     {0x385b44fffec08638, 3,     true,   4,      2,                false,      "SLAVE\0"},
-    {0x385b44fffe5f5af2, 4,     false,  2,      3,                false,      "SLAVE\0"},
+    {0x385b44fffe5f5af2, 4,     true,   2,      3,                false,      "SLAVE\0"},
 };
 
 /**

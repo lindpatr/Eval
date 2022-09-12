@@ -249,7 +249,7 @@ void cli_set_slot_time(sl_cli_command_arg_t *arguments)
         }
 
         gRailScheduleCfgTX.when = (gDeviceCfgAddr->slotPos * gTimeSlot);
-        gSyncPeriod = (RAIL_Time_t)((SLAVE_IN_SYSTEM*gTimeSlot)+(uint32_t)((float)(gSyncPeriodFact*(float)gTimeSlot)));
+        gSyncPeriod = (RAIL_Time_t)((common_getNbrDeviceOfType(SLAVE_TYPE)*gTimeSlot)+(uint32_t)((float)(gSyncPeriodFact*(float)gTimeSlot)));
         gSyncTimeOut = (RAIL_Time_t)(gSyncTimeOutNb * gSyncPeriod);
 
         app_log_info("Info Set slot time to %d us (%s)\n", gTimeSlot, str);

@@ -14,7 +14,7 @@
 #include <stddef.h>
 
 
-#define SLAVE_IN_SYSTEM (3)                     // Netowrk is composed of X slaves
+#define SLAVE_IN_SYSTEM (4)                     // Netowrk is composed of X slaves
 #define TIME_SLOT       (240U)                  // in us
 #define TIME_SLOT_MIN   (100U)                  // in us
 #define TIME_SLOT_MAX   (40000U)                // in us
