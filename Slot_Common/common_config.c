@@ -26,12 +26,12 @@
 
 PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
 {
-    /* ID                Pos    Eanble  Addr    Slot pos          Is master   Name          */
+    /* ID                Pos    Enable  Addr    Slot time         Is master   Name          */
     {0x385B44FFFEC085D3, 0,     true,   255,    0,                true,       "MASTER\0"},
     {0x385b44fffec0862b, 1,     true,   1,      0,                false,      "SLAVE\0"},
-    {0x385b44fffe5f5b23, 2,     true,   3,      1,                false,      "SLAVE\0"},
-    {0x385b44fffec08638, 3,     true,   4,      2,                false,      "SLAVE\0"},
-    {0x385b44fffe5f5af2, 4,     true,   2,      3,                false,      "SLAVE\0"},
+    {0x385b44fffe5f5af2, 2,     true,   2,      270/*300*/,                false,      "SLAVE\0"},
+    {0x385b44fffe5f5b23, 3,     true,   3,      430/*480*/,                false,      "SLAVE\0"},
+    {0x385b44fffec08638, 4,     true,   4,      610/*670*/,                false,      "SLAVE\0"},
 };
 
 /**
@@ -91,39 +91,37 @@ PROT_AddrMap_t* common_getConfig(uint64_t uniqueId)
 }
 
 /**
- * Return the device time slot position according to the unique ID.
+ * Return the device time slot according to the unique ID.
  *
  * @param[in] device unique ID.
- * @return  device internal slot pos or -1 (not found).
- *          Max 127 devices (limit MAX_NODE shall be below)
+ * @return  device internal slot time or UINT32_MAX if not found.
  */
-int8_t common_getTimeSlotPos(uint64_t uniqueId)
+uint32_t common_getSlotime(uint64_t uniqueId)
 {
     for (int i = 0; i < ADDR_TRANSLATION_TABLE_SIZE; i++)
     {
         if (addr_table[i].uinqueId == uniqueId)
         {
-            return addr_table[i].slotPos;
+            return addr_table[i].slotTime;
         }
     }
 
-    return -1;
+    return UINT32_MAX;
 }
 
 /**
  * Return the max time slot position.
  *
  * @param[in] -
- * @return  device internal slot pos or -1 (not found).
- *          Max 127 devices (limit MAX_NODE shall be below)
+ * @return  device internal slot time or 0 (not found).
  */
-int8_t common_getMaxTimeSlotPos(void)
+uint32_t common_getMaxSlotTime(void)
 {
-    uint8_t max = -1;
+    uint32_t max = 0;
 
     for (int i = 0; i < ADDR_TRANSLATION_TABLE_SIZE; i++)
     {
-        max = (addr_table[i].slotPos > max ? addr_table[i].slotPos : max);
+        max = (addr_table[i].slotTime > max ? addr_table[i].slotTime : max);
     }
 
     return max;

@@ -93,7 +93,7 @@ RAIL_StateTiming_t gRailStateTimings;
 
 volatile RAIL_Time_t gSyncPeriod = (RAIL_Time_t)SYNC_PERIOD;    // Value, indicating sync period on CLI
 volatile RAIL_Time_t gSyncTimeOut = (RAIL_Time_t)SYNC_TIMEOUT;  // Value, indicating sync timeout for Slave on CLI
-volatile uint16_t gTimeSlot = TIME_SLOT;                        // Value, indicating time of a slot in the protocol on CLI
+volatile uint16_t gTimeSlot = 0;                                // Value, indicating time of a slot in the protocol on CLI
 
 /// A static var that contains config data for the device
 PROT_AddrMap_t* gDeviceCfgAddr;
@@ -266,13 +266,13 @@ void config_protocol(void)
     app_assert(gRailHandle != NULL, "Error Not a valid RAIL handle (0x%llX)\n", gRailHandle);
 
     // Slot start time (when a slave shall transmit its data)
-    // gTimeSlot  =         // Consistency between all devices participating to the network is the responsability of the dev
+    gTimeSlot  = 0;                                                     // Consistency between all devices participating to the network is the responsability of the dev
 
     // Sync period (when the master shall send a sync frame)
-    gSyncPeriod = (RAIL_Time_t)((common_getNbrDeviceOfType(SLAVE_TYPE)*gTimeSlot)+(uint32_t)((float)(SYNC_PERIOD_FACT*(float)gTimeSlot)));
+    gSyncPeriod = (RAIL_Time_t) (common_getMaxSlotTime() + TIME_SLOT_DEF);
 
     // Sync timeout (when a slave is considering no more receiving sync from a master)
-    // gSyncTimeOut =       // Consistency with gSyncPeriod (gSyncTimeOut > gSyncPeriod) is the responsability of the dev
+    gSyncTimeOut = (RAIL_Time_t) (gSyncPeriod * SYNC_TIMEOUT_NB);       // Consistency with gSyncPeriod (gSyncTimeOut > gSyncPeriod) is the responsability of the dev
 
 }
 
