@@ -184,6 +184,7 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 		    GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_RX);
 			// Keep the packet in the radio buffer, download it later at the state machine
 			RAIL_HoldRxPacket(rail_handle);
+			GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
 			// In order to be the most synchrone as possible, start schedule TX directly from here
 			/*RAIL_Status_t status = */RAIL_StartScheduledTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, &gRailScheduleCfgTX, NULL);
 
@@ -407,17 +408,17 @@ static __INLINE void StartReceive(void)
 /******************************************************************************
  * ScheduleTransmit : prepare buffer and change to TX mode
  *****************************************************************************/
-static __INLINE void ScheduleTransmit(void)
-{
-	// Initialize radio buffer
-	prepare_packet_to_tx();
-
-	// For oscillo debug purposes
-	GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
-
-	RAIL_Status_t status = RAIL_StartScheduledTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, &gRailScheduleCfgTX, NULL);
-	PrintStatus(status, "Warning RAIL_StartScheduledTx");
-}
+//static __INLINE void ScheduleTransmit(void)
+//{
+//	// Initialize radio buffer
+//	prepare_packet_to_tx();
+//
+//	// For oscillo debug purposes
+//	GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
+//
+//    RAIL_Status_t status = RAIL_StartScheduledTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, &gRailScheduleCfgTX, NULL);
+//	PrintStatus(status, "Warning RAIL_StartScheduledTx");
+//}
 
 /******************************************************************************
  * DecodeReceivedMsg : decode received data
