@@ -252,11 +252,11 @@ void cli_set_slot_time(sl_cli_command_arg_t *arguments)
 
             app_log_info("Info Set TIME_SLOT to %d us (%s)\n", gTimeSlot, str);
 
-            if ((gTimeSlot >= gSyncPeriod) || (gTimeSlot >= gSyncTimeOut))
-            {
-                app_log_error("Error TIME_SLOT (%d us) is greater or equal to SYNC_PERIOD (%d us) or to SYNC_TIMEOUT (%d us)\n", gTimeSlot, gSyncPeriod, gSyncTimeOut);
-            }
-            else
+//            if ((gTimeSlot >= gSyncPeriod) || (gTimeSlot >= gSyncTimeOut))
+//            {
+//                app_log_error("Error TIME_SLOT (%d us) is greater or equal to SYNC_PERIOD (%d us) or to SYNC_TIMEOUT (%d us)\n", gTimeSlot, gSyncPeriod, gSyncTimeOut);
+//            }
+//            else
             {
                 app_log_warning("Warning The user is responsible to adjust SYNC_PERIOD (current = %d us) on Master and SYNC_TIMEOUT (current = %d us) on all slaves\n", gSyncPeriod, gSyncTimeOut);
             }
@@ -303,11 +303,11 @@ void cli_set_sync_period(sl_cli_command_arg_t *arguments)
 
             app_log_info("Info Set SYNC_PERIOD to %d us (N_SLAVE = %d, TIME_SLOT_MAX = %d us) (%s)\n", gSyncPeriod, common_getNbrDeviceOfType(SLAVE_TYPE), common_getMaxSlotTime(), str);
 
-            if ((gSyncPeriod >= gSyncTimeOut) || (gSyncPeriod <= common_getMaxSlotTime()))
-            {
-                app_log_error("Error SYNC_PERIOD (%d us) is greater or equal to SYNC_TIMEOUT (%d us) or less or equal to MAX_TIME_SLOT (%d us)\n", gSyncPeriod, gSyncTimeOut, common_getMaxSlotTime());
-            }
-            else
+//            if ((gSyncPeriod >= gSyncTimeOut) || (gSyncPeriod <= common_getMaxSlotTime()))
+//            {
+//                app_log_error("Error SYNC_PERIOD (%d us) is greater or equal to SYNC_TIMEOUT (%d us) or less or equal to MAX_TIME_SLOT (%d us)\n", gSyncPeriod, gSyncTimeOut, common_getMaxSlotTime());
+//            }
+//            else
             {
                 app_log_warning("Warning The user is responsible to adjust TIME_SLOT (max = %d us) and SYNC_TIMEOUT (current = %d us) on all slaves\n", common_getMaxSlotTime(), gSyncTimeOut);
             }
