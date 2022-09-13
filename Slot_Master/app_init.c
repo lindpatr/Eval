@@ -266,10 +266,10 @@ void config_protocol(void)
     app_assert(gRailHandle != NULL, "Error Not a valid RAIL handle (0x%llX)\n", gRailHandle);
 
     // Slot start time (when a slave shall transmit its data)
-    gTimeSlot  = 0;                                                     // Consistency between all devices participating to the network is the responsability of the dev
+    gTimeSlot  = gDeviceCfgAddr->slotTime;                                                     // Consistency between all devices participating to the network is the responsability of the dev
 
     // Sync period (when the master shall send a sync frame)
-    gSyncPeriod = (RAIL_Time_t) (common_getMaxSlotTime() + TIME_SLOT_DEF);
+    gSyncPeriod = (RAIL_Time_t) (common_getMaxSlotTime() + TIME_SLOT_LAST);
 
     // Sync timeout (when a slave is considering no more receiving sync from a master)
     gSyncTimeOut = (RAIL_Time_t) (gSyncPeriod * SYNC_TIMEOUT_NB);       // Consistency with gSyncPeriod (gSyncTimeOut > gSyncPeriod) is the responsability of the dev
