@@ -15,7 +15,8 @@
 
 
 #define SLAVE_IN_SYSTEM (4)                     // Netowrk is composed of X slaves
-#define TIME_SLOT_DEF   (240U)                  // in us
+#define TIME_SLOT_DEF   (180U)                  // in us
+#define TIME_SLOT_LAST  (290U)                  // in us
 #define TIME_SLOT_MIN   (100U)                  // in us
 #define TIME_SLOT_MAX   (40000U)                // in us
 
@@ -27,7 +28,7 @@
 // Slot N-1 : Slave N
 #define SYNC_PERIOD  (((SLAVE_IN_SYSTEM+1)*TIME_SLOT_DEF))  // in us
 #define SYNC_PERIOD_MIN (500)      // in us
-#define SYNC_PERIOD_MAX (100)      // in us
+#define SYNC_PERIOD_MAX (60000)      // in us
 
 
 // In Slave, considering if no Sync from Master after 5 times SYNC_PERIOD that Master stop its process -> restart state machine from Slaves
