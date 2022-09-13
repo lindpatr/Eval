@@ -302,15 +302,42 @@ __INLINE void DisplayStat(void)
     uint32_t absTXTimeOut = gTX_tab[TAB_POS_TX_TIMEOUT];
 
     statAbsTXErr = 100.0f * (float) (absTXErr + absTXTimeOut) / (float) (absTXCounter);
+    if (statAbsTXErr > 100.0f)
+        statAbsTXErr = 100.0f;
 
     // RX error rate
     uint32_t absRXErr = gRX_tab[myDevice][TAB_POS_RX_ERR];
     uint32_t absRXTimeOut = gRX_tab[myDevice][TAB_POS_RX_TIMEOUT];
+
+    // Detect never responding slaves
+    if (isMaster)   // From a master point of view
+    {
+        for (int i = 1; i <= common_getNbrDeviceOfType(SLAVE_TYPE); i++)
+        {
+            uint8_t pos = (common_getConfigTable()+i)->posTab;
+            if (gRX_counter[pos] == 0)
+            {
+                gRX_tab[pos][TAB_POS_TX_TIMEOUT] = absTXOk;
+                absRXTimeOut += absTXOk;
+            }
+        }
+    }
+    else    // From a slave point of view
+    {
+        if (absTXOk == 0)
+        {
+            gTX_tab[TAB_POS_TX_TIMEOUT] = absRXOk;
+            absTXTimeOut = absRXOk;
+        }
+    }
+
     uint32_t absCRCErr = gRX_tab[myDevice][TAB_POS_RX_CRC_ERR];
     uint32_t absSYNCErr = gRX_tab[myDevice][TAB_POS_RX_SYNC_LOST];
     uint32_t remainingAbsRXGap = ((absRXGap > absRXErr) ? (absRXGap - absRXErr): 0);            // Frame error implies a gap -> compute gap delta due to other reasons
 
     statAbsRXErr = 100.0f * (float) (absRXErr + absRXTimeOut + absCRCErr + remainingAbsRXGap) / (float) (absRXCounter);
+    if (statAbsRXErr > 100.0f)
+        statAbsRXErr = 100.0f;
 #endif  // qABS_STAT
 
     // Printing
@@ -412,16 +439,19 @@ __INLINE void DisplayStat(void)
     if (isMaster)
     {
         // Master node --> take in account all slaves
-        for (int i = 1; i < MAX_NODE; i++)
+        for (int i = 1; i <= common_getNbrDeviceOfType(SLAVE_TYPE); i++)
         {
-            if (gRX_counter[i])
-            {
-                app_log_info("Slave #%03d #cnt (#gap/max) : %d (%d/%d)\n",
-                        i,
-                        gRX_tab[i][TAB_POS_RX_OK],
-                        gRX_tab[i][TAB_POS_RX_GAP],
-                        gRX_tab[i][TAB_POS_RX_GAP_MAX]);
-            }
+            uint8_t pos = (common_getConfigTable()+i)->posTab;
+            uint8_t addr = (common_getConfigTable()+i)->internalAddr;
+//            if (gRX_counter[pos])
+//            {
+                app_log_info("#%03d #cnt (#RX-TO/#gap/max): %d (%d/%d/%d)\n",
+                        addr,
+                        gRX_tab[pos][TAB_POS_RX_OK],
+                        gRX_tab[pos][TAB_POS_TX_TIMEOUT],
+                        gRX_tab[pos][TAB_POS_RX_GAP],
+                        gRX_tab[pos][TAB_POS_RX_GAP_MAX]);
+//            }
         }
     }
     else    // Slave node -> take in account only the concerned slave
