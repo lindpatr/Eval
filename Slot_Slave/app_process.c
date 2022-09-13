@@ -227,7 +227,7 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 
 	// TODO To remove and disable RX_TX_SCHEDULED_RX_TX_STARTE events (if not additional code is required)
 	// Scheduled transmission is starting
-	if (events & (1ULL << RAIL_EVENT_SCHEDULED_TX_STARTED_SHIFT))
+	if (events & RAIL_EVENT_SCHEDULED_TX_STARTED)
 	{
 	    // For oscillo debug purposes
 	    GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_MISC);
@@ -455,7 +455,7 @@ static __INLINE void DecodeReceivedMsg(void)
 			gRX_counter[me] = (uint32_t) ((start_of_packet[kCounter0] << 0) + (start_of_packet[kCounter1] << 8) + (start_of_packet[kCounter2] << 16) + (start_of_packet[kCounter3] << 24));
 
 			uint32_t delta = gRX_counter[me] - gRX_counter_prev[me];
-			if (delta > 1)
+			if (delta != 1)
 			{
 				gRX_tab[me][TAB_POS_RX_GAP]++;
 				gRX_tab[me][TAB_POS_RX_GAP_MAX] = (delta > gRX_tab[me][TAB_POS_RX_GAP_MAX] ? delta : gRX_tab[me][TAB_POS_RX_GAP_MAX]);
