@@ -461,16 +461,16 @@ static __INLINE void DecodeReceivedMsg(void)
         if (packet_info.packetStatus == RAIL_RX_PACKET_READY_SUCCESS)
         {
             DisplayReceivedMsg(start_of_packet, packet_size);
-            // Backup previous data
-            memcpy(gRX_counter_prev, (uint32_t *)gRX_counter, MAX_NODE);
-            // Extract received data
 
             uint8_t addr = start_of_packet[kAddr];
 
+            // Backup previous data
+            gRX_counter_prev[addr] = gRX_counter[addr];
+            // Extract received data
             gRX_counter[addr] = (uint32_t) ((start_of_packet[kCounter0] << 0) + (start_of_packet[kCounter1] << 8) + (start_of_packet[kCounter2] << 16) + (start_of_packet[kCounter3] << 24));
 
             uint32_t delta = gRX_counter[addr] - gRX_counter_prev[addr];
-            if (delta > 1)
+            if (delta != 1)
             {
                 gRX_tab[addr][TAB_POS_RX_GAP]++;
                 gRX_tab[addr][TAB_POS_RX_GAP_MAX] = (delta > gRX_tab[addr][TAB_POS_RX_GAP_MAX] ? delta : gRX_tab[addr][TAB_POS_RX_GAP_MAX]);
