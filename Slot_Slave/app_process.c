@@ -186,7 +186,10 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 			RAIL_HoldRxPacket(rail_handle);
 			GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
 			// In order to be the most synchrone as possible, start schedule TX directly from here
-			/*RAIL_Status_t status = */RAIL_StartScheduledTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, &gRailScheduleCfgTX, NULL);
+			if (gRailScheduleCfgTX.when)
+			    /*RAIL_Status_t status = */RAIL_StartScheduledTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, &gRailScheduleCfgTX, NULL);
+			else
+			    /*RAIL_Status_t status = */RAIL_StartTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, NULL);
 
 			gRX_ok = true;
 		}
