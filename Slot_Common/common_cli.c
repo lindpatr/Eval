@@ -101,7 +101,7 @@ SL_CLI_COMMAND(cli_set_stat_period,
 static const sl_cli_command_info_t cli_cmd__slot_time =
 SL_CLI_COMMAND(cli_set_slot_time,
         "Set slot time (us)",
-        "100 - 40000 / 0 = default",
+        "10 - 40000 / 0 = default",
         {   SL_CLI_ARG_UINT16, SL_CLI_ARG_END,});
 
 static const sl_cli_command_info_t cli_cmd__sync_period =
