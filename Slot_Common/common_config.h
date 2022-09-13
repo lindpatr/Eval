@@ -17,7 +17,7 @@
 #define SLAVE_IN_SYSTEM (4)                     // Netowrk is composed of X slaves
 #define TIME_SLOT_DEF   (180U)                  // in us
 #define TIME_SLOT_LAST  (290U)                  // in us
-#define TIME_SLOT_MIN   (100U)                  // in us
+#define TIME_SLOT_MIN   (10)                    // in us
 #define TIME_SLOT_MAX   (40000U)                // in us
 
 // Master cycle of collecting data from Slaves
@@ -65,6 +65,14 @@ typedef struct
     bool ismaster;                               // true if master device
     char name[ADDR_INTERNAL_NAME_STRING_SIZE];   // Device name
 } PROT_AddrMap_t;
+
+/**
+* Return the device internal config table address.
+*
+* @param[in] --
+* @return  config table address or NULL (not found).
+*/
+PROT_AddrMap_t* common_getConfigTable(void);
 
 /**
  * Return the Master internal address.
