@@ -14,10 +14,11 @@
 /**
  * @brief Adresses mapping for all devices
  */
-// Table (non optimized (aligned)) for M-S1-S2-S3-S4
+
+// Table (for fixed time slot = f(Addr)) for M-S1-S2-S3-S4 (1+4)
 //PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
 //{
-//    /* ID                Pos    Addr    slot [us]         Is master   Name          */
+//    /* ID              syncPos    Addr    slot [us]         Is master   Name          */
 //	{0x385B44FFFEC085D3, 0,     255,    0,                true,       "MASTER\0"},
 //	{0x385b44fffec0862b, 1,     1,      (0*TIME_SLOT),    false,      "SLAVE\0"},
 //	{0x385b44fffe5f5af2, 2,     2,      (3*TIME_SLOT),    false,      "SLAVE\0"},
@@ -25,38 +26,76 @@
 //  {0x385b44fffec08638, 4,     4,      (2*TIME_SLOT),    false,      "SLAVE\0"}
 //};
 
-// Table (optimized) for M-S1-S2-S3-S4
+// Table (non optimized (aligned)) for M-S1-S2-S3-S4 (1+4)
+// N = 4
+// Sync = 960???
+// Rate = ?? ms
 //PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
 //{
 //    /* ID                Pos    Enable  Addr    Slot time         Is master   Name          */
 //    {0x385B44FFFEC085D3, 0,     true,   255,    0,                true,       "MASTER\0"},
 //    {0x385b44fffec0862b, 1,     true,   1,      0,                false,      "SLAVE\0"},
-//    {0x385b44fffe5f5af2, 2,     true,   2,      270/*300*/,                false,      "SLAVE\0"},
-//    {0x385b44fffe5f5b23, 3,     true,   3,      455/*480*/,                false,      "SLAVE\0"},
-//    {0x385b44fffec08638, 4,     true,   4,      610/*670*/,                false,      "SLAVE\0"},
+//    {0x385b44fffe5f5af2, 2,     true,   2,      300,              false,      "SLAVE\0"},
+//    {0x385b44fffe5f5b23, 3,     true,   3,      480,              false,      "SLAVE\0"},
+//    {0x385b44fffec08638, 4,     true,   4,      670,              false,      "SLAVE\0"},
 //};
 
-
-// Table (optimized) for M-S1-S3-S4
-//PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
-//{
-//    /* ID                Pos    Enable  Addr    Slot time         Is master   Name          */
-//    {0x385B44FFFEC085D3, 0,     true,   255,    0,                true,       "MASTER\0"},
-//    {0x385b44fffec0862b, 1,     true,   1,      0,                false,      "SLAVE\0"},
-//    {0x385b44fffe5f5af2, 2,     false,  2,      670/*610*//*670*/,                false,      "SLAVE\0"},
-//    {0x385b44fffe5f5b23, 3,     true,   3,      300/*270*//*300*/,                false,      "SLAVE\0"},
-//    {0x385b44fffec08638, 4,     true,   4,      480/*455*//*480*/,                false,      "SLAVE\0"},
-//};
-
+// Table (optimized) for M-S1-S2-S3-S4 (1+4)
+// N = 4
+// Sync = 855?
+// Rate = 19.11 ms
 PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
 {
     /* ID                Pos    Enable  Addr    Slot time         Is master   Name          */
     {0x385B44FFFEC085D3, 0,     true,   255,    0,                true,       "MASTER\0"},
     {0x385b44fffec0862b, 1,     true,   1,      0,                false,      "SLAVE\0"},
-    {0x385b44fffe5f5b23, 3,     true,   3,      300/*270*//*300*/,                false,      "SLAVE\0"},
-    {0x385b44fffec08638, 4,     true,   4,      480/*455*//*480*/,                false,      "SLAVE\0"},
-    {0x385b44fffe5f5af2, 2,     false,  2,      670/*610*//*670*/,                false,      "SLAVE\0"},
+    {0x385b44fffe5f5af2, 2,     true,   2,      270,              false,      "SLAVE\0"},
+    {0x385b44fffe5f5b23, 3,     true,   3,      455,              false,      "SLAVE\0"},
+    {0x385b44fffec08638, 4,     true,   4,      610,              false,      "SLAVE\0"},
 };
+
+
+// Table (non optimized (aligned)) for M-S1-S3-S4 (1+3)
+// N = 3
+// Sync = ???
+// Rate = ?? ms
+//PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
+//{
+//    /* ID                Pos    Enable  Addr    Slot time         Is master   Name          */
+//    {0x385B44FFFEC085D3, 0,     true,   255,    0,                true,       "MASTER\0"},
+//    {0x385b44fffec0862b, 1,     true,   1,      0,                false,      "SLAVE\0"},
+//    {0x385b44fffe5f5af2, 2,     false,  2,      670,              false,      "SLAVE\0"},
+//    {0x385b44fffe5f5b23, 3,     true,   3,      300,              false,      "SLAVE\0"},
+//    {0x385b44fffec08638, 4,     true,   4,      480,              false,      "SLAVE\0"},
+//};
+
+// Table (optimized) for M-S1-S3-S4 (1+3)
+// N = 3
+// Sync = 740
+// Rate = 19.85 ms
+//PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
+//{
+//    /* ID                Pos    Enable  Addr    Slot time         Is master   Name          */
+//    {0x385B44FFFEC085D3, 0,     true,   255,    0,                true,       "MASTER\0"},
+//    {0x385b44fffec0862b, 1,     true,   1,      0,                false,      "SLAVE\0"},
+//    {0x385b44fffe5f5af2, 2,     false,  2,      610,              false,      "SLAVE\0"},
+//    {0x385b44fffe5f5b23, 3,     true,   3,      270,              false,      "SLAVE\0"},
+//    {0x385b44fffec08638, 4,     true,   4,      455,              false,      "SLAVE\0"},
+//};
+
+// Table (optimized) for M-S1-S3-S4 (1+3) with delay 100 us for S1
+// N = 3
+// Sync = 740
+// Rate = 19.85 ms
+//PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
+//{
+//    /* ID                Pos    Enable  Addr    Slot time         Is master   Name          */
+//    {0x385B44FFFEC085D3, 0,     true,   255,    0,                true,       "MASTER\0"},
+//    {0x385b44fffec0862b, 1,     true,   1,      0+100,                false,      "SLAVE\0"},
+//    {0x385b44fffe5f5af2, 2,     false,  2,      610+100,              false,      "SLAVE\0"},
+//    {0x385b44fffe5f5b23, 3,     true,   3,      270+100,              false,      "SLAVE\0"},
+//    {0x385b44fffec08638, 4,     true,   4,      455+100,              false,      "SLAVE\0"},
+//};
 
 /**
 * Return the device internal config table address.
