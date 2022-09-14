@@ -91,9 +91,9 @@ RAIL_StateTransitions_t gRailTransitionTX;
 /// A static var for state timings
 RAIL_StateTiming_t gRailStateTimings;
 
-volatile RAIL_Time_t gSyncPeriod = (RAIL_Time_t)SYNC_PERIOD;    // Value, indicating sync period on CLI
-volatile RAIL_Time_t gSyncTimeOut = (RAIL_Time_t)SYNC_TIMEOUT;  // Value, indicating sync timeout for Slave on CLI
-volatile uint16_t gTimeSlot = 0;                                // Value, indicating time of a slot in the protocol on CLI
+volatile RAIL_Time_t gSyncPeriod = 0;       // Value, indicating sync period on CLI
+volatile RAIL_Time_t gSyncTimeOut = 0;      // Value, indicating sync timeout for Slave on CLI
+volatile uint16_t gTimeSlot = 0;            // Value, indicating time of a slot in the protocol on CLI
 
 /// A static var that contains config data for the device
 PROT_AddrMap_t* gDeviceCfgAddr;
@@ -126,9 +126,9 @@ void get_config(void)
     // Am I disabled?
     app_assert((gDeviceCfgAddr->enable), "Device disabled in network (enable = %d in addr_table)\n", gDeviceCfgAddr->enable);
     // Only one Master (enabled) is permitted
-    app_assert((common_getNbrDeviceOfType(MASTER_TYPE) == 1), "More than one Master (%d) enabled in network (isMaster is true in addr_table)\n", common_getNbrDeviceOfType(MASTER_TYPE));
+    app_assert((common_getNbrDeviceOfType(MASTER_TYPE, ENABLED) == 1), "More than one Master (%d) enabled in network (isMaster is true in addr_table)\n", common_getNbrDeviceOfType(MASTER_TYPE, ENABLED));
     // At least one Slave must be enabled
-    app_assert((common_getNbrDeviceOfType(SLAVE_TYPE) > 0), "No Slave (%d) enabled in network (isMaster is false in addr_table)\n", common_getNbrDeviceOfType(SLAVE_TYPE));
+    app_assert((common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED) > 0), "No Slave (%d) enabled in network (isMaster is false in addr_table)\n", common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED));
 }
 
 /*******************************************************************************
@@ -274,12 +274,19 @@ void config_protocol(void)
     // Sync timeout (when a slave is considering no more receiving sync from a master)
     gSyncTimeOut = (RAIL_Time_t) (gSyncPeriod * SYNC_TIMEOUT_NB);       // Consistency with gSyncPeriod (gSyncTimeOut > gSyncPeriod) is the responsability of the dev
 
+    if (!gDeviceCfgAddr->ismaster && (gDeviceCfgAddr->internalAddr > 1))
+    {
+        app_assert(gTimeSlot > 0, "Error TIME_SLOT shall be greater than %d\n", gTimeSlot);
+    }
+
+    app_assert(gSyncPeriod > 0, "Error SYNC_PERIOD shall be greater than %d\n", gSyncPeriod);
+    app_assert(gSyncTimeOut > gSyncPeriod, "Error SYNC_TIMEOUT shall be greater than %d\n", gSyncPeriod);
 }
 
 /*******************************************************************************
  * @brief Initializes the needed GPIO.
  * @note This function overwrite some settings of the radio configurator!
-
+gSyncPeriod
  ******************************************************************************/
 void config_gpio(void)
 {
@@ -341,7 +348,7 @@ void graphics_init(void)
     GLIB_drawStringOnLine(&gGlibContext, textBuf, 5, GLIB_ALIGN_CENTER, 0, 0, 0);
 
     GLIB_drawStringOnLine(&gGlibContext, "Press BTN0 on", 7, GLIB_ALIGN_CENTER, 0, 0, 0);
-    GLIB_drawStringOnLine(&gGlibContext, "Master to start", 8, GLIB_ALIGN_CENTER, 0, 0, 0);
+    GLIB_drawStringOnLine(&gGlibContext, "to start", 8, GLIB_ALIGN_CENTER, 0, 0, 0);
     GLIB_drawStringOnLine(&gGlibContext, "processing", 9, GLIB_ALIGN_CENTER, 0, 0, 0);
 
     GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
