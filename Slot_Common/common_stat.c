@@ -205,11 +205,14 @@ __INLINE void DisplayStat(void)
 
     if (isMaster)
     {
-        // Master node --> take in account all slaves [1..N]
-        for (int i = 1; i < MAX_NODE; i++)
+        // Master node --> take in account all enabled slaves [1..N]
+        for (int i = 1; i <= common_getNbrDeviceOfType(SLAVE_TYPE, ALL); i++)
         {
-            if (gRX_counter[i])
+            if (common_getConfigTable(i)->enable)
             {
+                uint8_t pos = common_getConfigTable(i)->posTab;
+                if (gRX_counter[pos] > 0)
+                {
 #if (qREL_STAT)
                 // Relative
                 // --------
@@ -224,6 +227,7 @@ __INLINE void DisplayStat(void)
                 absRXGap += gRX_tab[i][TAB_POS_RX_GAP];                 // Sum of absolute RX (from Slave) gap occurences
                 absRXOk += gRX_tab[i][TAB_POS_RX_OK];                   // Sum of absolute TX Ok (from Slave) counters
 #endif  // qABS_STAT
+                }
             }
         }
     }
@@ -312,13 +316,15 @@ __INLINE void DisplayStat(void)
     // Detect never responding slaves
     if (isMaster)   // From a master point of view
     {
-        for (int i = 1; i <= common_getNbrDeviceOfType(SLAVE_TYPE); i++)
+        for (int i = 1; i <= common_getNbrDeviceOfType(SLAVE_TYPE, ALL); i++)
         {
-            uint8_t pos = (common_getConfigTable()+i)->posTab;
-            if (gRX_counter[pos] == 0)
+            if (common_getConfigTable(i)->enable)
             {
-                gRX_tab[pos][TAB_POS_TX_TIMEOUT] = absTXOk;
-                absRXTimeOut += absTXOk;
+                uint8_t pos = common_getConfigTable(i)->posTab;
+                if (gRX_counter[pos] == 0)
+                {
+                    absRXTimeOut += absTXOk;
+                }
             }
         }
     }
@@ -326,7 +332,6 @@ __INLINE void DisplayStat(void)
     {
         if (absTXOk == 0)
         {
-            gTX_tab[TAB_POS_TX_TIMEOUT] = absRXOk;
             absTXTimeOut = absRXOk;
         }
     }
@@ -439,19 +444,22 @@ __INLINE void DisplayStat(void)
     if (isMaster)
     {
         // Master node --> take in account all slaves
-        for (int i = 1; i <= common_getNbrDeviceOfType(SLAVE_TYPE); i++)
+        for (int i = 1; i <= common_getNbrDeviceOfType(SLAVE_TYPE, ALL); i++)
         {
-            uint8_t pos = (common_getConfigTable()+i)->posTab;
-            uint8_t addr = (common_getConfigTable()+i)->internalAddr;
-//            if (gRX_counter[pos])
-//            {
-                app_log_info("#%03d #cnt (#RX-TO/#gap/max): %d (%d/%d/%d)\n",
-                        addr,
-                        gRX_tab[pos][TAB_POS_RX_OK],
-                        gRX_tab[pos][TAB_POS_TX_TIMEOUT],
-                        gRX_tab[pos][TAB_POS_RX_GAP],
-                        gRX_tab[pos][TAB_POS_RX_GAP_MAX]);
-//            }
+            if (common_getConfigTable(i)->enable)
+            {
+                uint8_t pos = common_getConfigTable(i)->posTab;
+                uint8_t addr = common_getConfigTable(i)->internalAddr;
+    //            if (gRX_counter[pos])
+    //            {
+                    app_log_info("#%03d #cnt (#RX-TO/#gap/max): %d (%d/%d/%d)\n",
+                            addr,
+                            gRX_tab[pos][TAB_POS_RX_OK],
+                            gRX_tab[pos][TAB_POS_TX_TIMEOUT],
+                            gRX_tab[pos][TAB_POS_RX_GAP],
+                            gRX_tab[pos][TAB_POS_RX_GAP_MAX]);
+    //            }
+            }
         }
     }
     else    // Slave node -> take in account only the concerned slave
