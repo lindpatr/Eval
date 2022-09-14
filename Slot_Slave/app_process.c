@@ -488,9 +488,23 @@ static __INLINE void DecodeReceivedMsg(void)
 /******************************************************************************
  * Application state machine, called infinitely
  *****************************************************************************/
+static RAIL_RadioStateDetail_t radio_old_state_detail = RAIL_RF_STATE_DETAIL_INACTIVE;
+
 void app_process_action(void)
 {
 	RAIL_RadioState_t radio_state = RAIL_RF_STATE_INACTIVE;
+//    RAIL_RadioStateDetail_t radio_state_detail = RAIL_RF_STATE_DETAIL_INACTIVE;
+//
+//    radio_state_detail = RAIL_GetRadioStateDetail(gRailHandle);
+//
+//    if (radio_state_detail != radio_old_state_detail)
+//    {
+//        if (radio_state_detail & RAIL_RF_STATE_DETAIL_TRANSITION/*RAIL_RF_STATE_DETAIL_TX_STATE*/)
+//        {
+//            GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
+//        }
+//        radio_old_state_detail = radio_state_detail;
+//    }
 
 	/// -----------------------------------------
 	/// Decode from interrupt / callback
@@ -622,7 +636,7 @@ void app_process_action(void)
 	case kListen:
 		radio_state = RAIL_GetRadioState(gRailHandle);
 
-		if ((radio_state != RAIL_RF_STATE_TX_ACTIVE) || (radio_state != RAIL_RF_STATE_RX_ACTIVE))
+		if ((radio_state != RAIL_RF_STATE_TX_ACTIVE) && (radio_state != RAIL_RF_STATE_RX_ACTIVE))
 		{
 			SetState(kWaitSync);
 			StartReceive();
