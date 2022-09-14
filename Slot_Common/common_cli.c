@@ -167,7 +167,7 @@ void cli_info(sl_cli_command_arg_t *arguments)
     if (gDeviceCfgAddr->ismaster)
     {
         app_log_info("  Sync period: %d us\n", gSyncPeriod);
-        app_log_info("  Nbr slaves : %d\n", common_getNbrDeviceOfType(SLAVE_TYPE));
+        app_log_info("  Nbr slaves : %d\n", common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED));
     }
     else
     {
@@ -301,7 +301,7 @@ void cli_set_sync_period(sl_cli_command_arg_t *arguments)
                 str = strDefault;
             }
 
-            app_log_info("Info Set SYNC_PERIOD to %d us (N_SLAVE = %d, TIME_SLOT_MAX = %d us) (%s)\n", gSyncPeriod, common_getNbrDeviceOfType(SLAVE_TYPE), common_getMaxSlotTime(), str);
+            app_log_info("Info Set SYNC_PERIOD to %d us (N_SLAVE = %d, TIME_SLOT_MAX = %d us) (%s)\n", gSyncPeriod, common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED), common_getMaxSlotTime(), str);
 
 //            if ((gSyncPeriod >= gSyncTimeOut) || (gSyncPeriod <= common_getMaxSlotTime()))
 //            {
