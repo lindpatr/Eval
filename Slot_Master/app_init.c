@@ -57,6 +57,8 @@
 #include "rail_chip_specific.h"
 #endif
 
+#include "common_debug.h"
+
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
@@ -109,6 +111,8 @@ static GLIB_Context_t gGlibContext;
 // -----------------------------------------------------------------------------
 //                          Private Function Definitions
 // -----------------------------------------------------------------------------
+
+
 
 /*******************************************************************************
  * @brief Read config data
@@ -170,19 +174,10 @@ void config_rail_transition(void)
     gRailTransitionTX.error = RAIL_RF_STATE_RX;     // TX Err -> RX
 
     status = RAIL_SetRxTransitions(gRailHandle, &gRailTransitionRX);
-    if (status != RAIL_STATUS_NO_ERROR)
-    {
-#if (qPrintErrorsL1)
-        app_log_warning("Warning RAIL_SetRxTransitions (%d)\n", status);
-#endif  // qPrintErrorsL1
-    }
+    PrintStatus(status, "Warning RAIL_SetRxTransitions");
+
     status = RAIL_SetTxTransitions(gRailHandle, &gRailTransitionTX);
-    if (status != RAIL_STATUS_NO_ERROR)
-    {
-#if (qPrintErrorsL1)
-        app_log_warning("Warning RAIL_SetTxTransitions (%d)\n", status);
-#endif  // qPrintErrorsL1
-    }
+    PrintStatus(status, "Warning RAIL_SetTxTransitions");
 
     // State timings
     if (TRANSITION_TIMING_BEST_EFFORT)
@@ -192,12 +187,7 @@ void config_rail_transition(void)
         gRailStateTimings.idleToTx = 0;
         gRailStateTimings.rxToTx = 0;
         status = RAIL_SetStateTiming(gRailHandle, &gRailStateTimings);
-        if (status != RAIL_STATUS_NO_ERROR)
-        {
-#if (qPrintErrorsL1)
-            app_log_warning("Warning RAIL_SetStateTiming (%d)\n", status);
-#endif  // qPrintErrorsL1
-        }
+        PrintStatus(status, "Warning RAIL_SetStateTiming");
     }
     // else keep value from RAIL configurator!
 }
@@ -237,9 +227,7 @@ void config_rail_events_callback(void)
                                                                             // RAIL_EVENT_RX_SCHEDULED_RX_MISSED:   part of the callback through RX_COMPLETION but not part of the enabled event!
                                             | RAIL_EVENT_CAL_NEEDED);
 
-#if (qPrintErrorsL1)
-    app_log_warning("Warning RAIL_ConfigEvents (%d)\n", status);
-#endif  // qPrintErrorsL1
+    PrintStatus(status, "Warning RAIL_ConfigEvents");
 }
 
 /*******************************************************************************
@@ -274,10 +262,10 @@ void config_protocol(void)
     // Sync timeout (when a slave is considering no more receiving sync from a master)
     gSyncTimeOut = (RAIL_Time_t) (gSyncPeriod * SYNC_TIMEOUT_NB);       // Consistency with gSyncPeriod (gSyncTimeOut > gSyncPeriod) is the responsability of the dev
 
-    if (!gDeviceCfgAddr->ismaster && (gDeviceCfgAddr->internalAddr > 1))
-    {
-        app_assert(gTimeSlot > 0, "Error TIME_SLOT shall be greater than %d\n", gTimeSlot);
-    }
+//    if (!gDeviceCfgAddr->ismaster && (gDeviceCfgAddr->internalAddr > 1))
+//    {
+//        app_assert(gTimeSlot > 0, "Error TIME_SLOT shall be greater than %d\n", gTimeSlot);
+//    }
 
     app_assert(gSyncPeriod > 0, "Error SYNC_PERIOD shall be greater than %d\n", gSyncPeriod);
     app_assert(gSyncTimeOut > gSyncPeriod, "Error SYNC_TIMEOUT shall be greater than %d\n", gSyncPeriod);
@@ -294,7 +282,6 @@ void config_gpio(void)
     GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_TX, gpioModePushPull, RESET);
     GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_RX, gpioModePushPull, RESET);
     GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_MISC, gpioModePushPull, RESET);
-
 
     // Turn OFF LEDs
     sl_led_turn_off(&sl_led_led0);
@@ -313,22 +300,10 @@ void graphics_init(void)
 
 	/* Initialize the DMD module for the DISPLAY device driver. */
 	status = DMD_init(0);
-	if (DMD_OK != status)
-	{
-#if (qPrintErrorsL1)
-		app_log_error("Error DMD_init (%d)\n", status);
-#endif  //qPrintErrorsL1
-		return;
-	}
+	PrintStatus(status, "Error DMD_init");
 
 	status = GLIB_contextInit(&gGlibContext);
-	if (GLIB_OK != status)
-	{
-#if (qPrintErrorsL1)
-		app_log_error("Error GLIB_contextInit (%d)\n", status);
-#endif  //qPrintErrorsL1
-		return;
-	}
+	PrintStatus(status, "Error GLIB_contextInit");
 
 	gGlibContext.backgroundColor = White;
 	gGlibContext.foregroundColor = Black;
@@ -357,13 +332,7 @@ void graphics_init(void)
 
 	// Force a redraw
 	DMD_updateDisplay();
-	if (GLIB_OK != status)
-	{
-#if (qPrintErrorsL1)
-		app_log_error("Error DMD_updateDisplay (%d)\n", status);
-#endif  //qPrintErrorsL1
-		return;
-	}
+	PrintStatus(status, "Error DMD_updateDisplay");
 }
 
 /*******************************************************************************
@@ -372,13 +341,13 @@ void graphics_init(void)
 void serial_init(void)
 {
     // Print Id software
-    const char string[] = "\nSlot Protocol";
+    char string[80] = "\nSlot Protocol";
 
-    app_log_info("%s - %s (Addr #%03d)\n", string,
-                                           gDeviceCfgAddr->name,
-                                           gDeviceCfgAddr->internalAddr);
-    app_log_info("---------------------------------\n");
-    app_log_info("Protocol (slot = %d us, sync period = %d us, sync to = %d us)\n", gTimeSlot, gSyncPeriod, gSyncTimeOut);
+    sprintf(string, "\nSlot Protocol - %s (Addr #%03d)", gDeviceCfgAddr->name, gDeviceCfgAddr->internalAddr);
+    PrintInfo(string);
+    PrintInfo("---------------------------------");
+    sprintf(string, "Protocol (slot = %d us, sync period = %d us, sync to = %d us)\n", gTimeSlot, gSyncPeriod, gSyncTimeOut);
+    PrintInfo(string);
 }
 
 /*****************************************************************************
@@ -431,15 +400,7 @@ void app_init(void)
     serial_init();
 
 	// Set up timers
-	if (!RAIL_ConfigMultiTimer(true))
-	{
-#if (qPrintErrorsL1)
-		app_log_warning("Warning RAIL_ConfigMultiTimer failed\n");
-#endif  // qPrintErrorsL1
-	}
+	bool ret = !RAIL_ConfigMultiTimer(true);
+	PrintStatus(ret, "Warning RAIL_ConfigMultiTimer failed");
 }
-
-// -----------------------------------------------------------------------------
-//                          Static Function Definitions
-// -----------------------------------------------------------------------------
 
