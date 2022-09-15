@@ -170,7 +170,7 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 {
 	gErrorCode = events;  // Save events context
 
-	GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_MISC);
+	//GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_MISC);
 
 	DecodeEvents(&events);  // Count events for debug and statistics
 
@@ -218,7 +218,7 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 		{
 			// Handle next step
 		    GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_TX);
-		    //GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_MISC);
+		    GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_MISC);
 
 			gTX_ok = true;
 
@@ -243,7 +243,7 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 	if (events & RAIL_EVENT_SCHEDULED_TX_STARTED)
 	{
 	    // For oscillo debug purposes
-	    //GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_MISC);
+	    GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_MISC);
 	}
 
 	// Perform all calibrations when needed
@@ -260,7 +260,7 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 		// REMOVED END
 	}
 
-	GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_MISC);
+	//GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_MISC);
 }
 
 /******************************************************************************
@@ -530,11 +530,16 @@ void app_process_action(void)
 	/// -----------------------------------------
 	if (gRX_ok)
 	{
+	    //char *str;
+
 		gRX_ok = false;
 
 		// MOVED BEGIN
 		GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
+		//RAIL_Status_t status = (gRailScheduleCfgTX.when > 0 ? RAIL_StartScheduledTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, &gRailScheduleCfgTX, NULL) : RAIL_StartTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, NULL));
 		RAIL_Status_t status = RAIL_StartScheduledTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, &gRailScheduleCfgTX, NULL);
+		//str = (gRailScheduleCfgTX.when > 0 ? "Warning RAIL_StartScheduledTx" : "Warning RAIL_StartTx");
+		//PrintStatus(status, str);
 		PrintStatus(status, "Warning RAIL_StartScheduledTx");
 		// MOVED END
 
