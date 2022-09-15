@@ -133,6 +133,7 @@ static volatile bool gTX_ok = false;
 static volatile bool gRX_error = false;
 static volatile bool gTX_error = false;
 static volatile bool gSyncTimerDone = false;
+static volatile bool gCAL_req = false;
 static volatile bool gCAL_error = false;
 
 /// Flags to update start print statistics
@@ -227,12 +228,15 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
     // Perform all calibrations when needed
     if (events & RAIL_EVENT_CAL_NEEDED)
     {
-        gCAL_tab[TAB_POS_CAL_REQ]++;
-        gCalibrationStatus = RAIL_Calibrate(rail_handle, NULL, RAIL_CAL_ALL_PENDING);
-        if (gCalibrationStatus != RAIL_STATUS_NO_ERROR)
-        {
-            gCAL_error = true;
-        }
+        gCAL_req = true;
+        // REMOVED BEGIN
+//      gCAL_tab[TAB_POS_CAL_REQ]++;
+//      gCalibrationStatus = RAIL_Calibrate(rail_handle, NULL, RAIL_CAL_ALL_PENDING);
+//      if (gCalibrationStatus != RAIL_STATUS_NO_ERROR)
+//      {
+//          gCAL_error = true;
+//      }
+        // REMOVED END
     }
 
     GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_MISC);
@@ -245,19 +249,23 @@ void sl_button_on_change(const sl_button_t *handle)
 {
     if (sl_button_get_state(handle) == SL_SIMPLE_BUTTON_PRESSED)
     {
-        if (!gStartProcess)
-        {
-            gBtnPressed = true;
+        // REMOVED BEGIN
+//        if (!gStartProcess)
+//        {
+//            gBtnPressed = true;
+//
+//            gStartProcess = true;
+//            gElapsedTime = RAIL_GetTime();
+//        }
+//        else
+//        {
+//            gOldElapsedTime = gElapsedTime;
+//            gElapsedTime = RAIL_GetTime();
+//            gPrintStat = true;
+//        }
+        // REMOVED END
 
-            gStartProcess = true;
-            gElapsedTime = RAIL_GetTime();
-        }
-        else
-        {
-            gOldElapsedTime = gElapsedTime;
-            gElapsedTime = RAIL_GetTime();
-            gPrintStat = true;
-        }
+        gBtnPressed = true;
     }
 }
 
@@ -272,24 +280,28 @@ void timer_callback(RAIL_MultiTimer_t *tmr, RAIL_Time_t expectedTimeOfEvent, voi
     if (tmr == &gStatDelayTimer) // used to print stat periodically
     {
         gStatTimerDone = true;
-        gOldElapsedTime = gElapsedTime;
-        gElapsedTime = RAIL_GetTime();
+        // REMOVED BEGIN
+//        gOldElapsedTime = gElapsedTime;
+//        gElapsedTime = RAIL_GetTime();
+        // REMOVED END
     }
     else if (tmr == &gSyncPeriodTimer) // used with standard StartTx when RAIL_StartScheduledTx isn't used
     {
         gSyncTimerDone = true;
 
-        if (!gPauseCycleReq)       // If no request to print stat is pending, restart cycle with the slaves
-        {
-            // In order to be the most accurate as possible, start StartTX directly from here
-            GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
-            /*RAIL_Status_t status = */RAIL_StartTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, NULL);
-            StartTimerSync();
-        }
-        else
-        {
-            gPauseCycleConf = true;// Cycle ended, permit a print stat
-        }
+        // REMOVED BEGIN
+//        if (!gPauseCycleReq)       // If no request to print stat is pending, restart cycle with the slaves
+//        {
+//            // In order to be the most accurate as possible, start StartTX directly from here
+//            GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
+//            /*RAIL_Status_t status = */RAIL_StartTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, NULL);
+//            StartTimerSync();
+//        }
+//        else
+//        {
+//            gPauseCycleConf = true;// Cycle ended, permit a print stat
+//        }
+        // REMOVED END
     }
 }
 
@@ -370,6 +382,7 @@ static __INLINE void StopRadio(void)
     gRX_error = false;
     gTX_error = false;
     gSyncTimerDone = false;
+    gCAL_req = false;
     gCAL_error = false;
 }
 
@@ -435,6 +448,10 @@ static __INLINE void StartTransmit(void)
     PrintStatus(status, "Warning RAIL_StartTx");
 
     StartTimerSync();
+
+    // MOVED BEGIN
+    SetState(kSendingMsg);
+    // MOVED END
 }
 
 /******************************************************************************
@@ -503,7 +520,7 @@ static __INLINE void DecodeReceivedMsg(void)
  *****************************************************************************/
 void app_process_action(void)
 {
-    RAIL_RadioState_t radio_state = RAIL_RF_STATE_INACTIVE;
+//    RAIL_RadioState_t radio_state = RAIL_RF_STATE_INACTIVE;
 
     /// -----------------------------------------
     /// Decode from interrupt / callback
@@ -512,30 +529,60 @@ void app_process_action(void)
     {
         gRX_ok = false;
 
-        SetState(kMsgReceived);
+        // REMOVED BEGIN
+        //SetState(kMsgReceived);
+        // REMOVED END
+
+        // MOVED BEGIN
+        // Extract received data from buffer
+        DecodeReceivedMsg();
+
+        // Auto transition to RX after successfull receive
+        // For oscillo debug purposes
+        GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
+        // MOVED END
     }
     else if (gTX_ok)
     {
         gTX_ok = false;
+
         //GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_TX);
-        //gTX_tab[TAB_POS_TX_OK]++;
         gTX_tab[TAB_POS_TX_OK] = gCB_tab[RAIL_EVENT_TX_PACKET_SENT_SHIFT];
         // Increment counter and prepare new data
         gTX_counter.u32++;    // pas de test overflow
         prepare_packet_to_tx();
 
-        SetState(kMsgSent);
+        // REMOVED BEGIN
+        // SetState(kMsgSent);
+        // REMOVED END
+
+        DisplaySentMsg();
+        // Indicate TX in progress on LED1
+        sl_led_toggle(&sl_led_led1);
+
+        // Auto transition to RX after successfull transmit
+        // For oscillo debug purposes
+        GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
     }
     else if (gRX_error)
     {
         gRX_error = false;
-        //gRX_tab[me][TAB_POS_RX_ERR]++;
-        gRX_tab[me][TAB_POS_RX_ERR] = gCB_tab[RAIL_EVENT_RX_PACKET_ABORTED_SHIFT] +
-                                                          gCB_tab[RAIL_EVENT_RX_FRAME_ERROR_SHIFT] +
-                                                          gCB_tab[RAIL_EVENT_RX_FIFO_OVERFLOW_SHIFT] +
-                                                          gCB_tab[RAIL_EVENT_RX_SCHEDULED_RX_MISSED_SHIFT];
 
-        SetState(kErrorRx);
+        gRX_tab[me][TAB_POS_RX_ERR] = gCB_tab[RAIL_EVENT_RX_PACKET_ABORTED_SHIFT] +
+                                      gCB_tab[RAIL_EVENT_RX_FRAME_ERROR_SHIFT] +
+                                      gCB_tab[RAIL_EVENT_RX_FIFO_OVERFLOW_SHIFT] +
+                                      gCB_tab[RAIL_EVENT_RX_SCHEDULED_RX_MISSED_SHIFT];
+
+        // REMOVED BEGIN
+        // SetState(kErrorRx);
+        // REMOVED END
+
+        // Abnormal event
+        PrintError(gErrorCode, "Error RX");
+
+        // Auto transition to RX after unsuccessfull receive
+        // For oscillo debug purposes
+        GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
     }
     else if (gTX_error)
     {
@@ -547,29 +594,96 @@ void app_process_action(void)
                                   gCB_tab[RAIL_EVENT_TX_CHANNEL_BUSY_SHIFT] +
                                   gCB_tab[RAIL_EVENT_TX_SCHEDULED_TX_MISSED_SHIFT];
 
-        prepare_packet_to_tx();
+        // REMOVED BEGIN
+        // prepare_packet_to_tx();
+        // SetState(kErrorTx);
+        // REMOVED END
 
-        SetState(kErrorTx);
+        PrintError(gErrorCode, "Error TX");
+
+        // REMOVED BEGIN
+        // SetState(kSendSync);            // Force to retransmit
+        // REMOVED END
+
+        StartTransmit();        // Force to retransmit
     }
     else if (gSyncTimerDone)
     {
         gSyncTimerDone = false;
 
-        //SetState(kSendSync);
-        SetState(kSendingMsg);            // instead kSendSync because StarTX called directly in the timer callback
-    }
-    else if (gCAL_error)
-    {
-        gCAL_error = false;
-        gCAL_tab[TAB_POS_CAL_ERR]++;
+        if (!gPauseCycleReq)       // If no request to print stat is pending, restart cycle with the slaves
+        {
+            StartTransmit();
+        }
+        else
+        {
+            gPauseCycleConf = true;// Cycle ended, permit a print stat
+        }
 
-        SetState(kErrorCal);
+
+        // REMOVED BEGIN
+        // SetState(kSendingMsg);            // instead kSendSync because StarTX called directly in the timer callback
+        // REMOVED END
     }
+    else if (gCAL_req)
+    {
+        gCAL_req = false;
+
+        // MOVED BEGIN
+        gCAL_tab[TAB_POS_CAL_REQ]++;
+
+        RAIL_Status_t status = RAIL_Calibrate(gRailHandle, NULL, RAIL_CAL_ALL_PENDING);
+        if (status != RAIL_STATUS_NO_ERROR)
+        {
+            // REMOVED BEGIN
+            // gCAL_error = true;
+            // REMOVED END
+            // REMOVED BEGIN
+            // gCAL_error = false;
+            // REMOVED END
+            gCAL_tab[TAB_POS_CAL_ERR]++;
+
+            // REMOVED BEGIN
+            // SetState(kErrorCal);
+            // REMOVED END
+
+#if (qPrintErrorsL1)
+            if (gErrorCode != gPrevErrorCode)
+            {
+                app_log_error("Error CAL (0x%llX / %d)\n", gErrorCode, status);
+                gPrevErrorCode = gErrorCode;
+            }
+#endif  // qPrintErrorsL1
+        }
+        // MOVED END
+    }
+//  else if (gCAL_error)
+//  {
+//      // REMOVED BEGIN
+////        gCAL_error = false;
+////        gCAL_tab[TAB_POS_CAL_ERR]++;
+////
+////        SetState(kErrorCal);
+//      // REMOVED END
+//  }
     else if (gBtnPressed)
     {
         gBtnPressed = false;
 
-        SetState(kStart);
+        if (!gStartProcess)
+        {
+            gStartProcess = true;
+
+            gElapsedTime = RAIL_GetTime();
+            SetState(kStart);
+        }
+        else
+        {
+            gOldElapsedTime = gElapsedTime;
+            gElapsedTime = RAIL_GetTime();
+
+            gPrintStat = true;
+        }
     }
 
     /// -----------------------------------------
@@ -598,13 +712,17 @@ void app_process_action(void)
 
     case kStart:
         // TX started by pressing BTN0
-        SetState(kSendSync);
-
+        // REMOVED BEGIN
+        // SetState(kSendSync);
+        // REMOVED END
         app_log_info("\nInfo Start process ...\n");
 
         sl_led_turn_on(&sl_led_led1);
-        StartTimerStat();
+
         gTX_counter_old = gTX_counter.u32;
+
+        StartTransmit();
+        StartTimerStat();
         break;
 
     case kIdle:
@@ -614,45 +732,45 @@ void app_process_action(void)
         // -----------------------------------------
         // RX
         // -----------------------------------------
-    case kWaitMsg:
-        // Wait receiving message
-        break;
+//    case kWaitMsg:
+//        // Wait receiving message
+//        break;
 
-    case kMsgReceived:
-        // Message received
-        SetState(kWaitMsg);    // Auto transition to RX after successfull receive
+//    case kMsgReceived:
+//        // Message received
+//        SetState(kWaitMsg);    // Auto transition to RX after successfull receive
+//
+//        // For oscillo debug purposes
+//        GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
+//
+//        // Extract received data from buffer
+//        DecodeReceivedMsg();
+//        break;
 
-        // For oscillo debug purposes
-        GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
+//    case kErrorRx:
+//        // Error on RX
+//        SetState(kWaitMsg);    // Auto transition to RX after unsuccessfull receive
+//
+//        // For oscillo debug purposes
+//        GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
+//
+//        // Abnormal event
+//        PrintError(gErrorCode, "Error RX");
+//        break;
 
-        // Extract received data from buffer
-        DecodeReceivedMsg();
-        break;
-
-    case kErrorRx:
-        // Error on RX
-        SetState(kWaitMsg);    // Auto transition to RX after unsuccessfull receive
-
-        // For oscillo debug purposes
-        GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
-
-        // Abnormal event
-        PrintError(gErrorCode, "Error RX");
-        break;
-
-    case kListen:
-        radio_state = RAIL_GetRadioState(gRailHandle);
-
-        if ((radio_state != RAIL_RF_STATE_TX_ACTIVE) && (radio_state != RAIL_RF_STATE_RX_ACTIVE))
-        {
-            SetState(kWaitMsg);
-            StartReceive();
-        }
-        else
-        {
-            SetState(kListen);  // Wait until transition to TX ready
-        }
-        break;
+//    case kListen:
+//        radio_state = RAIL_GetRadioState(gRailHandle);
+//
+//        if ((radio_state != RAIL_RF_STATE_TX_ACTIVE) && (radio_state != RAIL_RF_STATE_RX_ACTIVE))
+//        {
+//            SetState(kWaitMsg);
+//            StartReceive();
+//        }
+//        else
+//        {
+//            SetState(kListen);  // Wait until transition to TX ready
+//        }
+//        break;
 
         // -----------------------------------------
         // TX
@@ -661,50 +779,50 @@ void app_process_action(void)
         // Wait until message sent
         break;
 
-    case kMsgSent:
-        SetState(kWaitMsg);    // Auto transition to RX after successfull transmit
+//    case kMsgSent:
+//        SetState(kWaitMsg);    // Auto transition to RX after successfull transmit
+//
+//        // For oscillo debug purposes
+//        GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
+//
+//        DisplaySentMsg();
+//        // Indicate TX in progress on LED1
+//        sl_led_toggle(&sl_led_led1);
+//        break;
 
-        // For oscillo debug purposes
-        GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
+//    case kErrorTx:
+//        SetState(kSendSync);            // Force to retransmit
+//
+//        PrintError(gErrorCode, "Error TX");
+//        break;
 
-        DisplaySentMsg();
-        // Indicate TX in progress on LED1
-        sl_led_toggle(&sl_led_led1);
-        break;
-
-    case kErrorTx:
-        SetState(kSendSync);            // Force to retransmit
-
-        PrintError(gErrorCode, "Error TX");
-        break;
-
-    case kSendSync:
-
-        radio_state = RAIL_GetRadioState(gRailHandle);
-
-        if ((radio_state != RAIL_RF_STATE_TX_ACTIVE) && (radio_state != RAIL_RF_STATE_RX_ACTIVE))
-        {
-            SetState(kSendingMsg);
-            StartTransmit();
-        }
-        else
-        {
-            SetState(kSendSync);  // Wait until transition ready
-        }
-        break;
+//    case kSendSync:
+//
+//        radio_state = RAIL_GetRadioState(gRailHandle);
+//
+//        if ((radio_state != RAIL_RF_STATE_TX_ACTIVE) && (radio_state != RAIL_RF_STATE_RX_ACTIVE))
+//        {
+//            SetState(kSendingMsg);
+//            StartTransmit();
+//        }
+//        else
+//        {
+//            SetState(kSendSync);  // Wait until transition ready
+//        }
+//        break;
 
         // -----------------------------------------
         // CAL
         // -----------------------------------------
-    case kErrorCal:
-#if (qPrintErrorsL1)
-        if (gErrorCode != gPrevErrorCode)
-        {
-            app_log_error("Error CAL (0x%llX / %d)\n", gErrorCode, gCalibrationStatus);
-            gPrevErrorCode = gErrorCode;
-        }
-#endif  // qPrintErrorsL1
-        break;
+//    case kErrorCal:
+//#if (qPrintErrorsL1)
+//        if (gErrorCode != gPrevErrorCode)
+//        {
+//            app_log_error("Error CAL (0x%llX / %d)\n", gErrorCode, gCalibrationStatus);
+//            gPrevErrorCode = gErrorCode;
+//        }
+//#endif  // qPrintErrorsL1
+//        break;
 
     default:
         app_assert(false, "Unknown state (%d)\n", gProtocolState);
@@ -720,6 +838,11 @@ void app_process_action(void)
 
         if (gPauseCycleConf)        // Permission to print stat
         {
+            // MOVED BEGIN
+            gOldElapsedTime = gElapsedTime;
+            gElapsedTime = RAIL_GetTime();
+            // MOVED END
+
             gStatTimerDone = false;
             gPrintStat = false;
             gStatReq = false;
