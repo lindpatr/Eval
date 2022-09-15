@@ -43,6 +43,7 @@
 #include "sl_flex_packet_asm.h"
 
 #include "common_stat.h"
+#include "common_debug.h"
 
 // Specific to LCD display
 #include "dmd.h"
@@ -314,39 +315,6 @@ static __INLINE void SetState(StateEnum state)
 {
 	gPrevProtocolState = gProtocolState;
 	gProtocolState = state;
-}
-
-/******************************************************************************
- * PrintStatus : print return <> RAIL_STATUS_NO_ERROR status from RAIL functions
- *****************************************************************************/
-static __INLINE void PrintStatus(RAIL_Status_t status, char *text)
-{
-#if (qPrintErrorsL1)
-	if (status != RAIL_STATUS_NO_ERROR)
-	{
-		app_log_warning("%s (%d)\n", text, status);
-	}
-#else	// To avoid compile warnings
-	(void) status;
-	(void) text;
-#endif  // qPrintErrorsL1
-}
-
-/******************************************************************************
- * PrintError : print error event code from RAIL callback
- *****************************************************************************/
-static __INLINE void PrintError(uint64_t errcode, char *text)
-{
-#if (qPrintErrorsL2)
-	if (errcode != gPrevErrorCode)
-	{
-		app_log_error("%s (0x%llX)\n", text, errcode);
-		gPrevErrorCode = errcode;
-	}
-#else	// To avoid compile warnings
-	(void) errcode;
-	(void) text;
-#endif  // qPrintErrorsL2
 }
 
 /******************************************************************************
