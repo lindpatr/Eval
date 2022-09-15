@@ -172,6 +172,8 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 {
 	gErrorCode = events;  // Save events context
 
+	GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_MISC);
+
 	DecodeEvents(&events);  // Count events for debug and statistics
 
 	// Handle RX events
@@ -214,7 +216,7 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 		{
 			// Handle next step
 		    GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_TX);
-		    GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_MISC);
+		    //GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_MISC);
 			gTX_ok = true;
 
 			if (gPauseCycleReq)
@@ -236,7 +238,7 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 	if (events & RAIL_EVENT_SCHEDULED_TX_STARTED)
 	{
 	    // For oscillo debug purposes
-	    GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_MISC);
+	    //GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_MISC);
 	}
 
 	// Perform all calibrations when needed
@@ -249,6 +251,8 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 			gCAL_error = true;
 		}
 	}
+
+	GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_MISC);
 }
 
 /******************************************************************************
