@@ -275,10 +275,10 @@ void config_protocol(void)
     // Sync timeout (when a slave is considering no more receiving sync from a master)
     gSyncTimeOut = (RAIL_Time_t) (gSyncPeriod * SYNC_TIMEOUT_NB);       // Consistency with gSyncPeriod (gSyncTimeOut > gSyncPeriod) is the responsability of the dev
 
-    if (!gDeviceCfgAddr->ismaster && (gDeviceCfgAddr->internalAddr > 1))
-    {
-        app_assert(gTimeSlot > 0, "Error TIME_SLOT shall be greater than %d\n", gTimeSlot);
-    }
+//    if (!gDeviceCfgAddr->ismaster && (gDeviceCfgAddr->internalAddr > 1))
+//    {
+//        app_assert(gTimeSlot > 0, "Error TIME_SLOT shall be greater than %d\n", gTimeSlot);
+//    }
 
     app_assert(gSyncPeriod > 0, "Error SYNC_PERIOD shall be greater than %d\n", gSyncPeriod);
     app_assert(gSyncTimeOut > gSyncPeriod, "Error SYNC_TIMEOUT shall be greater than %d\n", gSyncPeriod);
