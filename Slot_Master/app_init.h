@@ -38,11 +38,19 @@
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
+// Debug general directive
+//#if (SL_DEBUG)
+#define qDebug          1           // Additional debug info
+//#else
+//#define qDebug        0           // Release
+//#endif  // SL_DEBUG
 #define qPrintTX        0     // Print out sent data on serial COM
 #define qPrintRX        0     // Print out received data on serial COM
 #define qPrintEvents    1     // Print out events on serial COM
 #define qPrintErrorsL1  1     // Print out RAIL errors on serial COM (generally return of RAIL_functions)
 #define qPrintErrorsL2  0     // Print out RAIL errors on serial COM (kTimeOutTx, kTimeOutRx, kErrorTx, kErrorRx)
+#define qPrintInfo      1     // Print out info serial COM
+#define qPrintStat      1     // Print out statistics serial COM
 
 #define TRANSITION_TIMING_BEST_EFFORT  1
 
