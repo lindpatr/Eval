@@ -210,6 +210,7 @@ void config_rail_events_callback(void)
                                             | RAIL_EVENT_TX_CCA_RETRY               // DEBUG
                                             | RAIL_EVENT_CONFIG_UNSCHEDULED         // DEBUG
                                             | RAIL_EVENT_RX_TIMEOUT                 // DEBUG
+                                            //| RAIL_EVENT_TX_STARTED             // --> only for debugging purposes (DEBUG_PIN_MISC)
 
                                             // TX errors
                                             | RAIL_EVENT_TX_ABORTED
@@ -218,7 +219,7 @@ void config_rail_events_callback(void)
                                             | RAIL_EVENT_TX_CHANNEL_BUSY
                                             | RAIL_EVENT_TX_SCHEDULED_TX_MISSED // --> enabled in Slave
                                             | RAIL_EVENT_SCHEDULED_TX_STARTED   // --> only for debugging purposes (DEBUG_PIN_MISC)
-                                            | RAIL_EVENT_TX_STARTED             // --> only for debugging purposes (DEBUG_PIN_MISC)
+
 
                                             // RX Ok
                                             | RAIL_EVENT_RX_PACKET_RECEIVED
@@ -231,7 +232,8 @@ void config_rail_events_callback(void)
 
                                             // generate a callback
                                             RAIL_EVENTS_TX_COMPLETION
-                                            | RAIL_EVENT_SCHEDULED_TX_STARTED
+                                            | RAIL_EVENT_SCHEDULED_TX_STARTED       // --> only for debugging purposes (DEBUG_PIN_MISC)
+                                            //| RAIL_EVENT_TX_STARTED                 // --> only for debugging purposes (DEBUG_PIN_MISC)
                                             | RAIL_EVENTS_RX_COMPLETION     // RAIL_EVENT_RX_ADDRESS_FILTERED:      part of the callback through RX_COMPLETION but not part of the enabled event!
                                                                             // RAIL_EVENT_RX_SCHEDULED_RX_MISSED:   part of the callback through RX_COMPLETION but not part of the enabled event!
                                             | RAIL_EVENT_TX_CHANNEL_CLEAR           // DEBUG
@@ -282,7 +284,7 @@ void config_protocol(void)
     gTimeSlot  = gDeviceCfgAddr->slotTime;                                                     // Consistency between all devices participating to the network is the responsability of the dev
 
     // Sync period (when the master shall send a sync frame)
-    gSyncPeriod = (RAIL_Time_t) (common_getMaxSlotTime() + TIME_SLOT_LAST);
+    gSyncPeriod = SYNC_PERIOD;  //(RAIL_Time_t) (common_getMaxSlotTime() + TIME_SLOT_LAST);
 
     // Sync timeout (when a slave is considering no more receiving sync from a master)
     gSyncTimeOut = (RAIL_Time_t) (gSyncPeriod * SYNC_TIMEOUT_NB);       // Consistency with gSyncPeriod (gSyncTimeOut > gSyncPeriod) is the responsability of the dev
@@ -306,7 +308,7 @@ void config_gpio(void)
     // Debug pins init + set to 0
     GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_TX, gpioModePushPull, RESET);
     GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_RX, gpioModePushPull, RESET);
-    GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_MISC, gpioModePushPull, RESET);
+    GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_CB, gpioModePushPull, RESET);
 
     // Turn OFF LEDs
     sl_led_turn_off(&sl_led_led0);

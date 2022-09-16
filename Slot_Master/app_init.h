@@ -55,12 +55,19 @@
 #define TRANSITION_TIMING_BEST_EFFORT  1
 
 // GPIO debug
-#define DEBUG_PIN_TX    (1)           // PB01 --> Exp Header 9
-#define DEBUG_PIN_RX    (2)           // PB02 --> Exp Header 15
-#define DEBUG_PIN_MISC  (3)           // PB03 --> Exp Header 16
-#define DEBUG_PORT      gpioPortB
-#define SET             (1)           // Set PIN
-#define RESET           (0)           // Reset PIN
+#define DEBUG_PIN_TX                DEBUG_PIN_H09
+#define DEBUG_PIN_RX                DEBUG_PIN_H15
+#define DEBUG_PIN_CB                DEBUG_PIN_H16
+
+#define DEBUG_PIN_TX_SET            DEBUG_PIN_SET(DEBUG_PIN_TX)
+#define DEBUG_PIN_TX_RESET          DEBUG_PIN_RESET(DEBUG_PIN_TX)
+#define DEBUG_PIN_TX_STARTED_SET
+#define DEBUG_PIN_TX_STARTED_RESET
+#define DEBUG_PIN_RX_SET            DEBUG_PIN_SET(DEBUG_PIN_RX)
+#define DEBUG_PIN_RX_RESET          DEBUG_PIN_RESET(DEBUG_PIN_TX)
+#define DEBUG_PIN_CB_SET            DEBUG_PIN_SET(DEBUG_PIN_CB)
+#define DEBUG_PIN_CB_RESET          DEBUG_PIN_RESET(DEBUG_PIN_CB)
+
 
 // -----------------------------------------------------------------------------
 //                                Global Variables
