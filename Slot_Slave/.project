@@ -51,6 +51,16 @@
 			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_config.h</locationURI>
 		</link>
 		<link>
+			<name>Slot_Common/common_debug.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_debug.c</locationURI>
+		</link>
+		<link>
+			<name>Slot_Common/common_debug.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_debug.h</locationURI>
+		</link>
+		<link>
 			<name>Slot_Common/common_stat.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_stat.c</locationURI>
