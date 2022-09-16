@@ -51,6 +51,26 @@
 			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_config.h</locationURI>
 		</link>
 		<link>
+			<name>Slot_Common/common_iadc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_iadc.c</locationURI>
+		</link>
+		<link>
+			<name>Slot_Common/common_iadc.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_iadc.h</locationURI>
+		</link>
+		<link>
+			<name>Slot_Common/common_mbox.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_mbox.c</locationURI>
+		</link>
+		<link>
+			<name>Slot_Common/common_mbox.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_mbox.h</locationURI>
+		</link>
+		<link>
 			<name>Slot_Common/common_stat.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_stat.c</locationURI>
@@ -59,6 +79,11 @@
 			<name>Slot_Common/common_stat.h</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_stat.h</locationURI>
+		</link>
+		<link>
+			<name>emlib/em_iadc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/SDKs/gecko_sdk/platform/emlib/src/em_iadc.c</locationURI>
 		</link>
 		<link>
 			<name>gecko_sdk_4.1.1/hardware/board/inc/sl_board_control.h</name>
