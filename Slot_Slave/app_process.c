@@ -246,6 +246,11 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 	    // For oscillo debug purposes
 	    GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_MISC);
 	}
+    if (events & RAIL_EVENT_TX_STARTED)
+    {
+        // For oscillo debug purposes
+        GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_MISC);
+    }
 
 	// Perform all calibrations when needed
 	if (events & RAIL_EVENT_CAL_NEEDED)
@@ -584,8 +589,15 @@ void app_process_action(void)
     case kSyncReceived:
         GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
 
-        status = RAIL_StartScheduledTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, &gRailScheduleCfgTX, NULL);
-        PrintStatus(status, "Warning RAIL_StartScheduledTx");
+        if (gRailScheduleCfgTX.when)
+        {
+            status = RAIL_StartScheduledTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, &gRailScheduleCfgTX, NULL);
+            PrintStatus(status, "Warning RAIL_StartScheduledTx");
+        }
+        else    // don't necessary as transition auto RX -> TX
+        {
+            GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_MISC);
+        }
 
         StartTimerSyncTO();         // Test if Master is still alive and sending Sync periodically
 
