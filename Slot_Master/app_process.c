@@ -170,9 +170,7 @@ extern volatile RAIL_Time_t gStatDelay;
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
 // -----------------------------------------------------------------------------
-/******************************************************************************
- * StartTimerSync : start sync cycle timer
- *****************************************************************************/
+//static __INLINE void StartTransmit(void);
 
 
 // -----------------------------------------------------------------------------
@@ -185,7 +183,7 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 {
     gErrorCode = events;  // Save events context
 
-    GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_MISC);
+    DEBUG_PIN_CB_SET;
 
     DecodeEvents(&events);  // Count events for debug and statistics
 
@@ -195,7 +193,7 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 
         if (events & RAIL_EVENT_RX_PACKET_RECEIVED)
         {
-            GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_RX);
+            DEBUG_PIN_RX_RESET;
             // Keep the packet in the radio buffer, download it later at the state machine
             RAIL_HoldRxPacket(rail_handle);
             gRX_ok = true;
@@ -217,7 +215,7 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
         if (events & RAIL_EVENT_TX_PACKET_SENT)
         {
             // Handle next step
-            GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_TX);
+            DEBUG_PIN_TX_RESET;
 
             gTX_ok = true;
         }
@@ -232,13 +230,19 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
         }
     }
 
+//    if (events & RAIL_EVENT_TX_STARTED)
+//    {
+//        // For oscillo debug purposes
+//        DEBUG_PIN_TX_SET;
+//    }
+
     // Perform all calibrations when needed
     if (events & RAIL_EVENT_CAL_NEEDED)
     {
         gCAL_req = true;
     }
 
-    GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_MISC);
+    DEBUG_PIN_CB_RESET;
 }
 
 /******************************************************************************
@@ -267,6 +271,15 @@ void timer_callback(RAIL_MultiTimer_t *tmr, RAIL_Time_t expectedTimeOfEvent, voi
     else if (tmr == &gSyncPeriodTimer) // used with standard StartTx when RAIL_StartScheduledTx isn't used
     {
         gSYNC_timeout = true;
+
+//        if (!gPauseCycleReq)       // If no request to print stat is pending, restart cycle with the slaves
+//        {
+//            StartTransmit();
+//        }
+//        else
+//        {
+//            gPauseCycleConf = true;       // Cycle ended, permit a print stat
+//        }
     }
 }
 
@@ -389,7 +402,7 @@ static __INLINE void StartReceive(void)
     // Start RX and check result
 
     // For oscillo debug purposes
-    GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
+    DEBUG_PIN_RX_SET;
 
     // Start RX without timeout
     RAIL_Status_t status = RAIL_StartRx(gRailHandle, CHANNEL, NULL);
@@ -405,7 +418,7 @@ static __INLINE void StartTransmit(void)
     prepare_packet_to_tx();
 
     // For oscillo debug purposes
-    GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_TX);
+    DEBUG_PIN_TX_SET;
 
     RAIL_Status_t status = RAIL_StartTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, NULL);
     PrintStatus(status, "Warning RAIL_StartTx");
@@ -467,7 +480,6 @@ static __INLINE void DecodeReceivedMsg(void)
         sl_led_toggle(&sl_led_led0);
         rx_packet_handle = RAIL_GetRxPacketInfo(gRailHandle, RAIL_RX_PACKET_HANDLE_OLDEST_COMPLETE, &packet_info);
     }
-    //GPIO_PinOutClear(DEBUG_PORT, DEBUG_PIN_RX);
 }
 
 // -----------------------------------------------------------------------------
@@ -595,7 +607,7 @@ void app_process_action(void)
 
         // Auto transition to RX after successfull receive
         // For oscillo debug purposes
-        GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
+        DEBUG_PIN_RX_SET;
 
         SetState(kIdle);
         break;
@@ -611,7 +623,7 @@ void app_process_action(void)
 
         // Auto transition to RX after unsuccessfull receive
         // For oscillo debug purposes
-        GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
+        DEBUG_PIN_RX_SET;
 
         SetState(kIdle);
         break;
@@ -631,7 +643,7 @@ void app_process_action(void)
 
         // Auto transition to RX after successfull transmit
         // For oscillo debug purposes
-        GPIO_PinOutSet(DEBUG_PORT, DEBUG_PIN_RX);
+        DEBUG_PIN_RX_SET;
 
         SetState(kIdle);
         break;
@@ -686,6 +698,15 @@ void app_process_action(void)
             gPauseCycleConf = true;       // Cycle ended, permit a print stat
             SetState(kStatistics);
         }
+//        if (!gPauseCycleReq)       // If no request to print stat is pending, restart cycle with the slaves
+//        {
+//            SetState(kIdle);
+//        }
+//        else
+//        {
+//            if (gPauseCycleConf)       // Cycle ended, permit a print stat
+//                SetState(kStatistics);
+//        }
         break;
 
         // -----------------------------------------
