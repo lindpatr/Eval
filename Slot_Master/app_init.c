@@ -205,6 +205,10 @@ void config_rail_events_callback(void)
                                             // Active (= enable in radio configurator)
                                             // TX Ok
                                             RAIL_EVENT_TX_PACKET_SENT
+                                            | RAIL_EVENT_TX_CHANNEL_CLEAR           // DEBUG
+                                            | RAIL_EVENT_TX_CCA_RETRY               // DEBUG
+                                            | RAIL_EVENT_CONFIG_UNSCHEDULED         // DEBUG
+                                            | RAIL_EVENT_RX_TIMEOUT                 // DEBUG
                                             // TX errors
                                             | RAIL_EVENT_TX_ABORTED
                                             | RAIL_EVENT_TX_BLOCKED
@@ -225,6 +229,10 @@ void config_rail_events_callback(void)
                                             RAIL_EVENTS_TX_COMPLETION       // RAIL_EVENT_TX_SCHEDULED_TX_MISSED:   part of the callback through TX_COMPLETION but not part of the enabled event!
                                             | RAIL_EVENTS_RX_COMPLETION     // RAIL_EVENT_RX_ADDRESS_FILTERED:      part of the callback through RX_COMPLETION but not part of the enabled event!
                                                                             // RAIL_EVENT_RX_SCHEDULED_RX_MISSED:   part of the callback through RX_COMPLETION but not part of the enabled event!
+                                            | RAIL_EVENT_TX_CHANNEL_CLEAR           // DEBUG
+                                            | RAIL_EVENT_TX_CCA_RETRY               // DEBUG
+                                            | RAIL_EVENT_CONFIG_UNSCHEDULED         // DEBUG
+                                            | RAIL_EVENT_RX_TIMEOUT                 // DEBUG
                                             | RAIL_EVENT_CAL_NEEDED);
 
     PrintStatus(status, "Warning RAIL_ConfigEvents");
@@ -251,8 +259,6 @@ void config_rail(void)
  ******************************************************************************/
 void config_protocol(void)
 {
-    app_assert(gRailHandle != NULL, "Error Not a valid RAIL handle (0x%llX)\n", gRailHandle);
-
     // Slot start time (when a slave shall transmit its data)
     gTimeSlot  = gDeviceCfgAddr->slotTime;                                                     // Consistency between all devices participating to the network is the responsability of the dev
 
@@ -384,11 +390,11 @@ void app_init(void)
 	// Config GPIO
 	config_gpio();
 
+    // Config protocol
+    config_protocol();
+
 	// Config RAIL
 	config_rail();
-
-	// Config protocol
-	config_protocol();
 
 	// User commands add to CLI
 	cli_user_init();

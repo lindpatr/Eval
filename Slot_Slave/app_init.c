@@ -166,7 +166,10 @@ void config_rail_transition(void)
     app_assert(gRailHandle != NULL, "Error Not a valid RAIL handle (0x%llX)\n", gRailHandle);
 
     // Set RX and TX transition
-    gRailTransitionRX.success = RAIL_RF_STATE_RX;   // RX Ok  -> RX
+    if (gRailScheduleCfgTX.when)
+        gRailTransitionRX.success = RAIL_RF_STATE_RX;   // RX Ok  -> RX because RAIL_StartScheduledTx is used!
+    else    // TX immediate
+        gRailTransitionRX.success = RAIL_RF_STATE_TX;   // RX Ok  -> TX because RAIL_StartScheduledTx is not used!
     gRailTransitionRX.error = RAIL_RF_STATE_RX;     // RX Err -> RX
     gRailTransitionTX.success = RAIL_RF_STATE_RX;   // TX Ok  -> RX
     gRailTransitionTX.error = RAIL_RF_STATE_RX;     // TX Err -> RX
@@ -203,6 +206,11 @@ void config_rail_events_callback(void)
                                             // Active (= enable in radio configurator)
                                             // TX Ok
                                             RAIL_EVENT_TX_PACKET_SENT
+                                            | RAIL_EVENT_TX_CHANNEL_CLEAR           // DEBUG
+                                            | RAIL_EVENT_TX_CCA_RETRY               // DEBUG
+                                            | RAIL_EVENT_CONFIG_UNSCHEDULED         // DEBUG
+                                            | RAIL_EVENT_RX_TIMEOUT                 // DEBUG
+
                                             // TX errors
                                             | RAIL_EVENT_TX_ABORTED
                                             | RAIL_EVENT_TX_BLOCKED
@@ -210,6 +218,7 @@ void config_rail_events_callback(void)
                                             | RAIL_EVENT_TX_CHANNEL_BUSY
                                             | RAIL_EVENT_TX_SCHEDULED_TX_MISSED // --> enabled in Slave
                                             | RAIL_EVENT_SCHEDULED_TX_STARTED   // --> only for debugging purposes (DEBUG_PIN_MISC)
+                                            | RAIL_EVENT_TX_STARTED             // --> only for debugging purposes (DEBUG_PIN_MISC)
 
                                             // RX Ok
                                             | RAIL_EVENT_RX_PACKET_RECEIVED
@@ -225,6 +234,10 @@ void config_rail_events_callback(void)
                                             | RAIL_EVENT_SCHEDULED_TX_STARTED
                                             | RAIL_EVENTS_RX_COMPLETION     // RAIL_EVENT_RX_ADDRESS_FILTERED:      part of the callback through RX_COMPLETION but not part of the enabled event!
                                                                             // RAIL_EVENT_RX_SCHEDULED_RX_MISSED:   part of the callback through RX_COMPLETION but not part of the enabled event!
+                                            | RAIL_EVENT_TX_CHANNEL_CLEAR           // DEBUG
+                                            | RAIL_EVENT_TX_CCA_RETRY               // DEBUG
+                                            | RAIL_EVENT_CONFIG_UNSCHEDULED         // DEBUG
+                                            | RAIL_EVENT_RX_TIMEOUT                 // DEBUG
                                             | RAIL_EVENT_CAL_NEEDED);
 
     PrintStatus(status, "Warning RAIL_ConfigEvents");
@@ -244,6 +257,20 @@ void config_rail(void)
     config_rail_schedule();
     config_rail_transition();
     config_rail_events_callback();
+
+    // Le filtage est hardware.
+    // Configuration : RAIL Utility, Initialization (inst0) -> Radio Event Configuration -> RX Address Filtered = true/false
+    // Si Filtered = true, on recevra un event dans le callback pour indiquer que l'adresse a été filtrée et le message annulé.
+    // Si Filtered = false on NE recevra pas d'event dans le callback pour indiquer que l'adresse a été filtrée et le message annulé.
+    uint8_t addr = common_getMasterAddr();
+
+    // Configuration du filtrage des adresses
+    // Filtrage sur 1 byte avec un offset de 0 byte depuis le débute de la trame.
+    RAIL_ConfigAddressFilter(gRailHandle, &addrConfig);
+    // set de la valeur d'adresse à filtrer
+    RAIL_SetAddressFilterAddress(gRailHandle, 0, 1, &addr, 1);
+    // activation
+    RAIL_EnableAddressFilter(gRailHandle, true);
 }
 
 /*******************************************************************************
@@ -251,8 +278,6 @@ void config_rail(void)
  ******************************************************************************/
 void config_protocol(void)
 {
-    app_assert(gRailHandle != NULL, "Error Not a valid RAIL handle (0x%llX)\n", gRailHandle);
-
     // Slot start time (when a slave shall transmit its data)
     gTimeSlot  = gDeviceCfgAddr->slotTime;                                                     // Consistency between all devices participating to the network is the responsability of the dev
 
@@ -269,20 +294,6 @@ void config_protocol(void)
 
     app_assert(gSyncPeriod > 0, "Error SYNC_PERIOD shall be greater than %d\n", gSyncPeriod);
     app_assert(gSyncTimeOut > gSyncPeriod, "Error SYNC_TIMEOUT shall be greater than %d\n", gSyncPeriod);
-
-    // Le filtage est hardware.
-    // Configuration : RAIL Utility, Initialization (inst0) -> Radio Event Configuration -> RX Address Filtered = true/false
-    // Si Filtered = true, on recevra un event dans le callback pour indiquer que l'adresse a été filtrée et le message annulé.
-    // Si Filtered = false on NE recevra pas d'event dans le callback pour indiquer que l'adresse a été filtrée et le message annulé.
-    uint8_t addr = common_getMasterAddr();
-
-    // Configuration du filtrage des adresses
-    // Filtrage sur 1 byte avec un offset de 0 byte depuis le débute de la trame.
-    RAIL_ConfigAddressFilter(gRailHandle, &addrConfig);
-    // set de la valeur d'adresse à filtrer
-    RAIL_SetAddressFilterAddress(gRailHandle, 0, 1, &addr, 1);
-    // activation
-    RAIL_EnableAddressFilter(gRailHandle, true);
 }
 
 /*******************************************************************************
@@ -399,11 +410,11 @@ void app_init(void)
     // Config GPIO
     config_gpio();
 
-    // Config RAIL
-    config_rail();
-
     // Config protocol
     config_protocol();
+
+    // Config RAIL
+    config_rail();
 
     // User commands add to CLI
     cli_user_init();
