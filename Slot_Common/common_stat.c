@@ -211,19 +211,19 @@ __INLINE void DisplayStat(void)
             if (common_getConfigTable(i)->enable)
             {
                 uint8_t pos = common_getConfigTable(i)->posTab;
-                if (gRX_counter[pos] > 0)
+                if (gRX_counter[pos].u32 > 0UL)
                 {
 #if (qREL_STAT)
                 // Relative
                 // --------
-                relRXCounter += (gRX_counter[i] - gRX_counter_old[i]);                                   // Sum of relative RX (from Slave) and TX counters
+                relRXCounter += (gRX_counter[i].u32 - gRX_counter_old[i]);                                   // Sum of relative RX (from Slave) and TX counters
                 relRXGap += (gRX_tab[i][TAB_POS_RX_GAP] - gRX_tab_old[i][TAB_POS_RX_GAP]);               // Sum of absolute RX (from Slave) gap occurences
                 relRXOk += (gRX_tab[i][TAB_POS_RX_OK] - gRX_tab_old[i][TAB_POS_RX_OK]);                  // Sum of absolute TX Ok (from Slave) counters
 #endif  // qREL_STAT
 #if (qABS_STAT)
                 // Absolute
                 // --------
-                absRXCounter += gRX_counter[i];                         // Sum of absolute RX (from Slave) counters
+                absRXCounter += gRX_counter[i].u32;                         // Sum of absolute RX (from Slave) counters
                 absRXGap += gRX_tab[i][TAB_POS_RX_GAP];                 // Sum of absolute RX (from Slave) gap occurences
                 absRXOk += gRX_tab[i][TAB_POS_RX_OK];                   // Sum of absolute TX Ok (from Slave) counters
 #endif  // qABS_STAT
@@ -236,14 +236,14 @@ __INLINE void DisplayStat(void)
 #if (qREL_STAT)
         // Relative
         // --------
-        relRXCounter = (gRX_counter[myDevice] - gRX_counter_old[myDevice]);
+        relRXCounter = (gRX_counter[myDevice].u32 - gRX_counter_old[myDevice]);
         relRXGap = (gRX_tab[myDevice][TAB_POS_RX_GAP] - gRX_tab_old[myDevice][TAB_POS_RX_GAP]);
         relRXOk = (gRX_tab[myDevice][TAB_POS_RX_OK] - gRX_tab_old[myDevice][TAB_POS_RX_OK]);
 #endif  // qREL_STAT
 #if (qABS_STAT)
         // Absolute
         // --------
-        absRXCounter = gRX_counter[myDevice];
+        absRXCounter = gRX_counter[myDevice].u32;
         absRXGap = gRX_tab[myDevice][TAB_POS_RX_GAP];
         absRXOk = gRX_tab[myDevice][TAB_POS_RX_OK];
 #endif  // qABS_STAT
@@ -321,7 +321,7 @@ __INLINE void DisplayStat(void)
             if (common_getConfigTable(i)->enable)
             {
                 uint8_t pos = common_getConfigTable(i)->posTab;
-                if (gRX_counter[pos] == 0)
+                if (gRX_counter[pos].u32 == 0UL)
                 {
                     absRXTimeOut += absTXOk;
                 }
@@ -392,7 +392,7 @@ __INLINE void DisplayStat(void)
         // Master node --> take in account all slaves
         for (int i = 1; i < MAX_NODE; i++)
         {
-            if (gRX_counter[i])
+            if (gRX_counter[i].u32 > 0UL)
             {
                 app_log_info("Slave #%03d #cnt (#gap/max) : %d (%d/%d)\n",
                         i,
@@ -450,7 +450,7 @@ __INLINE void DisplayStat(void)
             {
                 uint8_t pos = common_getConfigTable(i)->posTab;
                 uint8_t addr = common_getConfigTable(i)->internalAddr;
-    //            if (gRX_counter[pos])
+    //            if (gRX_counter[pos].u32 > 0UL)
     //            {
                     app_log_info("#%03d #cnt (#RX-TO/#gap/max): %d (%d/%d/%d)\n",
                             addr,

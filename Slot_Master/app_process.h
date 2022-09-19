@@ -54,7 +54,7 @@ typedef union
 // -----------------------------------------------------------------------------
 //                                Global Variables
 // -----------------------------------------------------------------------------
-extern volatile uint32_t gRX_counter[MAX_NODE];
+extern volatile union32_t gRX_counter[MAX_NODE];
 extern volatile union32_t gTX_counter;
 extern volatile uint32_t gTX_counter_old;
 extern volatile uint32_t gRX_counter_old[MAX_NODE];
