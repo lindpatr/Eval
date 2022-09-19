@@ -51,9 +51,9 @@
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
 // -----------------------------------------------------------------------------
-void cli_set_stat_period(sl_cli_command_arg_t *arguments);
+//void cli_set_stat_period(sl_cli_command_arg_t *arguments);
 void cli_start_process(sl_cli_command_arg_t *arguments);
-void cli_req_stat(sl_cli_command_arg_t *arguments);
+//void cli_req_stat(sl_cli_command_arg_t *arguments);
 void cli_set_slot_time(sl_cli_command_arg_t *arguments);
 void cli_set_sync_period(sl_cli_command_arg_t *arguments);
 void cli_set_sync_timeout(sl_cli_command_arg_t *arguments);
@@ -65,12 +65,12 @@ void cli_set_sync_timeout(sl_cli_command_arg_t *arguments);
 /// Flag, indicating a start process request (button was pressed / CLI start request has occurred)
 extern volatile bool gStartProcess;
 /// Flag, indicating a request to print statistics (button was pressed / CLI statistics request has occurred)
-extern volatile bool gStatReq;
+//extern volatile bool gStatReq;
 /// Button pressed simulation with CLI, start process
 extern volatile bool gBtnPressed;
 
 /// Value, indicating print stat delay on CLI
-extern volatile RAIL_Time_t gStatDelay;
+//extern volatile RAIL_Time_t gStatDelay;
 /// Value, indicating time of a slot in the protocol on CLI
 extern volatile uint16_t gTimeSlot;
 /// Value, indicating sync period for Master on CLI
@@ -93,11 +93,11 @@ extern PROT_AddrMap_t* gDeviceCfgAddr;
 //                                Static Variables
 // -----------------------------------------------------------------------------
 // User additional CLI command
-static const sl_cli_command_info_t cli_cmd__stat_period =
-SL_CLI_COMMAND(cli_set_stat_period,
-		"Set statistics print period (s)",
-		"1 - 3600 / 0 = default",
-		{	SL_CLI_ARG_UINT16, SL_CLI_ARG_END,});
+//static const sl_cli_command_info_t cli_cmd__stat_period =
+//SL_CLI_COMMAND(cli_set_stat_period,
+//		"Set statistics print period (s)",
+//		"1 - 3600 / 0 = default",
+//		{	SL_CLI_ARG_UINT16, SL_CLI_ARG_END,});
 
 static const sl_cli_command_info_t cli_cmd__slot_time =
 SL_CLI_COMMAND(cli_set_slot_time,
@@ -123,21 +123,21 @@ SL_CLI_COMMAND(cli_start_process,
 		"",
         {SL_CLI_ARG_END, });
 
-static const sl_cli_command_info_t cli_cmd__req_stat =
-SL_CLI_COMMAND(cli_req_stat,
-		"Print statistics",
-		"",
-        {SL_CLI_ARG_END, });
+//static const sl_cli_command_info_t cli_cmd__req_stat =
+//SL_CLI_COMMAND(cli_req_stat,
+//		"Print statistics",
+//		"",
+//        {SL_CLI_ARG_END, });
 
 // User command table
 const sl_cli_command_entry_t cli_my_command_table[] =
 {
-{ "stat", &cli_cmd__stat_period, false },
+//{ "stat", &cli_cmd__stat_period, false },
 { "slot", &cli_cmd__slot_time, false },
 { "sync", &cli_cmd__sync_period, false },
 { "sync_to", &cli_cmd__sync_timeout, false },
 { "start", &cli_cmd__start_process, false },
-{ "print_stat", &cli_cmd__req_stat, false },
+//{ "print_stat", &cli_cmd__req_stat, false },
 { NULL, NULL, false }, };
 
 // User CLI grouo
@@ -199,27 +199,27 @@ void cli_receive_packet(sl_cli_command_arg_t *arguments)
 /******************************************************************************
  * CLI - Set period: set the statistics timeout
  *****************************************************************************/
-void cli_set_stat_period(sl_cli_command_arg_t *arguments)
-{
-	uint16_t arg = sl_cli_get_argument_uint16(arguments, 0);
-	char *str;
-
-	if (arg > 0)
-	{
-	    arg = MIN(arg, STAT_PERIOD_MAX);
-	    arg = MAX(arg, 1);
-
-	    gStatDelay = (RAIL_Time_t)(arg * SEC);
-
-	    str = strNew;
-	}
-	else    // Default value
-	{
-	    gStatDelay = (RAIL_Time_t)STAT_PERIOD_us;
-        str = strDefault;
-	}
-	app_log_info("Info Set automatic print statistics period to %d sec (%s)\n", (gStatDelay / SEC), str);
-}
+//void cli_set_stat_period(sl_cli_command_arg_t *arguments)
+//{
+//	uint16_t arg = sl_cli_get_argument_uint16(arguments, 0);
+//	char *str;
+//
+//	if (arg > 0)
+//	{
+//	    arg = MIN(arg, STAT_PERIOD_MAX);
+//	    arg = MAX(arg, 1);
+//
+//	    gStatDelay = (RAIL_Time_t)(arg * SEC);
+//
+//	    str = strNew;
+//	}
+//	else    // Default value
+//	{
+//	    gStatDelay = (RAIL_Time_t)STAT_PERIOD_us;
+//        str = strDefault;
+//	}
+//	app_log_info("Info Set automatic print statistics period to %d sec (%s)\n", (gStatDelay / SEC), str);
+//}
 
 /******************************************************************************
  * CLI - Set slot time: set schedule TX deadline
@@ -409,15 +409,15 @@ void cli_start_process(sl_cli_command_arg_t *arguments)
 /******************************************************************************
  * CLI - Stat request: Sets a flag indicating that a statistic is requested
  *****************************************************************************/
-void cli_req_stat(sl_cli_command_arg_t *arguments)
-{
-	(void) arguments;
-
-	gStatReq = true;
-	gOldElapsedTime = gElapsedTime;
-	gElapsedTime = RAIL_GetTime();
-	app_log_info("Info Statistics print requested\n");
-}
+//void cli_req_stat(sl_cli_command_arg_t *arguments)
+//{
+//	(void) arguments;
+//
+//	gStatReq = true;
+//	gOldElapsedTime = gElapsedTime;
+//	gElapsedTime = RAIL_GetTime();
+//	app_log_info("Info Statistics print requested\n");
+//}
 
 // -----------------------------------------------------------------------------
 //                          Static Function Definitions
