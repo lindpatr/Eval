@@ -27,8 +27,9 @@
 // ...
 // Slot N-1 : Slave N
 //#define SYNC_PERIOD  (((SLAVE_IN_SYSTEM+1)*TIME_SLOT_DEF))  // in us --> only if time slot of a slave is defined as (Addr-1)*TIME_SLOT_DEF
-#define SYNC_PERIOD_MIN (500)      // in us
-#define SYNC_PERIOD_MAX (60000)      // in us
+#define SYNC_PERIOD     (1000/*20000*/)      // 20 ms
+#define SYNC_PERIOD_MIN (500)       // in us
+#define SYNC_PERIOD_MAX (60000)     // in us
 
 
 // In Slave, considering if no Sync from Master after 5 times SYNC_PERIOD that Master stop its process -> restart state machine from Slaves; current implementation is setting a specific time slot for each slave!
