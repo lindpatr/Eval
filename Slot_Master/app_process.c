@@ -95,7 +95,7 @@ typedef enum
     //  IHM & CLI
     //  ------------
     kBtnPressed,
-    kStatReq
+//    kStatReq
 
 } StateEnum;
 
@@ -146,11 +146,11 @@ static volatile bool gCAL_req = false;
 static volatile bool gSYNC_timeout = false;
 
 /// Flags to update start print statistics
-static volatile bool gStatTimerDone = false;	// Timeout of the delay for printing stat
-volatile bool gStatReq = false;					// Flag, indicating a request to print statistics (button was pressed / CLI statistics request has occurred)
+//static volatile bool gStatTimerDone = false;	// Timeout of the delay for printing stat
+//volatile bool gStatReq = false;					// Flag, indicating a request to print statistics (button was pressed / CLI statistics request has occurred)
 
 /// TX and RX counters
-volatile uint32_t gRX_counter[MAX_NODE] = { 0UL };
+volatile union32_t gRX_counter[MAX_NODE] = { 0UL };
 volatile union32_t gTX_counter = { .u32 = 1UL };
 volatile uint32_t gTX_counter_old = 0UL;
 volatile uint32_t gRX_counter_old[MAX_NODE] = { 0UL };
@@ -264,11 +264,11 @@ void timer_callback(RAIL_MultiTimer_t *tmr, RAIL_Time_t expectedTimeOfEvent, voi
     (void) expectedTimeOfEvent;   // To avoid warnings
     (void) cbArg;         // To avoid warnings
 
-    if (tmr == &gStatDelayTimer) // used to print stat periodically
+    /*if (tmr == &gStatDelayTimer) // used to print stat periodically
     {
         gStatTimerDone = true;
     }
-    else if (tmr == &gSyncPeriodTimer) // used with standard StartTx when RAIL_StartScheduledTx isn't used
+    else*/ if (tmr == &gSyncPeriodTimer) // used with standard StartTx when RAIL_StartScheduledTx isn't used
     {
         gSYNC_timeout = true;
 
@@ -341,7 +341,7 @@ static __INLINE bool PrintStatistics(void)
         RestartRadio();
 
         gTX_counter_old = gTX_counter.u32;
-        memcpy((uint32_t*) gRX_counter_old, (uint32_t*) gRX_counter, MAX_NODE);
+        memcpy((uint32_t*) &gRX_counter_old[0], (uint32_t*) &gRX_counter[0].u32, MAX_NODE);
 
         gPauseCycleReq = false;
         gPauseCycleConf = false;
@@ -446,39 +446,47 @@ static __INLINE void DecodeReceivedMsg(void)
     rx_packet_handle = RAIL_GetRxPacketInfo(gRailHandle, RAIL_RX_PACKET_HANDLE_OLDEST_COMPLETE, &packet_info);
     while (rx_packet_handle != RAIL_RX_PACKET_HANDLE_INVALID)
     {
-        uint8_t *start_of_packet = 0;
-        uint16_t packet_size = unpack_packet_from_rx(gRX_fifo, &packet_info, &start_of_packet);
-        status = RAIL_ReleaseRxPacket(gRailHandle, rx_packet_handle);
-        PrintStatus(status, "Warning ReleaseRxPacket");
-
-        if (packet_info.packetStatus == RAIL_RX_PACKET_READY_SUCCESS)
+        if (packet_info.packetStatus != RAIL_RX_PACKET_RECEIVING)
         {
-            DisplayReceivedMsg(start_of_packet, packet_size);
+            uint8_t *start_of_packet = 0;
+            uint16_t packet_size = unpack_packet_from_rx(gRX_fifo, &packet_info, &start_of_packet);
+            status = RAIL_ReleaseRxPacket(gRailHandle, rx_packet_handle);
+            PrintStatus(status, "Warning ReleaseRxPacket");
 
-            uint8_t addr = start_of_packet[kAddr];
-
-            // Backup previous data
-            gRX_counter_prev[addr] = gRX_counter[addr];
-            // Extract received data
-            gRX_counter[addr] = (uint32_t) ((start_of_packet[kCounter0] << 0) + (start_of_packet[kCounter1] << 8) + (start_of_packet[kCounter2] << 16) + (start_of_packet[kCounter3] << 24));
-
-            uint32_t delta = gRX_counter[addr] - gRX_counter_prev[addr];
-            if (delta != 1)
+            if (packet_info.packetStatus == RAIL_RX_PACKET_READY_SUCCESS)
             {
-                gRX_tab[addr][TAB_POS_RX_GAP]++;
-                gRX_tab[addr][TAB_POS_RX_GAP_MAX] = (delta > gRX_tab[addr][TAB_POS_RX_GAP_MAX] ? delta : gRX_tab[addr][TAB_POS_RX_GAP_MAX]);
+                DisplayReceivedMsg(start_of_packet, packet_size);
+
+                uint8_t addr = start_of_packet[kAddr];
+
+                // Backup previous data
+                gRX_counter_prev[addr] = gRX_counter[addr].u32;
+                // Extract received data
+                //gRX_counter[addr] = (uint32_t) ((start_of_packet[kCounter0] << 0) + (start_of_packet[kCounter1] << 8) + (start_of_packet[kCounter2] << 16) + (start_of_packet[kCounter3] << 24));
+                gRX_counter[addr].u8[0] = start_of_packet[kCounter0];
+                gRX_counter[addr].u8[1] = start_of_packet[kCounter1];
+                gRX_counter[addr].u8[2] = start_of_packet[kCounter2];
+                gRX_counter[addr].u8[3] = start_of_packet[kCounter3];
+
+                uint32_t delta = gRX_counter[addr].u32 - gRX_counter_prev[addr];
+                if (delta != 1)
+                {
+                    gRX_tab[addr][TAB_POS_RX_GAP]++;
+                    gRX_tab[addr][TAB_POS_RX_GAP_MAX] = (delta > gRX_tab[addr][TAB_POS_RX_GAP_MAX] ? delta : gRX_tab[addr][TAB_POS_RX_GAP_MAX]);
+                }
+                else
+                    gRX_tab[addr][TAB_POS_RX_OK]++;
             }
-            else
-                gRX_tab[addr][TAB_POS_RX_OK]++;
-        }
-        else if (packet_info.packetStatus == RAIL_RX_PACKET_READY_CRC_ERROR)
-        {
-            gRX_tab[me][TAB_POS_RX_CRC_ERR]++;
+            else if (packet_info.packetStatus == RAIL_RX_PACKET_READY_CRC_ERROR)
+            {
+                gRX_tab[me][TAB_POS_RX_CRC_ERR]++;
+            }
+
+            // Indicate RX in progress on LED0
+            sl_led_toggle(&sl_led_led0);
         }
 
-        // Indicate RX in progress on LED0
-        sl_led_toggle(&sl_led_led0);
-        rx_packet_handle = RAIL_GetRxPacketInfo(gRailHandle, RAIL_RX_PACKET_HANDLE_OLDEST_COMPLETE, &packet_info);
+       rx_packet_handle = RAIL_GetRxPacketInfo(gRailHandle, RAIL_RX_PACKET_HANDLE_OLDEST_COMPLETE, &packet_info);
     }
 }
 
@@ -530,24 +538,24 @@ void app_process_action(void)
 
         SetState(kSyncReq);
     }
-    else if (gStatTimerDone)        // Periodic stat
-    {
-        gStatTimerDone = false;
-
-        SetState(kStatistics);
-    }
+//    else if (gStatTimerDone)        // Periodic stat
+//    {
+//        gStatTimerDone = false;
+//
+//        //SetState(kStatistics);
+//    }
     else if (gBtnPressed)           // Button pressed: start process then print stat
     {
         gBtnPressed = false;
 
         SetState(kBtnPressed);
     }
-    else if (gStatReq)              // Stat via CLI
-    {
-        gStatReq = false;
-
-        SetState(kStatistics);
-    }
+//    else if (gStatReq)              // Stat via CLI
+//    {
+//        gStatReq = false;
+//
+//        SetState(kStatistics);
+//    }
 
 
     /// -----------------------------------------
@@ -725,11 +733,11 @@ void app_process_action(void)
         }
         break;
 
-    case kStatReq:                  // CLI stat
-        gStatReq = false;
-
-        SetState(kStatistics);
-        break;
+//    case kStatReq:                  // CLI stat
+//        gStatReq = false;
+//
+//        SetState(kStatistics);
+//        break;
 
         // -----------------------------------------
         // Statistics
