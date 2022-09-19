@@ -206,10 +206,6 @@ void config_rail_events_callback(void)
                                             // Active (= enable in radio configurator)
                                             // TX Ok
                                             RAIL_EVENT_TX_PACKET_SENT
-                                            | RAIL_EVENT_TX_CHANNEL_CLEAR           // DEBUG
-                                            | RAIL_EVENT_TX_CCA_RETRY               // DEBUG
-                                            | RAIL_EVENT_CONFIG_UNSCHEDULED         // DEBUG
-                                            | RAIL_EVENT_RX_TIMEOUT                 // DEBUG
                                             //| RAIL_EVENT_TX_STARTED             // --> only for debugging purposes (DEBUG_PIN_MISC)
 
                                             // TX errors
@@ -236,10 +232,6 @@ void config_rail_events_callback(void)
                                             //| RAIL_EVENT_TX_STARTED                 // --> only for debugging purposes (DEBUG_PIN_MISC)
                                             | RAIL_EVENTS_RX_COMPLETION     // RAIL_EVENT_RX_ADDRESS_FILTERED:      part of the callback through RX_COMPLETION but not part of the enabled event!
                                                                             // RAIL_EVENT_RX_SCHEDULED_RX_MISSED:   part of the callback through RX_COMPLETION but not part of the enabled event!
-                                            | RAIL_EVENT_TX_CHANNEL_CLEAR           // DEBUG
-                                            | RAIL_EVENT_TX_CCA_RETRY               // DEBUG
-                                            | RAIL_EVENT_CONFIG_UNSCHEDULED         // DEBUG
-                                            | RAIL_EVENT_RX_TIMEOUT                 // DEBUG
                                             | RAIL_EVENT_CAL_NEEDED);
 
     PrintStatus(status, "Warning RAIL_ConfigEvents");
