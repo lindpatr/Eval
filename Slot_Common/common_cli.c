@@ -39,6 +39,7 @@
 
 #include "app_init.h"
 #include "common_stat.h"
+#include "common_debug.h"
 
 
 // -----------------------------------------------------------------------------
