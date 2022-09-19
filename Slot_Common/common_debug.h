@@ -17,6 +17,21 @@
 #include "app_log.h"
 #include "app_init.h"
 
+
+
+// GPIO debug
+#define DEBUG_PORT              gpioPortB
+#define DEBUG_PIN_H09           1           // PB01 --> Exp Header 9
+#define DEBUG_PIN_H15           2           // PB02 --> Exp Header 15
+#define DEBUG_PIN_H16           3           // PB03 --> Exp Header 16
+
+#define DEBUG_PIN_SET(pin)      GPIO_PinOutSet(DEBUG_PORT, pin)
+#define DEBUG_PIN_RESET(pin)    GPIO_PinOutClear(DEBUG_PORT, pin)
+
+#define SET                     1
+#define RESET                   0
+
+
 /******************************************************************************
  * PrintStatus : print return <> RAIL_STATUS_NO_ERROR status from RAIL functions
  *****************************************************************************/
