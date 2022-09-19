@@ -250,6 +250,14 @@ void cli_set_slot_time(sl_cli_command_arg_t *arguments)
 
             gRailScheduleCfgTX.when = gTimeSlot;
 
+            if (gRailScheduleCfgTX.when)
+                gRailTransitionRX.success = RAIL_RF_STATE_RX;   // RX Ok  -> RX because RAIL_StartScheduledTx is used!
+            else    // TX immediate
+                gRailTransitionRX.success = RAIL_RF_STATE_TX;   // RX Ok  -> TX because RAIL_StartScheduledTx is not used!
+
+            RAIL_Status_t status = RAIL_SetRxTransitions(gRailHandle, &gRailTransitionRX);
+            PrintStatus(status, "Warning RAIL_SetRxTransitions");
+
             app_log_info("Info Set TIME_SLOT to %d us (%s)\n", gTimeSlot, str);
 
 //            if ((gTimeSlot >= gSyncPeriod) || (gTimeSlot >= gSyncTimeOut))
