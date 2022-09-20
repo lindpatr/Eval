@@ -149,7 +149,7 @@ void config_rail_schedule(void)
 //  gRailScheduleCfgRX.rxTransitionEndSchedule = false;
 
     // Set timeout for scheduled TX
-    gRailScheduleCfgTX.when = (gDeviceCfgAddr->slotTime);
+    gRailScheduleCfgTX.when = gTimeSlot;
     gRailScheduleCfgTX.mode = RAIL_TIME_DELAY;
     gRailScheduleCfgTX.txDuringRx = RAIL_SCHEDULED_TX_DURING_RX_POSTPONE_TX;
 }
@@ -166,7 +166,7 @@ void config_rail_transition(void)
     app_assert(gRailHandle != NULL, "Error Not a valid RAIL handle (0x%llX)\n", gRailHandle);
 
     // Set RX and TX transition
-    if (gRailScheduleCfgTX.when)
+    if (gTimeSlot > 0UL)
         gRailTransitionRX.success = RAIL_RF_STATE_RX;   // RX Ok  -> RX because RAIL_StartScheduledTx is used!
     else    // TX immediate
         gRailTransitionRX.success = RAIL_RF_STATE_TX;   // RX Ok  -> TX because RAIL_StartScheduledTx is not used!

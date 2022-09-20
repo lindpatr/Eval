@@ -151,7 +151,7 @@ void config_rail_schedule(void)
 //    gRailScheduleCfgRX.rxTransitionEndSchedule = false;
 
     // Set timeout for scheduled TX --> none
-//    gRailScheduleCfgTX.when = (gDeviceCfgAddr->slotPos /** TIME_SLOT*/);
+//    gRailScheduleCfgTX.when = gTimeSlot;
 //    gRailScheduleCfgTX.mode = RAIL_TIME_DELAY;
 //    gRailScheduleCfgTX.txDuringRx = RAIL_SCHEDULED_TX_DURING_RX_POSTPONE_TX;
 }
