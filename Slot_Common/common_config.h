@@ -14,11 +14,11 @@
 #include <stddef.h>
 
 
-//#define SLAVE_IN_SYSTEM (4)                     // Netowrk is composed of X slaves
-//#define TIME_SLOT_DEF   (180U)                  // in us --> only if time slot of a slave is defined as (Addr-1)*TIME_SLOT_DEF; current implementation is setting a specific time slot for each slave!
+//#define SLAVE_IN_SYSTEM (4)                   // Netowrk is composed of X slaves
+//#define TIME_SLOT_DEF   (180U)                // in us --> only if time slot of a slave is defined as (Addr-1)*TIME_SLOT_DEF; current implementation is setting a specific time slot for each slave!
 #define TIME_SLOT_LAST  (290U)                  // in us
-#define TIME_SLOT_MIN   (10)                    // in us
-#define TIME_SLOT_MAX   (40000U)                // in us
+#define TIME_SLOT_MIN   (10U)                   // in us
+#define TIME_SLOT_MAX   (100000U)               // in us
 
 // Master cycle of collecting data from Slaves
 // Slot 0   : Master
@@ -27,15 +27,15 @@
 // ...
 // Slot N-1 : Slave N
 //#define SYNC_PERIOD  (((SLAVE_IN_SYSTEM+1)*TIME_SLOT_DEF))  // in us --> only if time slot of a slave is defined as (Addr-1)*TIME_SLOT_DEF
-#define SYNC_PERIOD     (1000/*20000*/)      // 20 ms
-#define SYNC_PERIOD_MIN (500)       // in us
-#define SYNC_PERIOD_MAX (60000)     // in us
+#define SYNC_PERIOD     (1000/*20000*/)         // 20 ms
+#define SYNC_PERIOD_MIN (400U)                  // in us
+#define SYNC_PERIOD_MAX (1000000U)              // in us
 
 
 // In Slave, considering if no Sync from Master after 5 times SYNC_PERIOD that Master stop its process -> restart state machine from Slaves; current implementation is setting a specific time slot for each slave!
 #define SYNC_TIMEOUT_NB (5)
-#define SYNC_TIMOUT_MIN (500)        // in us
-#define SYNC_TIMOUT_MAX (1200000)    // in usT
+#define SYNC_TIMOUT_MIN (500U)                  // in us
+#define SYNC_TIMOUT_MAX (5000000U)              // in us
 #define SYNC_TIMEOUT    (SYNC_TIMEOUT_NB*SYNC_PERIOD)
 
 #define SEC (1000000U)
@@ -50,6 +50,19 @@
 #endif
 
 #define ADDR_INTERNAL_NAME_STRING_SIZE (10)
+
+
+// Kind of possible messages
+typedef enum
+{
+    kInvalidMsg = 0x00,
+    kSyncMsg    = 0xAA,
+    kDataMsg    = 0x0F,
+    kStatMsg    = 0x55,
+    kDiagMsg    = 0xF0,
+    kServiceMsg = 0xA5,
+    kSetupMsg   = 0x5A
+} TypeMsgEnum;
 
 /**
  * @struct PROT_AddrMap_t
