@@ -157,17 +157,6 @@ __INLINE void DecodeEvents(RAIL_Events_t *events)
 
 __INLINE void DisplayStat(void)
 {
-#if (qREL_STAT)
-    // Relative
-    // --------
-    uint32_t relRXCounter = 0U;
-    uint32_t relRXGap = 0U;
-    uint32_t relRXOk = 0U;
-
-    float statRelMsgPerSec, statRelMsgPerSecRef, statRelTXErr, statRelRXErr;
-#endif  // qREL_STAT
-
-#if (qABS_STAT)
     // Absolute
     // --------
     uint32_t absRXCounter = 0U;
@@ -175,10 +164,8 @@ __INLINE void DisplayStat(void)
     uint32_t absRXOk = 0U;
 
     float statAbsMsgPerSec, statAbsMsgPerSecRef, statAbsTXErr, statAbsRXErr;
-#endif  // qABS_STAT
 
     float relElapsedTime;
-    RAIL_Time_t deltaElapsedTime;
     bool isMaster = gDeviceCfgAddr->ismaster;
     uint8_t myDevice = gDeviceCfgAddr->posTab;
 
@@ -186,22 +173,8 @@ __INLINE void DisplayStat(void)
     // Common processing
     // -----------------
 
-    // Based on 32 bits counter, gElapsedTime roll over every 1h 11 min 34.96 sec
-    if (gElapsedTime < gOldElapsedTime)
-    {
-        uint64_t tmp = gElapsedTime + UINT32_MAX - gOldElapsedTime;
-        deltaElapsedTime = (uint32_t)tmp;
-    }
-    else
-        deltaElapsedTime = (gElapsedTime - gOldElapsedTime);
-
     // Compute sum of absolute RX (from Slave) counters and sum of relative (since last stat) RX (from Slave) counters
-#if (qREL_STAT)
-    uint32_t relTXCounter = (gTX_counter.u32 - gTX_counter_old);
-#endif  // qREL_STAT
-#if (qABS_STAT)
     uint32_t absTXCounter = gTX_counter.u32;
-#endif  // qABS_STAT
 
     if (isMaster)
     {
@@ -213,84 +186,30 @@ __INLINE void DisplayStat(void)
                 uint8_t pos = common_getConfigTable(i)->posTab;
                 if (gRX_counter[pos].u32 > 0UL)
                 {
-#if (qREL_STAT)
-                // Relative
-                // --------
-                relRXCounter += (gRX_counter[i].u32 - gRX_counter_old[i]);                                   // Sum of relative RX (from Slave) and TX counters
-                relRXGap += (gRX_tab[i][TAB_POS_RX_GAP] - gRX_tab_old[i][TAB_POS_RX_GAP]);               // Sum of absolute RX (from Slave) gap occurences
-                relRXOk += (gRX_tab[i][TAB_POS_RX_OK] - gRX_tab_old[i][TAB_POS_RX_OK]);                  // Sum of absolute TX Ok (from Slave) counters
-#endif  // qREL_STAT
-#if (qABS_STAT)
-                // Absolute
-                // --------
-                absRXCounter += gRX_counter[i].u32;                         // Sum of absolute RX (from Slave) counters
-                absRXGap += gRX_tab[i][TAB_POS_RX_GAP];                 // Sum of absolute RX (from Slave) gap occurences
-                absRXOk += gRX_tab[i][TAB_POS_RX_OK];                   // Sum of absolute TX Ok (from Slave) counters
-#endif  // qABS_STAT
+                    // Absolute
+                    // --------
+                    absRXCounter += gRX_counter[i].u32;                         // Sum of absolute RX (from Slave) counters
+                    absRXGap += gRX_tab[i][TAB_POS_RX_GAP];                 // Sum of absolute RX (from Slave) gap occurences
+                    absRXOk += gRX_tab[i][TAB_POS_RX_OK];                   // Sum of absolute TX Ok (from Slave) counters
                 }
             }
         }
     }
     else    // Slave node -> take in account only the concerned slave
     {
-#if (qREL_STAT)
-        // Relative
-        // --------
-        relRXCounter = (gRX_counter[myDevice].u32 - gRX_counter_old[myDevice]);
-        relRXGap = (gRX_tab[myDevice][TAB_POS_RX_GAP] - gRX_tab_old[myDevice][TAB_POS_RX_GAP]);
-        relRXOk = (gRX_tab[myDevice][TAB_POS_RX_OK] - gRX_tab_old[myDevice][TAB_POS_RX_OK]);
-#endif  // qREL_STAT
-#if (qABS_STAT)
         // Absolute
         // --------
         absRXCounter = gRX_counter[myDevice].u32;
         absRXGap = gRX_tab[myDevice][TAB_POS_RX_GAP];
         absRXOk = gRX_tab[myDevice][TAB_POS_RX_OK];
-#endif  // qABS_STAT
     }
 
-#if (qREL_STAT)
-    uint32_t relAllCounter = relTXCounter + relRXCounter;
-#endif  // qREL_STAT
-#if (qABS_STAT)
     uint32_t absAllCounter = absTXCounter + absRXCounter;
-#endif  // qABS_STAT
 
-#if (qREL_STAT)
-    // Relative stat (since last occurence)
-    // -------------
-    // Elapsed time
-    relElapsedTime = (float) (deltaElapsedTime) / (float)(SEC);
-    // Messages pro second
-    statRelMsgPerSec = (float)(relAllCounter) / relElapsedTime;
-    // Then compare to the key transmission rate of 1 master + 100 slaves @10ms
-    statRelMsgPerSecRef = REF_MSG_PER_SEC / statRelMsgPerSec;
 
-    uint32_t relTXOk = (gTX_tab[TAB_POS_TX_OK] - gTX_tab_old[TAB_POS_TX_OK]);
-    uint32_t relCalOk = (gCAL_tab[TAB_POS_CAL_REQ] - gCAL_tab_old[TAB_POS_CAL_REQ]);
-    uint32_t relCalErr = (gCAL_tab[TAB_POS_CAL_ERR] - gCAL_tab_old[TAB_POS_CAL_ERR]);
-
-    // TX error rate
-    uint32_t relTXErr = (gTX_tab[TAB_POS_TX_ERR] - gTX_tab_old[TAB_POS_TX_ERR]);
-    uint32_t relTXTimeOut = (gTX_tab[TAB_POS_TX_TIMEOUT] - gTX_tab_old[TAB_POS_TX_TIMEOUT]);
-
-    statRelTXErr = 100.0f * (float) (relTXErr + relTXTimeOut) / (float) (relTXCounter);
-
-    // RX error rate
-    uint32_t relRXErr = (gRX_tab[myDevice][TAB_POS_RX_ERR] - gRX_tab_old[myDevice][TAB_POS_RX_ERR]);
-    uint32_t relRXTimeOut = (gRX_tab[myDevice][TAB_POS_RX_TIMEOUT] - gRX_tab_old[myDevice][TAB_POS_RX_TIMEOUT]);
-    uint32_t relCRCErr = (gRX_tab[myDevice][TAB_POS_RX_CRC_ERR] - gRX_tab_old[myDevice][TAB_POS_RX_CRC_ERR]);
-    uint32_t relSYNCErr = (gRX_tab[myDevice][TAB_POS_RX_SYNC_LOST] - gRX_tab_old[myDevice][TAB_POS_RX_SYNC_LOST]);
-    uint32_t remainingRelRXGap = ((relRXGap > relRXErr) ? (relRXGap - relRXErr): 0);        // Frame error implies a gap -> compute gap delta due to other reasons
-
-    statRelRXErr = 100.0f * (float) (relRXErr + relRXTimeOut + relCRCErr + remainingRelRXGap) / (float) (relRXCounter);
-#endif  // qREL_STAT
-
-#if (qABS_STAT)
     // Absolute stat
     // -------------
     // Cumulative time
-    gTotalElapsedTime += (uint64_t)(deltaElapsedTime);
     relElapsedTime = (float)((double) (gTotalElapsedTime) / (float)(SEC));
     // Messages pro second
     statAbsMsgPerSec = (float)(absAllCounter) / relElapsedTime;
@@ -343,7 +262,6 @@ __INLINE void DisplayStat(void)
     statAbsRXErr = 100.0f * (float) (absRXErr + absRXTimeOut + absCRCErr + remainingAbsRXGap) / (float) (absRXCounter);
     if (statAbsRXErr > 100.0f)
         statAbsRXErr = 100.0f;
-#endif  // qABS_STAT
 
     // Printing
     // --------
@@ -354,66 +272,10 @@ __INLINE void DisplayStat(void)
     app_log_info("----------------------\n");
     app_log_info("Stat print #count          : %d\n", gCountPrintStat);
 
-#if (qREL_STAT)
-    // Relative stat (since last occurence)
-    // -------------
-    app_log_info("\nRelative (since last ocurence)\n");
-    app_log_info("------------------------------\n");
-    app_log_info("Elapsed time               : %0.2f sec\n", relElapsedTime);
 
-    // Counters TX and RX
-    app_log_info("#Counter %s            : %d\n", (isMaster ? "      " : "      "), relTXOk);
-    app_log_info("#Counter (%s)          : %d\n", (isMaster ? "Slaves" : "Master"), relRXOk);
-
-    // Errors TX and RX
-    app_log_info("TX Err (#err/#TO)          : %0.3f%% (%d/%d)\n", statRelTXErr, relTXErr, relTXTimeOut);
-    app_log_info("RX Err (#err/#TO/#CRC/#gap): %0.3f%% (%d/%d/%d/%d)\n", statRelRXErr, relRXErr, relRXTimeOut, relCRCErr, remainingRelRXGap);
-
-    // Transmission rate
-    if (isMaster)
-    {
-        app_log_info("Rate (loop 100)            : %0.2f msg/s (%0.2f ms)\n", statRelMsgPerSec, statRelMsgPerSecRef);
-    }
-    else
-    {
-        app_log_info("#Sync lost                 : %d\n", relSYNCErr);
-        app_log_info("Rate                       : %0.2f msg/s\n", statRelMsgPerSec);
-    }
-
-    // Calibration
-    app_log_info("Cal #request (#err)        : %d (%d)\n", relCalOk, relCalErr);
-
-    // Slave detail
-    app_log_info("\n");
-    app_log_info("%s detail\n", (isMaster ? "Slaves" : "Slave"));
-    app_log_info("-------------\n");
-    if (isMaster)
-    {
-        // Master node --> take in account all slaves
-        for (int i = 1; i < MAX_NODE; i++)
-        {
-            if (gRX_counter[i].u32 > 0UL)
-            {
-                app_log_info("Slave #%03d #cnt (#gap/max) : %d (%d/%d)\n",
-                        i,
-                        (gRX_tab[i][TAB_POS_RX_OK] - gRX_tab_old[i][TAB_POS_RX_OK]),
-                        (gRX_tab[i][TAB_POS_RX_GAP] - gRX_tab_old[i][TAB_POS_RX_GAP]),
-                        (gRX_tab[i][TAB_POS_RX_GAP_MAX] - gRX_tab_old[i][TAB_POS_RX_GAP_MAX]));
-            }
-        }
-    }
-    else    // Slave node -> take in account only the concerned slave
-    {
-        app_log_info("#Counter (#gap/max)        : %d (%d=%d gap-%d FErr / max: %d)\n", relRXOk, remainingRelRXGap, relRXGap, relRXErr, gRX_tab[myDevice][TAB_POS_RX_GAP_MAX]);
-    }
-#endif  // qREL_STAT
-
-#if (qABS_STAT)
     // Absolute stat
     // -------------
-    app_log_info("\nAbsolute\n");
-    app_log_info("--------\n");
-    app_log_info("Elapsed time               : %0.2f sec\n", relElapsedTime);
+    app_log_info("\nElapsed time               : %0.2f sec\n", relElapsedTime);
 
     // Counters TX and RX
     app_log_info("#Counter %s            : %d\n", (isMaster ? "      " : "      "), absTXOk);
@@ -466,7 +328,6 @@ __INLINE void DisplayStat(void)
     {
         app_log_info("#Counter (#gap/max)        : %d (%d=%d gap-%d FErr / max: %d)\n", absRXOk, remainingAbsRXGap, absRXGap, absRXErr, gRX_tab[myDevice][TAB_POS_RX_GAP_MAX]);
     }
-#endif  // qABS_STAT
 
     // Detail of callback events
     DisplayEvents();

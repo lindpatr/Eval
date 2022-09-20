@@ -14,16 +14,14 @@
 #include "app_init.h"
 
 
-#define qREL_STAT   (0)
-#define qABS_STAT   (1)
 
 #define TIMER_TIMEOUT_RX_SHIFT  (RAIL_EVENT_DETECT_RSSI_THRESHOLD_SHIFT+1)
 #define TIMER_TIMEOUT_TX_SHIFT  (TIMER_TIMEOUT_RX_SHIFT+1)
 
 // Period to print statistics
-#define STAT_PERIOD_s (60U)                // Default value, in us --> CLI command delay xx for other value (not stored! ... yet)
+#define STAT_PERIOD_s (60U/*1800U*/)                // Default value, in us (30 min) --> CLI command delay xx for other value (not stored! ... yet)
 #define STAT_PERIOD_us (STAT_PERIOD_s * SEC) // in sec
-#define STAT_PERIOD_MAX (60*60)        // in sec (= 1h)
+#define STAT_PERIOD_MAX (53*60)              // in sec (= 53 min); RAIL function permit max. 3221 sec !?!
 
 #define SIZE_UINT64_IN_BITS (int)(8*sizeof(uint64_t))
 
