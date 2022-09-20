@@ -85,7 +85,7 @@ extern volatile RAIL_Time_t gSyncPeriod;
 // Value, indicating sync timeout for Slave on CLI
 extern volatile RAIL_Time_t gSyncTimeOut;
 // Value, indicating time of a slot in the protocol on CLI
-extern volatile uint16_t gTimeSlot;
+extern volatile uint32_t gTimeSlot;
 
 
 

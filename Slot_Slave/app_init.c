@@ -93,7 +93,7 @@ RAIL_StateTiming_t gRailStateTimings;
 
 volatile RAIL_Time_t gSyncPeriod = 0;       // Value, indicating sync period on CLI
 volatile RAIL_Time_t gSyncTimeOut = 0;      // Value, indicating sync timeout for Slave on CLI
-volatile uint16_t gTimeSlot = 0;            // Value, indicating time of a slot in the protocol on CLI
+volatile uint32_t gTimeSlot = 0;            // Value, indicating time of a slot in the protocol on CLI
 
 /// A static var that contains config data for the device
 PROT_AddrMap_t* gDeviceCfgAddr;
