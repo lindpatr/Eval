@@ -35,7 +35,7 @@
 //{
 //    /* ID                Pos    Enable  Addr    Slot time         Is master   Name          */
 //    {0x385B44FFFEC085D3, 0,     true,   255,    0,                true,       "MASTER\0"},
-//    {0x385b44fffec0862b, 1,     true,   1,      0,                false,      "SLAVE\0"},
+//    {0x385b44fffec0862b, 1,     true,   1,      1,                false,      "SLAVE\0"},
 //    {0x385b44fffe5f5af2, 2,     true,   2,      300,              false,      "SLAVE\0"},
 //    {0x385b44fffe5f5b23, 3,     true,   3,      480,              false,      "SLAVE\0"},
 //    {0x385b44fffec08638, 4,     true,   4,      670,              false,      "SLAVE\0"},
@@ -50,7 +50,7 @@
 //{
 //    /* ID                Pos    Enable  Addr    Slot time         Is master   Name          */
 //    {0x385B44FFFEC085D3, 0,     true,   255,    0,                true,       "MASTER\0"},
-//    {0x385b44fffec0862b, 1,     true,   1,      0,                false,      "SLAVE\0"},
+//    {0x385b44fffec0862b, 1,     true,   1,      1,                false,      "SLAVE\0"},
 //    {0x385b44fffe5f5af2, 2,     true,   2,      270,              false,      "SLAVE\0"},
 //    {0x385b44fffe5f5b23, 3,     true,   3,      455,              false,      "SLAVE\0"},
 //    {0x385b44fffec08638, 4,     true,   4,      610,              false,      "SLAVE\0"},
@@ -81,7 +81,7 @@ PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
 //{
 //    /* ID                Pos    Enable  Addr    Slot time         Is master   Name          */
 //    {0x385B44FFFEC085D3, 0,     true,   255,    0,                true,       "MASTER\0"},
-//    {0x385b44fffec0862b, 1,     true,   1,      0,                false,      "SLAVE\0"},
+//    {0x385b44fffec0862b, 1,     true,   1,      1,                false,      "SLAVE\0"},
 //    {0x385b44fffe5f5af2, 2,     false,  2,      610,              false,      "SLAVE\0"},
 //    {0x385b44fffe5f5b23, 3,     true,   3,      270,              false,      "SLAVE\0"},
 //    {0x385b44fffec08638, 4,     true,   4,      455,              false,      "SLAVE\0"},
