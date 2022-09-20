@@ -51,7 +51,7 @@
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
 // -----------------------------------------------------------------------------
-//void cli_set_stat_period(sl_cli_command_arg_t *arguments);
+void cli_set_stat_period(sl_cli_command_arg_t *arguments);
 void cli_start_process(sl_cli_command_arg_t *arguments);
 //void cli_req_stat(sl_cli_command_arg_t *arguments);
 void cli_set_slot_time(sl_cli_command_arg_t *arguments);
@@ -70,9 +70,9 @@ extern volatile bool gStartProcess;
 extern volatile bool gBtnPressed;
 
 /// Value, indicating print stat delay on CLI
-//extern volatile RAIL_Time_t gStatDelay;
+extern volatile RAIL_Time_t gStatDelay;
 /// Value, indicating time of a slot in the protocol on CLI
-extern volatile uint16_t gTimeSlot;
+extern volatile uint32_t gTimeSlot;
 /// Value, indicating sync period for Master on CLI
 extern volatile RAIL_Time_t gSyncPeriod;
 /// Value, indicating sync timeout for Slave on CLI
@@ -83,38 +83,33 @@ extern RAIL_ScheduleTxConfig_t gRailScheduleCfgTX;
 /// A static var that contains config data for the device
 extern PROT_AddrMap_t* gDeviceCfgAddr;
 
-///// Value, indicating sync period factor for Master on CLI
-//static float gSyncPeriodFact = SYNC_PERIOD_FACT;
-///// Value, indicating sync timeout multiple of gSyncPeriod on CLI
-//static uint8_t gSyncTimeOutNb = SYNC_TIMEOUT_NB;
-
 
 // -----------------------------------------------------------------------------
 //                                Static Variables
 // -----------------------------------------------------------------------------
 // User additional CLI command
-//static const sl_cli_command_info_t cli_cmd__stat_period =
-//SL_CLI_COMMAND(cli_set_stat_period,
-//		"Set statistics print period (s)",
-//		"1 - 3600 / 0 = default",
-//		{	SL_CLI_ARG_UINT16, SL_CLI_ARG_END,});
+static const sl_cli_command_info_t cli_cmd__stat_period =
+SL_CLI_COMMAND(cli_set_stat_period,
+		"Set statistics print period (s)",
+		"1 - 3180 (53 min) / 0 = default",
+		{	SL_CLI_ARG_UINT16, SL_CLI_ARG_END,});
 
 static const sl_cli_command_info_t cli_cmd__slot_time =
 SL_CLI_COMMAND(cli_set_slot_time,
         "Set slot time (us)",
-        "10 - 40000 / 0 = default",
+        "10 - 100000 (100 ms) / 0 = default",
         {   SL_CLI_ARG_UINT16, SL_CLI_ARG_END,});
 
 static const sl_cli_command_info_t cli_cmd__sync_period =
 SL_CLI_COMMAND(cli_set_sync_period,
         "Set sync period (us)",
-        "400 - 60000 / 0 = default",
+        "400 - 1000000 (1 s) / 0 = default",
         {   SL_CLI_ARG_UINT16, SL_CLI_ARG_END,});
 
 static const sl_cli_command_info_t cli_cmd__sync_timeout =
 SL_CLI_COMMAND(cli_set_sync_timeout,
         "Set sync timeout (us)",
-        "500 - 1200000  / 0 = default",
+        "500 - 5000000 (5 s)  / 0 = default",
         {   SL_CLI_ARG_UINT32, SL_CLI_ARG_END,});
 
 static const sl_cli_command_info_t cli_cmd__start_process =
@@ -132,7 +127,7 @@ SL_CLI_COMMAND(cli_start_process,
 // User command table
 const sl_cli_command_entry_t cli_my_command_table[] =
 {
-//{ "stat", &cli_cmd__stat_period, false },
+{ "stat", &cli_cmd__stat_period, false },
 { "slot", &cli_cmd__slot_time, false },
 { "sync", &cli_cmd__sync_period, false },
 { "sync_to", &cli_cmd__sync_timeout, false },
@@ -199,34 +194,34 @@ void cli_receive_packet(sl_cli_command_arg_t *arguments)
 /******************************************************************************
  * CLI - Set period: set the statistics timeout
  *****************************************************************************/
-//void cli_set_stat_period(sl_cli_command_arg_t *arguments)
-//{
-//	uint16_t arg = sl_cli_get_argument_uint16(arguments, 0);
-//	char *str;
-//
-//	if (arg > 0)
-//	{
-//	    arg = MIN(arg, STAT_PERIOD_MAX);
-//	    arg = MAX(arg, 1);
-//
-//	    gStatDelay = (RAIL_Time_t)(arg * SEC);
-//
-//	    str = strNew;
-//	}
-//	else    // Default value
-//	{
-//	    gStatDelay = (RAIL_Time_t)STAT_PERIOD_us;
-//        str = strDefault;
-//	}
-//	app_log_info("Info Set automatic print statistics period to %d sec (%s)\n", (gStatDelay / SEC), str);
-//}
+void cli_set_stat_period(sl_cli_command_arg_t *arguments)
+{
+	uint16_t arg = sl_cli_get_argument_uint16(arguments, 0);
+	char *str;
+
+	if (arg > 0)
+	{
+	    arg = MIN(arg, STAT_PERIOD_MAX);
+	    arg = MAX(arg, 1);
+
+	    gStatDelay = (RAIL_Time_t)(arg * SEC);
+
+	    str = strNew;
+	}
+	else    // Default value
+	{
+	    gStatDelay = (RAIL_Time_t)STAT_PERIOD_us;
+        str = strDefault;
+	}
+	app_log_info("Info Set automatic print statistics period to %d sec (%s)\n", (gStatDelay / SEC), str);
+}
 
 /******************************************************************************
  * CLI - Set slot time: set schedule TX deadline
  *****************************************************************************/
 void cli_set_slot_time(sl_cli_command_arg_t *arguments)
 {
-    uint16_t arg = sl_cli_get_argument_uint16(arguments, 0);
+    uint32_t arg = sl_cli_get_argument_uint32(arguments, 0);
     char *str;
 
     if (!gStartProcess)
@@ -260,15 +255,7 @@ void cli_set_slot_time(sl_cli_command_arg_t *arguments)
             PrintStatus(status, "Warning RAIL_SetRxTransitions");
 
             app_log_info("Info Set TIME_SLOT to %d us (%s)\n", gTimeSlot, str);
-
-//            if ((gTimeSlot >= gSyncPeriod) || (gTimeSlot >= gSyncTimeOut))
-//            {
-//                app_log_error("Error TIME_SLOT (%d us) is greater or equal to SYNC_PERIOD (%d us) or to SYNC_TIMEOUT (%d us)\n", gTimeSlot, gSyncPeriod, gSyncTimeOut);
-//            }
-//            else
-            {
-                app_log_warning("Warning The user is responsible to adjust SYNC_PERIOD (current = %d us) on Master and SYNC_TIMEOUT (current = %d us) on all slaves\n", gSyncPeriod, gSyncTimeOut);
-            }
+            app_log_warning("Warning The user is responsible to adjust SYNC_PERIOD (current = %d us) on Master and SYNC_TIMEOUT (current = %d us) on all slaves\n", gSyncPeriod, gSyncTimeOut);
         }
         else
         {
@@ -287,7 +274,7 @@ void cli_set_slot_time(sl_cli_command_arg_t *arguments)
  *****************************************************************************/
 void cli_set_sync_period(sl_cli_command_arg_t *arguments)
 {
-    uint16_t arg = sl_cli_get_argument_uint16(arguments, 0);
+    uint32_t arg = sl_cli_get_argument_uint32(arguments, 0);
     char *str;
 
     if (!gStartProcess)
@@ -311,15 +298,7 @@ void cli_set_sync_period(sl_cli_command_arg_t *arguments)
             }
 
             app_log_info("Info Set SYNC_PERIOD to %d us (N_SLAVE = %d, TIME_SLOT_MAX = %d us) (%s)\n", gSyncPeriod, common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED), common_getMaxSlotTime(), str);
-
-//            if ((gSyncPeriod >= gSyncTimeOut) || (gSyncPeriod <= common_getMaxSlotTime()))
-//            {
-//                app_log_error("Error SYNC_PERIOD (%d us) is greater or equal to SYNC_TIMEOUT (%d us) or less or equal to MAX_TIME_SLOT (%d us)\n", gSyncPeriod, gSyncTimeOut, common_getMaxSlotTime());
-//            }
-//            else
-            {
-                app_log_warning("Warning The user is responsible to adjust TIME_SLOT (max = %d us) and SYNC_TIMEOUT (current = %d us) on all slaves\n", common_getMaxSlotTime(), gSyncTimeOut);
-            }
+            app_log_warning("Warning The user is responsible to adjust TIME_SLOT (max = %d us) and SYNC_TIMEOUT (current = %d us) on all slaves\n", common_getMaxSlotTime(), gSyncTimeOut);
         }
         else
         {
@@ -395,7 +374,6 @@ void cli_start_process(sl_cli_command_arg_t *arguments)
         {
             gBtnPressed = true;
             gStartProcess = true;
-            gElapsedTime = RAIL_GetTime();
         }
         else
             app_log_warning("Warning Process already started!\n");
@@ -414,8 +392,6 @@ void cli_start_process(sl_cli_command_arg_t *arguments)
 //	(void) arguments;
 //
 //	gStatReq = true;
-//	gOldElapsedTime = gElapsedTime;
-//	gElapsedTime = RAIL_GetTime();
 //	app_log_info("Info Statistics print requested\n");
 //}
 
