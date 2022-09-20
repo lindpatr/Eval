@@ -53,7 +53,7 @@
 // -----------------------------------------------------------------------------
 void cli_set_stat_period(sl_cli_command_arg_t *arguments);
 void cli_start_process(sl_cli_command_arg_t *arguments);
-//void cli_req_stat(sl_cli_command_arg_t *arguments);
+void cli_req_stat(sl_cli_command_arg_t *arguments);
 void cli_set_slot_time(sl_cli_command_arg_t *arguments);
 void cli_set_sync_period(sl_cli_command_arg_t *arguments);
 void cli_set_sync_timeout(sl_cli_command_arg_t *arguments);
@@ -65,7 +65,7 @@ void cli_set_sync_timeout(sl_cli_command_arg_t *arguments);
 /// Flag, indicating a start process request (button was pressed / CLI start request has occurred)
 extern volatile bool gStartProcess;
 /// Flag, indicating a request to print statistics (button was pressed / CLI statistics request has occurred)
-//extern volatile bool gStatReq;
+extern volatile bool gStatReq;
 /// Button pressed simulation with CLI, start process
 extern volatile bool gBtnPressed;
 
@@ -118,11 +118,11 @@ SL_CLI_COMMAND(cli_start_process,
 		"",
         {SL_CLI_ARG_END, });
 
-//static const sl_cli_command_info_t cli_cmd__req_stat =
-//SL_CLI_COMMAND(cli_req_stat,
-//		"Print statistics",
-//		"",
-//        {SL_CLI_ARG_END, });
+static const sl_cli_command_info_t cli_cmd__req_stat =
+SL_CLI_COMMAND(cli_req_stat,
+		"Print statistics",
+		"",
+        {SL_CLI_ARG_END, });
 
 // User command table
 const sl_cli_command_entry_t cli_my_command_table[] =
@@ -132,7 +132,7 @@ const sl_cli_command_entry_t cli_my_command_table[] =
 { "sync", &cli_cmd__sync_period, false },
 { "sync_to", &cli_cmd__sync_timeout, false },
 { "start", &cli_cmd__start_process, false },
-//{ "print_stat", &cli_cmd__req_stat, false },
+{ "print_stat", &cli_cmd__req_stat, false },
 { NULL, NULL, false }, };
 
 // User CLI grouo
@@ -169,26 +169,6 @@ void cli_info(sl_cli_command_arg_t *arguments)
     {
         app_log_info("  Sync TO    : %d us\n", gSyncTimeOut);
     }
-}
-
-/******************************************************************************
- * CLI - send: Sets a flag indicating that a packet has to be sent
- *****************************************************************************/
-void cli_send_packet(sl_cli_command_arg_t *arguments)
-{
-	(void) arguments;
-
-	app_log_warning("Warning N/A in this application!\n");
-}
-
-/******************************************************************************
- * CLI - receive: Turn on/off received message
- *****************************************************************************/
-void cli_receive_packet(sl_cli_command_arg_t *arguments)
-{
-	(void) arguments;
-
-	app_log_warning("Warning N/A in this application!\n");
 }
 
 /******************************************************************************
@@ -246,7 +226,7 @@ void cli_set_slot_time(sl_cli_command_arg_t *arguments)
 
             gRailScheduleCfgTX.when = gTimeSlot;
 
-            if (gRailScheduleCfgTX.when)
+            if (gTimeSlot > 0UL)
                 gRailTransitionRX.success = RAIL_RF_STATE_RX;   // RX Ok  -> RX because RAIL_StartScheduledTx is used!
             else    // TX immediate
                 gRailTransitionRX.success = RAIL_RF_STATE_TX;   // RX Ok  -> TX because RAIL_StartScheduledTx is not used!
@@ -298,16 +278,16 @@ void cli_set_sync_period(sl_cli_command_arg_t *arguments)
             }
 
             app_log_info("Info Set SYNC_PERIOD to %d us (N_SLAVE = %d, TIME_SLOT_MAX = %d us) (%s)\n", gSyncPeriod, common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED), common_getMaxSlotTime(), str);
-            app_log_warning("Warning The user is responsible to adjust TIME_SLOT (max = %d us) and SYNC_TIMEOUT (current = %d us) on all slaves\n", common_getMaxSlotTime(), gSyncTimeOut);
+            app_log_warning("Warning The user is responsible to eventually adjust TIME_SLOT (max = %d us) and SYNC_TIMEOUT (current = %d us) on all slaves\n", common_getMaxSlotTime(), gSyncTimeOut);
         }
         else
         {
-            app_log_warning("Warning Only available on Master\n");
+            app_log_warning("Warning Command only available on Master\n");
         }
     }
     else
     {
-        app_log_warning("Warning Only available before starting process -> do a reset to use it!\n");
+        app_log_warning("Warning Only available before starting process -> do a hard reset to use it!\n");
     }
 }
 
@@ -347,17 +327,17 @@ void cli_set_sync_timeout(sl_cli_command_arg_t *arguments)
             }
             else
             {
-                app_log_warning("Warning The user is responsible to adjust TIME_SLOT (max = %d us) and SYNC_PERIOD (current = %d us) on all slaves\n", common_getMaxSlotTime(), gSyncPeriod);
+                app_log_warning("Warning The user is responsible to eventually adjust TIME_SLOT (max = %d us) and SYNC_PERIOD (current = %d us) on all slaves\n", common_getMaxSlotTime(), gSyncPeriod);
             }
         }
         else
         {
-            app_log_warning("Warning Only available on Slaves\n");
+            app_log_warning("Warning Command only available on Slaves\n");
         }
     }
     else
     {
-        app_log_warning("Warning Only available before starting process -> do a reset to use it!\n");
+        app_log_warning("Warning Only available before starting process -> do a hard reset to use it!\n");
     }
 }
 
@@ -380,23 +360,52 @@ void cli_start_process(sl_cli_command_arg_t *arguments)
 	}
 	else
     {
-        app_log_warning("Warning Only available on Master\n");
+        app_log_warning("Warning Command only available on Master\n");
     }
 }
 
 /******************************************************************************
  * CLI - Stat request: Sets a flag indicating that a statistic is requested
  *****************************************************************************/
-//void cli_req_stat(sl_cli_command_arg_t *arguments)
-//{
-//	(void) arguments;
-//
-//	gStatReq = true;
-//	app_log_info("Info Statistics print requested\n");
-//}
+void cli_req_stat(sl_cli_command_arg_t *arguments)
+{
+	(void) arguments;
+
+	gStatReq = true;
+
+    if (gDeviceCfgAddr->ismaster)
+    {
+        app_log_info("Info Statistics print out requested synchronously on master and all slaves\n");
+    }
+    else
+    {
+        app_log_info("Info Statistics print requested\n");
+        app_log_warning("Warning On slaves, statistics print is an asynchron process!\n");
+    }
+}
+
+/******************************************************************************
+ * CLI - send: Sets a flag indicating that a packet has to be sent
+ *****************************************************************************/
+void cli_send_packet(sl_cli_command_arg_t *arguments)
+{
+    (void) arguments;
+
+    app_log_warning("Warning N/A in this application!\n");
+}
+
+/******************************************************************************
+ * CLI - receive: Turn on/off received message
+ *****************************************************************************/
+void cli_receive_packet(sl_cli_command_arg_t *arguments)
+{
+    (void) arguments;
+
+    app_log_warning("Warning N/A in this application!\n");
+}
 
 // -----------------------------------------------------------------------------
-//                          Static Function Definitions
+//                          Public Function Definitions
 // -----------------------------------------------------------------------------
 
 /*****************************************************************************
