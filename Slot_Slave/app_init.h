@@ -35,6 +35,7 @@
 // -----------------------------------------------------------------------------
 #include "rail.h"
 #include "common_config.h"
+#include "common_debug.h"
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
@@ -53,19 +54,6 @@
 #define qPrintStat      1     // Print out statistics serial COM
 
 #define TRANSITION_TIMING_BEST_EFFORT  1
-
-// GPIO debug
-// GPIO debug
-#define DEBUG_PIN_TX                DEBUG_PIN_H09
-#define DEBUG_PIN_RX                DEBUG_PIN_H11
-#define DEBUG_PIN_CB                DEBUG_PIN_H13
-
-#define DEBUG_PIN_TX_SET            DEBUG_PIN_SET(DEBUG_PIN_TX)
-#define DEBUG_PIN_TX_RESET          DEBUG_PIN_RESET(DEBUG_PIN_TX)
-#define DEBUG_PIN_RX_SET            DEBUG_PIN_SET(DEBUG_PIN_RX)
-#define DEBUG_PIN_RX_RESET          DEBUG_PIN_RESET(DEBUG_PIN_TX)
-#define DEBUG_PIN_CB_SET            DEBUG_PIN_SET(DEBUG_PIN_CB)
-#define DEBUG_PIN_CB_RESET          DEBUG_PIN_RESET(DEBUG_PIN_CB)
 
 // -----------------------------------------------------------------------------
 //                                Global Variables
@@ -86,8 +74,6 @@ extern volatile RAIL_Time_t gSyncPeriod;
 extern volatile RAIL_Time_t gSyncTimeOut;
 // Value, indicating time of a slot in the protocol on CLI
 extern volatile uint32_t gTimeSlot;
-
-
 
 // -----------------------------------------------------------------------------
 //                          Public Function Declarations

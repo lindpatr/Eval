@@ -12,7 +12,18 @@
 #include <stdbool.h>
 
 #include "app_log.h"
+#include "em_gpio.h"
 
+/******************************************************************************
+ * InitGPIODebug : Setup GPIO debug specific pins
+ *****************************************************************************/
+void InitGPIODebug(void)
+{
+    // Debug pins init + set to 0
+    GPIO_PinModeSet(DEBUG_PORT_B, DEBUG_PIN_H09, gpioModePushPull, RESET);
+    GPIO_PinModeSet(DEBUG_PORT_D, DEBUG_PIN_H11, gpioModePushPull, RESET);
+    GPIO_PinModeSet(DEBUG_PORT_D, DEBUG_PIN_H13, gpioModePushPull, RESET);
+}
 
 /******************************************************************************
  * PrintStatus : print return <> RAIL_STATUS_NO_ERROR status from RAIL functions

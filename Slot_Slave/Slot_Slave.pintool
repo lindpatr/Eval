@@ -19,10 +19,8 @@
     <property object="PB00" propertyId="pin.reserve" value="Reserved"/>
     <property object="PB01" propertyId="pin.name" value="DEBUG_1"/>
     <property object="PB01" propertyId="pin.reserve" value="Reserved"/>
-    <property object="PB02" propertyId="pin.name" value="DEBUG_2"/>
-    <property object="PB02" propertyId="pin.reserve" value="Reserved"/>
-    <property object="PB03" propertyId="pin.name" value="DEBUG_3"/>
-    <property object="PB03" propertyId="pin.reserve" value="Reserved"/>
+    <property object="PB02" propertyId="pin.name" value=""/>
+    <property object="PB03" propertyId="pin.name" value=""/>
     <property object="PB04" propertyId="ABModule.selectedRequirement" value="gpio%T%SL_BOARD_ENABLE_VCOM%T%sl_board_control_config.h"/>
     <property object="PB04" propertyId="pin.name" value="EN_UART"/>
     <property object="PB04" propertyId="pin.reserve" value="Reserved"/>
@@ -35,10 +33,10 @@
     <property object="PC07" propertyId="pin.name" value="EN_DISPL"/>
     <property object="PC07" propertyId="pin.reserve" value="Reserved"/>
     <property object="PD02" propertyId="ABModule.selectedRequirement" value="gpio%T%SL_SIMPLE_LED_LED0%T%sl_simple_led_led0_config.h"/>
-    <property object="PD02" propertyId="pin.name" value="LED_0"/>
+    <property object="PD02" propertyId="pin.name" value="DEBUG_2"/>
     <property object="PD02" propertyId="pin.reserve" value="Reserved"/>
     <property object="PD03" propertyId="ABModule.selectedRequirement" value="gpio%T%SL_SIMPLE_LED_LED1%T%sl_simple_led_led1_config.h"/>
-    <property object="PD03" propertyId="pin.name" value="LED_1"/>
+    <property object="PD03" propertyId="pin.name" value="DEBUG_3"/>
     <property object="PD03" propertyId="pin.reserve" value="Reserved"/>
     <property object="PORTIO" propertyId="portio.euart0.enable.cts" value="Enabled"/>
     <property object="PORTIO" propertyId="portio.euart0.enable.rts" value="Enabled"/>

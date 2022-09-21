@@ -200,7 +200,8 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 		if (events & RAIL_EVENT_RX_PACKET_RECEIVED)
 		{
 		    // For debug on oscillo purposes --> check delta between all slave
-		    DEBUG_PIN_RESET(DEBUG_PIN_RX);
+		    DEBUG_PIN_RX_RESET;
+
 			// Keep the packet in the radio buffer, download it later at the state machine
 			RAIL_HoldRxPacket(rail_handle);
 
@@ -430,7 +431,7 @@ static __INLINE void StartReceive(void)
 	// Start RX and check result
 
 	// For oscillo debug purposes
-    DEBUG_PIN_SET(DEBUG_PIN_RX);
+    DEBUG_PIN_RX_SET;
 
 	// Start RX
 	RAIL_Status_t status = RAIL_StartRx(gRailHandle, CHANNEL, NULL);
@@ -731,7 +732,7 @@ void app_process_action(void)
 
         // Auto transition to RX after unsuccessfull receive
         // For oscillo debug purposes
-        DEBUG_PIN_SET(DEBUG_PIN_RX);
+        DEBUG_PIN_RX_SET;
 
         SetState(kIdle);
         break;
@@ -758,7 +759,7 @@ void app_process_action(void)
 
         // Auto transition to RX after successfull transmit
         // For oscillo debug purposes
-        DEBUG_PIN_SET(DEBUG_PIN_RX);
+        DEBUG_PIN_RX_SET;
 
         SetState(kIdle);
         break;
@@ -782,7 +783,7 @@ void app_process_action(void)
 
         // Auto transition to RX after unsuccessfull transmit
         // For oscillo debug purposes
-        DEBUG_PIN_SET(DEBUG_PIN_RX);
+        DEBUG_PIN_RX_SET;
 
         SetState(kIdle);
         break;

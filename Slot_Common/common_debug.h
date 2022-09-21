@@ -17,8 +17,6 @@
 #include "app_log.h"
 #include "app_init.h"
 
-
-
 // GPIO debug
 #define DEBUG_PORT_B            gpioPortB
 #define DEBUG_PORT_D            gpioPortD
@@ -26,12 +24,28 @@
 #define DEBUG_PIN_H11           2           // PD02 --> Exp Header 11
 #define DEBUG_PIN_H13           3           // PD03 --> Exp Header 13
 
-#define DEBUG_PIN_SET(pin)      (pin == DEBUG_PIN_H09 ? GPIO_PinOutSet(DEBUG_PORT_B, pin) : GPIO_PinOutSet(DEBUG_PORT_D, pin))
-#define DEBUG_PIN_RESET(pin)    (pin == DEBUG_PIN_H09 ? GPIO_PinOutClear(DEBUG_PORT_B, pin) : GPIO_PinOutClear(DEBUG_PORT_D, pin))
+// Do not use this
+#define xDEBUG_PIN_SET(pin)      (pin == DEBUG_PIN_H09 ? GPIO_PinOutSet(DEBUG_PORT_B, pin) : GPIO_PinOutSet(DEBUG_PORT_D, pin))
+#define xDEBUG_PIN_RESET(pin)    (pin == DEBUG_PIN_H09 ? GPIO_PinOutClear(DEBUG_PORT_B, pin) : GPIO_PinOutClear(DEBUG_PORT_D, pin))
 
 #define SET                     1
 #define RESET                   0
 
+// Use that
+#define DEBUG_PIN_TX_SET            DEBUG_PIN_SET(DEBUG_PIN_H09)
+#define DEBUG_PIN_TX_RESET          DEBUG_PIN_RESET(DEBUG_PIN_H09)
+#define DEBUG_PIN_RX_SET            DEBUG_PIN_SET(DEBUG_PIN_H11)
+#define DEBUG_PIN_RX_RESET          DEBUG_PIN_RESET(DEBUG_PIN_H11)
+#define DEBUG_PIN_CB_SET            DEBUG_PIN_SET(DEBUG_PIN_H13)
+#define DEBUG_PIN_CB_RESET          DEBUG_PIN_RESET(DEBUG_PIN_H13)
+
+#define DEBUG_PIN_IADC_SET
+#define DEBUG_PIN_IADC_RESET
+
+/******************************************************************************
+ * InitGPIODebug : Setup GPIO debug specific pins
+ *****************************************************************************/
+void InitGPIODebug(void);
 
 /******************************************************************************
  * PrintStatus : print return <> RAIL_STATUS_NO_ERROR status from RAIL functions

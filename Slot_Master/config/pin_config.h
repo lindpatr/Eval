@@ -143,17 +143,11 @@
 #define DEBUG_1_PORT                             gpioPortB
 #define DEBUG_1_PIN                              1
 
-#define DEBUG_2_PORT                             gpioPortB
+#define DEBUG_2_PORT                             gpioPortD
 #define DEBUG_2_PIN                              2
 
-#define DEBUG_3_PORT                             gpioPortB
+#define DEBUG_3_PORT                             gpioPortD
 #define DEBUG_3_PIN                              3
-
-#define LED_0_PORT                               gpioPortD
-#define LED_0_PIN                                2
-
-#define LED_1_PORT                               gpioPortD
-#define LED_1_PIN                                3
 
 // [CUSTOM_PIN_NAME]$
 

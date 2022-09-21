@@ -42,7 +42,6 @@
 #include "rail_config.h"
 #include "app_assert.h"
 
-#include "em_gpio.h"
 #include "app_init.h"
 #include "em_system.h"
 
@@ -279,9 +278,7 @@ gSyncPeriod
 void config_gpio(void)
 {
     // Debug pins init + set to 0
-    GPIO_PinModeSet(DEBUG_PORT_B, DEBUG_PIN_TX, gpioModePushPull, RESET);
-    GPIO_PinModeSet(DEBUG_PORT_D, DEBUG_PIN_RX, gpioModePushPull, RESET);
-    GPIO_PinModeSet(DEBUG_PORT_D, DEBUG_PIN_CB, gpioModePushPull, RESET);
+    InitGPIODebug();
 
 //    // Turn OFF LEDs
 //    sl_led_turn_off(&sl_led_led0);
