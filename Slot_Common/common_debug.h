@@ -20,13 +20,14 @@
 
 
 // GPIO debug
-#define DEBUG_PORT              gpioPortB
+#define DEBUG_PORT_B            gpioPortB
+#define DEBUG_PORT_D            gpioPortD
 #define DEBUG_PIN_H09           1           // PB01 --> Exp Header 9
-#define DEBUG_PIN_H15           2           // PB02 --> Exp Header 15
-#define DEBUG_PIN_H16           3           // PB03 --> Exp Header 16
+#define DEBUG_PIN_H11           2           // PD02 --> Exp Header 11
+#define DEBUG_PIN_H13           3           // PD03 --> Exp Header 13
 
-#define DEBUG_PIN_SET(pin)      GPIO_PinOutSet(DEBUG_PORT, pin)
-#define DEBUG_PIN_RESET(pin)    GPIO_PinOutClear(DEBUG_PORT, pin)
+#define DEBUG_PIN_SET(pin)      (pin == DEBUG_PIN_H09 ? GPIO_PinOutSet(DEBUG_PORT_B, pin) : GPIO_PinOutSet(DEBUG_PORT_D, pin))
+#define DEBUG_PIN_RESET(pin)    (pin == DEBUG_PIN_H09 ? GPIO_PinOutClear(DEBUG_PORT_B, pin) : GPIO_PinOutClear(DEBUG_PORT_D, pin))
 
 #define SET                     1
 #define RESET                   0

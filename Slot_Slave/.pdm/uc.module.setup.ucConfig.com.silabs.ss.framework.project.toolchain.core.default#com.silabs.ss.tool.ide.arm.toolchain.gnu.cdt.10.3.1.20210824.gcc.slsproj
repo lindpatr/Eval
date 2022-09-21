@@ -24,8 +24,6 @@
     <file name="sl_rail_util_dma_config.h" generated="true" linked="false"/>
     <file name="sl_cli_config_example.h" generated="true" linked="false"/>
     <file name="sl_device_init_lfxo_config.h" generated="true" linked="false"/>
-    <file name="sl_simple_led_led0_config.h" generated="true" linked="false"/>
-    <file name="sl_simple_led_led1_config.h" generated="true" linked="false"/>
     <file name="dmadrv_config.h" generated="true" linked="false"/>
     <file name="sl_rail_util_pti_config.h" generated="true" linked="false"/>
     <file name="sl_rail_util_rssi_config.h" generated="true" linked="false"/>

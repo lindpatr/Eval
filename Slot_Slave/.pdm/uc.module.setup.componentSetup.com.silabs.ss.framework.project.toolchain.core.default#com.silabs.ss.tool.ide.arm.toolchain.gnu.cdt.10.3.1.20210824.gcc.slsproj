@@ -100,16 +100,6 @@
             <file name="sl_debug_swo.h" uri="studio:/sdk/platform/driver/debug/inc/sl_debug_swo.h"/>
           </folder>
         </folder>
-        <folder name="leddrv">
-          <folder name="src">
-            <file name="sl_led.c" uri="studio:/sdk/platform/driver/leddrv/src/sl_led.c"/>
-            <file name="sl_simple_led.c" uri="studio:/sdk/platform/driver/leddrv/src/sl_simple_led.c"/>
-          </folder>
-          <folder name="inc">
-            <file name="sl_led.h" uri="studio:/sdk/platform/driver/leddrv/inc/sl_led.h"/>
-            <file name="sl_simple_led.h" uri="studio:/sdk/platform/driver/leddrv/inc/sl_simple_led.h"/>
-          </folder>
-        </folder>
       </folder>
       <folder name="service">
         <folder name="cli">
@@ -498,7 +488,6 @@
   <includePath uri="studio:/sdk/platform/middleware/glib/glib"/>
   <includePath uri="studio:/sdk/platform/emdrv/gpiointerrupt/inc"/>
   <includePath uri="studio:/sdk/platform/service/iostream/inc"/>
-  <includePath uri="studio:/sdk/platform/driver/leddrv/inc"/>
   <includePath uri="studio:/sdk/hardware/driver/memlcd/src/ls013b7dh03"/>
   <includePath uri="studio:/sdk/hardware/driver/memlcd/inc"/>
   <includePath uri="studio:/sdk/hardware/driver/memlcd/inc/memlcd_usart"/>

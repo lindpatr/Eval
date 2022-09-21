@@ -36,7 +36,6 @@
 #include "rail.h"
 #include "sl_rail_util_init.h"
 #include "app_process.h"
-#include "sl_simple_led_instances.h"
 #include "app_log.h"
 #include "sl_rail_util_init_inst0_config.h"
 #include "sl_rail_util_protocol_types.h"
@@ -280,13 +279,13 @@ gSyncPeriod
 void config_gpio(void)
 {
     // Debug pins init + set to 0
-    GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_TX, gpioModePushPull, RESET);
-    GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_RX, gpioModePushPull, RESET);
-    GPIO_PinModeSet(DEBUG_PORT, DEBUG_PIN_CB, gpioModePushPull, RESET);
+    GPIO_PinModeSet(DEBUG_PORT_B, DEBUG_PIN_TX, gpioModePushPull, RESET);
+    GPIO_PinModeSet(DEBUG_PORT_D, DEBUG_PIN_RX, gpioModePushPull, RESET);
+    GPIO_PinModeSet(DEBUG_PORT_D, DEBUG_PIN_CB, gpioModePushPull, RESET);
 
-    // Turn OFF LEDs
-    sl_led_turn_off(&sl_led_led0);
-    sl_led_turn_off(&sl_led_led1);
+//    // Turn OFF LEDs
+//    sl_led_turn_off(&sl_led_led0);
+//    sl_led_turn_off(&sl_led_led1);
 }
 
 /*******************************************************************************

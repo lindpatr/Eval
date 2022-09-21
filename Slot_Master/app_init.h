@@ -56,8 +56,8 @@
 
 // GPIO debug
 #define DEBUG_PIN_TX                DEBUG_PIN_H09
-#define DEBUG_PIN_RX                DEBUG_PIN_H15
-#define DEBUG_PIN_CB                DEBUG_PIN_H16
+#define DEBUG_PIN_RX                DEBUG_PIN_H11
+#define DEBUG_PIN_CB                DEBUG_PIN_H13
 
 #define DEBUG_PIN_TX_SET            DEBUG_PIN_SET(DEBUG_PIN_TX)
 #define DEBUG_PIN_TX_RESET          DEBUG_PIN_RESET(DEBUG_PIN_TX)

@@ -38,7 +38,6 @@
 #include "rail.h"
 #include "app_process.h"
 #include "sl_simple_button_instances.h"
-#include "sl_simple_led_instances.h"
 #include "rail_config.h"
 #include "sl_flex_packet_asm.h"
 
@@ -97,7 +96,7 @@ typedef enum
     //  IHM & CLI
     //  ------------
     kBtnPressed,
- //   kStatReq
+    kStatReq
 
 } StateEnum;
 
@@ -105,7 +104,7 @@ typedef enum
 typedef enum
 {
     kAddr       = 0,
-    kNone       = 1,
+    kMsgType    = 1,
     kCounter0   = 2,
     kCounter1   = 3,
     kCounter2   = 4,
@@ -145,10 +144,15 @@ static volatile bool gTX_error = false;
 static volatile bool gCAL_req = false;
 static volatile bool gSYNC_timeout = false;
 
-/// Flags to update strat print statistics
+/// Flags to update stat print statistics
 //static volatile bool gStatTimerDone = false;	// Timeout of the delay for printing stat
-//volatile bool gStatReq = false;					// Flag, indicating a request to print statistics (button was pressed / CLI statistics request has occurred)
+volatile bool gStatReq = false;					// Flag, indicating a request to print statistics (button was pressed / CLI statistics request has occurred)
 
+/// Data content (payload)
+/// Address
+/// --
+/// Message type
+TypeMsgEnum gRX_msg_type = kInvalidMsg;
 /// TX and RX counters
 volatile union32_t gRX_counter[MAX_NODE] = {0UL};
 volatile union32_t gTX_counter = {.u32 = 1UL};
@@ -200,7 +204,7 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 			// Keep the packet in the radio buffer, download it later at the state machine
 			RAIL_HoldRxPacket(rail_handle);
 
-//	        if (gRailScheduleCfgTX.when)
+//	        if (gTimeSlot > 0UL)
 //	        {
 //	            /*status = */RAIL_StartScheduledTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, &gRailScheduleCfgTX, NULL);
 //	            //PrintStatus(status, "Warning RAIL_StartScheduledTx");
@@ -343,7 +347,18 @@ static __INLINE bool PrintStatistics(void)
         gOldElapsedTime = gElapsedTime;
         gElapsedTime = RAIL_GetTime();
 
+        if (gElapsedTime < gOldElapsedTime)
+        {
+            uint64_t tmp = gElapsedTime + UINT32_MAX - gOldElapsedTime;
+            gTotalElapsedTime += (uint32_t) tmp;
+        }
+        else
+            gTotalElapsedTime += (gElapsedTime - gOldElapsedTime);
+
         gCountPrintStat++;
+
+        bool status = RAIL_CancelMultiTimer(&gSyncTimeOutTimer);
+        PrintStatus((status == false), "Warning RAIL_CancelMultiTimer SYNC TIMEOUT");
 
         StopRadio();
 
@@ -369,7 +384,6 @@ static __INLINE bool PrintStatistics(void)
 static __INLINE void StartTimerStat(void)
 {
 	RAIL_Status_t status = RAIL_SetMultiTimer(&gStatDelayTimer, gStatDelay, RAIL_TIME_DELAY, &timer_callback, NULL);
-	gElapsedTime = RAIL_GetTime();
 	PrintStatus(status, "Warning RAIL_SetMultiTimer STAT PERIOD");
 }
 
@@ -457,6 +471,7 @@ static __INLINE void DecodeReceivedMsg(void)
 	            gRX_counter_prev[me] = gRX_counter[me].u32;
 	            // Extract received data
 	            //gRX_counter[me] = (uint32_t) ((start_of_packet[kCounter0] << 0) + (start_of_packet[kCounter1] << 8) + (start_of_packet[kCounter2] << 16) + (start_of_packet[kCounter3] << 24));
+	            gRX_msg_type          = start_of_packet[kMsgType];
 	            gRX_counter[me].u8[0] = start_of_packet[kCounter0];
 	            gRX_counter[me].u8[1] = start_of_packet[kCounter1];
 	            gRX_counter[me].u8[2] = start_of_packet[kCounter2];
@@ -476,8 +491,8 @@ static __INLINE void DecodeReceivedMsg(void)
 	            gRX_tab[me][TAB_POS_RX_CRC_ERR]++;
 	        }
 
-	        // Indicate RX in progress on LED0
-	        sl_led_toggle(&sl_led_led0);
+//	        // Indicate RX in progress on LED0
+//	        sl_led_toggle(&sl_led_led0);
 	    }
 
 		rx_packet_handle = RAIL_GetRxPacketInfo(gRailHandle, RAIL_RX_PACKET_HANDLE_OLDEST_COMPLETE, &packet_info);
@@ -500,60 +515,92 @@ void app_process_action(void)
     /// -----------------------------------------
     /// Decode from interrupt / callback
     /// -----------------------------------------
-    if (gRX_ok)                     // Msg received
+
+    /// Msg received successfully
+    /// -------------------------
+    if (gRX_ok)
     {
         gRX_ok = false;
 
         SetState(kSyncReceived);
     }
-    else if (gTX_ok)                // Msg sent
+    /// Msg sent successfully
+    /// ---------------------
+    else if (gTX_ok)
     {
         gTX_ok = false;
 
         SetState(kMsgSent);
     }
-    else if (gRX_error)             // Error during RX
+    /// Error during RX (does not include additional check in a data level)
+    /// -------------------------------------------------------------------
+    else if (gRX_error)
     {
         gRX_error = false;
 
         SetState(kErrorRx);
     }
-    else if (gTX_error)             // Error during TX
+    /// Error during TX
+    /// ---------------
+    else if (gTX_error)
     {
         gTX_error = false;
 
         SetState(kErrorTx);
     }
-    else if (gCAL_req)              // Calibration request
+    /// Calibration request
+    /// -------------------
+    else if (gCAL_req)
     {
         gCAL_req = false;
 
         SetState(kCalReq);
     }
-    else if (gSYNC_timeout)         // Mast sync timeout
+    /// Master Sync timeout check
+    /// -------------------------
+    else if (gSYNC_timeout)
     {
         gSYNC_timeout = false;
 
         SetState(kSyncLost);
     }
-//    else if (gStatTimerDone)        // Periodic stat
+    /// Periodic stat print out request
+    /// -------------------------------
+//    else if (gStatTimerDone)
 //    {
 //        gStatTimerDone = false;
 //
-//        //SetState(kStatistics);
+// Reactivate this code is no èrint out stat is needed and comment SetState(kStatistics);
+////        gOldElapsedTime = gElapsedTime;
+////        gElapsedTime = RAIL_GetTime();
+////
+////        if (gElapsedTime < gOldElapsedTime)
+////        {
+////            uint64_t tmp = gElapsedTime + UINT32_MAX - gOldElapsedTime;
+////            gTotalElapsedTime += (uint32_t)tmp;
+////        }
+////        else
+////            gTotalElapsedTime += (gElapsedTime - gOldElapsedTime);
+////
+////        StartTimerStat();
+//        SetState(kStatistics);
 //    }
-    else if (gBtnPressed)           // Button pressed: wait process starts then print stat
+    /// Button pressed: start process then print stat
+    /// ---------------------------------------------
+    else if (gBtnPressed)
     {
         gBtnPressed = false;
 
         SetState(kBtnPressed);
     }
-//    else if (gStatReq)              // Stat via CLI
-//    {
-//        gStatReq = false;
-//
-//        SetState(kStatistics);
-//    }
+    /// Stat print out request via CLI
+    /// ------------------------------
+    else if (gStatReq)
+    {
+        gStatReq = false;
+
+        SetState(kStatistics);
+    }
 
 	/// -----------------------------------------
 	/// State machine
@@ -568,18 +615,20 @@ void app_process_action(void)
 
 	    // Set node address
 	    gTX_fifo.fifo[kAddr] = gDeviceCfgAddr->internalAddr;
+	    // Pos tab for various counters (callback, RX/TX_counters)
 	    me = gDeviceCfgAddr->posTab;
 
-	    // TX fifo ready
+	    // To track first sync received from master
+	    gRX_first = false;
+
+	    // TX fifo ready (in case of auto transition RX->TX is activated!)
 		prepare_packet_to_tx();
 
+		// Print out
         if (!gStartProcess)
-            PrintInfo("\nInfo Ready ...\n");
+            PrintInfo("\nInfo Ready\n");
         else
-            PrintInfo("\nInfo Waiting next stat ...\n");
-
-        gElapsedTime = RAIL_GetTime();
-        gOldElapsedTime = gElapsedTime;
+            PrintInfo("\nInfo Running ...\n");
 
         // Listen from Master
         SetState(kListen);
@@ -589,54 +638,96 @@ void app_process_action(void)
         // Idle
         // -----------------------------------------
 	case kIdle:
-		// Wait sync from master
+		// Wait sync or stat commands from master
 		break;
 
         // -----------------------------------------
         // RX
         // -----------------------------------------
+
+        /// Switch to RX
+        /// ------------
     case kListen:
+        // Put slave in receiving mode
         StartReceive();
+        // Wait command from master
         SetState(kIdle);
         break;
 
+        /// RX successfully
+        /// ---------------
     case kSyncReceived:
         //DEBUG_PIN_TX_SET;
-
-        if (gRailScheduleCfgTX.when)
-        {
-            status = RAIL_StartScheduledTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, &gRailScheduleCfgTX, NULL);
-            PrintStatus(status, "Warning RAIL_StartScheduledTx");
-        }
-        else        // don't necessary as transition auto RX -> TX
-            DEBUG_PIN_TX_SET;
-
-        StartTimerSyncTO();         // Test if Master is still alive and sending Sync periodically
-
-        if (!gStartProcess)
-            gStartProcess = true;
-
-        if (!gRX_first)
-        {
-            gRX_first = true;
-            gTX_counter_old = gTX_counter.u32;
-            gRX_counter_old[me] = gRX_counter[me].u32;
-            StartTimerStat();           // Print stat after deadline
-        }
 
         // Extract received data from buffer
         DecodeReceivedMsg();
 
-        SetState(kIdle);
+        // Actions according command type
+        switch (gRX_msg_type)
+        {
+            /// Normal mode (data)
+        case kDataMsg:
+            if (gTimeSlot > 0UL)
+            {
+                status = RAIL_StartScheduledTx(gRailHandle, CHANNEL, RAIL_TX_OPTIONS_DEFAULT, &gRailScheduleCfgTX, NULL);
+                PrintStatus(status, "Warning RAIL_StartScheduledTx");
+            }
+            else                            // don't necessary as transition auto RX -> TX
+                DEBUG_PIN_TX_SET;
+
+            StartTimerSyncTO();             // Test if Master is still alive and sending Sync periodically
+
+            if (!gStartProcess)             // One shot process started
+                gStartProcess = true;
+
+            if (!gRX_first)                 // First time and after each stat print out
+            {
+                gRX_first = true;
+
+                gTX_counter_old = gTX_counter.u32;
+                gRX_counter_old[me] = gRX_counter[me].u32;
+
+                //StartTimerStat();           // Print stat after deadline
+
+                gElapsedTime = RAIL_GetTime();
+                gOldElapsedTime = gElapsedTime;
+            }
+
+            SetState(kIdle);
+            break;
+
+            /// Stat print out command
+        case kStatMsg:
+            gPauseCycleReq = true;
+            gPauseCycleConf = true;         // Cycle ended, permit a print stat
+
+            SetState(kStatistics);          // Print out statistics
+            break;
+
+            /// No yet implemented commands
+        case kInvalidMsg:
+        case kDiagMsg:
+        case kServiceMsg:
+        case kSetupMsg:
+            /// Shall not happen
+        default:
+            app_assert(false, "Unknown msg type (%d)\n", gRX_msg_type);
+            break;
+        }
         break;
 
+        /// RX error
+        /// --------
     case kErrorRx:
-        gRX_tab[me][TAB_POS_RX_ERR] = gCB_tab[RAIL_EVENT_RX_PACKET_ABORTED_SHIFT] +
-                                      gCB_tab[RAIL_EVENT_RX_FRAME_ERROR_SHIFT] +
-                                      gCB_tab[RAIL_EVENT_RX_FIFO_OVERFLOW_SHIFT] +
-                                      gCB_tab[RAIL_EVENT_RX_SCHEDULED_RX_MISSED_SHIFT];
+        if (gRX_msg_type == kDataMsg)       // Don't take in account the error generated by other command than normal mode (data)
+        {
+            gRX_tab[me][TAB_POS_RX_ERR] = gCB_tab[RAIL_EVENT_RX_PACKET_ABORTED_SHIFT] +
+                                          gCB_tab[RAIL_EVENT_RX_FRAME_ERROR_SHIFT] +
+                                          gCB_tab[RAIL_EVENT_RX_FIFO_OVERFLOW_SHIFT] +
+                                          gCB_tab[RAIL_EVENT_RX_SCHEDULED_RX_MISSED_SHIFT];
 
-        PrintError(gErrorCode, "Error RX");
+            PrintError(gErrorCode, "Error RX");
+        }
 
         // Auto transition to RX after unsuccessfull receive
         // For oscillo debug purposes
@@ -648,43 +739,46 @@ void app_process_action(void)
         // -----------------------------------------
         // TX
         // -----------------------------------------
-    case kMsgSent:
-        gTX_tab[TAB_POS_TX_OK] = gCB_tab[RAIL_EVENT_TX_PACKET_SENT_SHIFT];
 
-        if (!gPauseCycleReq)
+        /// TX successfully
+        /// ---------------
+    case kMsgSent:
+        if (gRX_msg_type == kDataMsg)       // Don't take in account the error generated by other command than normal mode (data)
         {
+            gTX_tab[TAB_POS_TX_OK] = gCB_tab[RAIL_EVENT_TX_PACKET_SENT_SHIFT];
             // Increment counter and prepare new data
             gTX_counter.u32++;    // pas de test overflow
+
             prepare_packet_to_tx();
 
             DisplaySentMsg();
-            // Indicate TX in progress on LED1
-            sl_led_toggle(&sl_led_led1);
-
-            // Auto transition to RX after successfull transmit
-            // For oscillo debug purposes
-            DEBUG_PIN_SET(DEBUG_PIN_RX);
-
-            SetState(kIdle);
+//            // Indicate TX in progress on LED1
+//            sl_led_toggle(&sl_led_led1);
         }
-        else
-        {
-            gPauseCycleConf = true;       // Cycle ended, permit a print stat
-            SetState(kStatistics);
-        }
+
+        // Auto transition to RX after successfull transmit
+        // For oscillo debug purposes
+        DEBUG_PIN_SET(DEBUG_PIN_RX);
+
+        SetState(kIdle);
         break;
 
+        /// TX error
+        /// --------
     case kErrorTx:
-        gTX_tab[TAB_POS_TX_ERR] = gCB_tab[RAIL_EVENT_TX_ABORTED_SHIFT] +
-                                  gCB_tab[RAIL_EVENT_TX_BLOCKED_SHIFT] +
-                                  gCB_tab[RAIL_EVENT_TX_UNDERFLOW_SHIFT] +
-                                  gCB_tab[RAIL_EVENT_TX_CHANNEL_BUSY_SHIFT] +
-                                  gCB_tab[RAIL_EVENT_TX_SCHEDULED_TX_MISSED_SHIFT];
+        if (gRX_msg_type == kDataMsg)       // Don't take in account the error generated by other command than normal mode (data)
+        {
+            gTX_tab[TAB_POS_TX_ERR] = gCB_tab[RAIL_EVENT_TX_ABORTED_SHIFT] +
+                                      gCB_tab[RAIL_EVENT_TX_BLOCKED_SHIFT] +
+                                      gCB_tab[RAIL_EVENT_TX_UNDERFLOW_SHIFT] +
+                                      gCB_tab[RAIL_EVENT_TX_CHANNEL_BUSY_SHIFT] +
+                                      gCB_tab[RAIL_EVENT_TX_SCHEDULED_TX_MISSED_SHIFT];
+
+            PrintError(gErrorCode, "Error TX");
+        }
 
          // Same data but tell RAIL that FIFO is set
         prepare_packet_to_tx();
-
-        PrintError(gErrorCode, "Error TX");
 
         // Auto transition to RX after unsuccessfull transmit
         // For oscillo debug purposes
@@ -726,30 +820,32 @@ void app_process_action(void)
         PrintInfo("\nWarning Master sync lost!\n");
 
         SetState(kInit);
-
         break;
 
         // -----------------------------------------
         // IHM
         // -----------------------------------------
+
+        /// BTN0 button
+        /// -----------
     case kBtnPressed:
         if (!gStartProcess)
         {
-            // Do nothing as process not yet started
-
-            SetState(gProtocolPrevState);
+            SetState(gProtocolPrevState);   // Do nothing as process not yet started; process is started with the first sync command RX from Master
         }
         else
         {
-            SetState(kStatistics);
+            SetState(kStatistics);          // Start stat print out pcrocess
         }
         break;
 
-//    case kStatReq:                  // CLI stat
-//        gStatReq = false;
-//
-//        SetState(kStatistics);
-//        break;
+        /// stat CLI
+        /// --------
+    case kStatReq:                          // CLI stat
+        gStatReq = false;
+
+        SetState(kStatistics);              // Start stat print out pcrocess
+        break;
 
         // -----------------------------------------
         // Statistics
@@ -758,14 +854,14 @@ void app_process_action(void)
         // On timeout delay || Button pressed || CLI command
         if (PrintStatistics())
         {
-            SetState(kInit);       // Restart the cycle
+            SetState(kInit);                // Restart the cycle
         }
-        else // stay in this state upon stat print completion
+        else                                // Start stat print out pcrocess (wait next sync period to synchronize the process)
             SetState(kStatistics);
         //
-
         break;
 
+        /// Shall not happen
 	default:
 		app_assert(false, "Unknown state (%d)\n", gProtocolState);
 		break;

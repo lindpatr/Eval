@@ -56,8 +56,7 @@
 typedef enum
 {
     kInvalidMsg = 0x00,
-    kSyncMsg    = 0xAA,
-    kDataMsg    = 0x0F,
+    kDataMsg    = 0xAA,
     kStatMsg    = 0x55,
     kDiagMsg    = 0xF0,
     kServiceMsg = 0xA5,
