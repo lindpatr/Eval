@@ -25,8 +25,8 @@
 #define DEBUG_PIN_H13           3           // PD03 --> Exp Header 13
 
 // Do not use this
-#define xDEBUG_PIN_SET(pin)      (pin == DEBUG_PIN_H09 ? GPIO_PinOutSet(DEBUG_PORT_B, pin) : GPIO_PinOutSet(DEBUG_PORT_D, pin))
-#define xDEBUG_PIN_RESET(pin)    (pin == DEBUG_PIN_H09 ? GPIO_PinOutClear(DEBUG_PORT_B, pin) : GPIO_PinOutClear(DEBUG_PORT_D, pin))
+#define DEBUG_PIN_SET(pin)      (pin == DEBUG_PIN_H09 ? GPIO_PinOutSet(DEBUG_PORT_B, pin) : GPIO_PinOutSet(DEBUG_PORT_D, pin))
+#define DEBUG_PIN_RESET(pin)    (pin == DEBUG_PIN_H09 ? GPIO_PinOutClear(DEBUG_PORT_B, pin) : GPIO_PinOutClear(DEBUG_PORT_D, pin))
 
 #define SET                     1
 #define RESET                   0
