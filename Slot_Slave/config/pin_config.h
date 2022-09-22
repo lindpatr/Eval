@@ -82,6 +82,10 @@
 #define USART0_CLK_PORT                          gpioPortC
 #define USART0_CLK_PIN                           2
 
+// USART0 RX on PC01
+#define USART0_RX_PORT                           gpioPortC
+#define USART0_RX_PIN                            1
+
 // USART0 TX on PC00
 #define USART0_TX_PORT                           gpioPortC
 #define USART0_TX_PIN                            0
@@ -164,11 +168,11 @@
 #define LCD_SPI_MOSI_PORT                        gpioPortC
 #define LCD_SPI_MOSI_PIN                         0
 
+#define LCD_SPI_MISO_PORT                        gpioPortC
+#define LCD_SPI_MISO_PIN                         1
+
 #define LCD_SPI_CLK_PORT                         gpioPortC
 #define LCD_SPI_CLK_PIN                          2
-
-#define LCD_SPI_CS_PORT                          gpioPortC
-#define LCD_SPI_CS_PIN                           6
 
 #define EN_DISPL_PORT                            gpioPortC
 #define EN_DISPL_PIN                             7

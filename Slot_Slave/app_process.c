@@ -45,8 +45,8 @@
 #include "common_debug.h"
 
 // Specific to LCD display
-#include "dmd.h"
-#include "glib.h"
+//#include "dmd.h"
+//#include "glib.h"
 #include "printf.h"
 
 // -----------------------------------------------------------------------------

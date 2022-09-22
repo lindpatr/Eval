@@ -146,11 +146,6 @@
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_assert.h</locationURI>
 		</link>
 		<link>
-			<name>gecko_sdk_4.1.1/platform/emlib/inc/em_burtc.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_burtc.h</locationURI>
-		</link>
-		<link>
 			<name>gecko_sdk_4.1.1/platform/emlib/inc/em_bus.h</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_bus.h</locationURI>
@@ -226,11 +221,6 @@
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_ramfunc.h</locationURI>
 		</link>
 		<link>
-			<name>gecko_sdk_4.1.1/platform/emlib/inc/em_rtcc.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_rtcc.h</locationURI>
-		</link>
-		<link>
 			<name>gecko_sdk_4.1.1/platform/emlib/inc/em_syscfg.h</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_syscfg.h</locationURI>
@@ -249,11 +239,6 @@
 			<name>gecko_sdk_4.1.1/platform/emlib/inc/em_version.h</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_version.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/emlib/src/em_burtc.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_burtc.c</locationURI>
 		</link>
 		<link>
 			<name>gecko_sdk_4.1.1/platform/emlib/src/em_cmu.c</name>
@@ -296,11 +281,6 @@
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_prs.c</locationURI>
 		</link>
 		<link>
-			<name>gecko_sdk_4.1.1/platform/emlib/src/em_rtcc.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_rtcc.c</locationURI>
-		</link>
-		<link>
 			<name>gecko_sdk_4.1.1/platform/emlib/src/em_system.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_system.c</locationURI>
@@ -309,21 +289,6 @@
 			<name>gecko_sdk_4.1.1/platform/emlib/src/em_usart.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_usart.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/middleware/glib/bmp_conf.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/middleware/glib/bmp_conf.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/middleware/glib/bpmfont.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/middleware/glib/bpmfont.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/middleware/glib/em_types.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/middleware/glib/em_types.h</locationURI>
 		</link>
 		<link>
 			<name>gecko_sdk_4.1.1/util/third_party/printf/printf.c</name>
@@ -369,21 +334,6 @@
 			<name>gecko_sdk_4.1.1/hardware/driver/configuration_over_swo/src/sl_cos.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/hardware/driver/configuration_over_swo/src/sl_cos.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/hardware/driver/memlcd/inc/sl_memlcd.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/hardware/driver/memlcd/inc/sl_memlcd.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/hardware/driver/memlcd/src/sl_memlcd.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/hardware/driver/memlcd/src/sl_memlcd.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/hardware/driver/memlcd/src/sl_memlcd_display.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/hardware/driver/memlcd/src/sl_memlcd_display.c</locationURI>
 		</link>
 		<link>
 			<name>gecko_sdk_4.1.1/platform/CMSIS/Core/Include/cmsis_compiler.h</name>
@@ -489,81 +439,6 @@
 			<name>gecko_sdk_4.1.1/platform/emdrv/gpiointerrupt/src/gpiointerrupt.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emdrv/gpiointerrupt/src/gpiointerrupt.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/middleware/glib/dmd/dmd.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/middleware/glib/dmd/dmd.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/middleware/glib/glib/bmp.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/middleware/glib/glib/bmp.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/middleware/glib/glib/bmp.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/middleware/glib/glib/bmp.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/middleware/glib/glib/glib.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/middleware/glib/glib/glib.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/middleware/glib/glib/glib.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/middleware/glib/glib/glib.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/middleware/glib/glib/glib_bitmap.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/middleware/glib/glib/glib_bitmap.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/middleware/glib/glib/glib_circle.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/middleware/glib/glib/glib_circle.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/middleware/glib/glib/glib_color.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/middleware/glib/glib/glib_color.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/middleware/glib/glib/glib_font_narrow_6x8.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/middleware/glib/glib/glib_font_narrow_6x8.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/middleware/glib/glib/glib_font_normal_8x8.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/middleware/glib/glib/glib_font_normal_8x8.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/middleware/glib/glib/glib_font_number_16x20.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/middleware/glib/glib/glib_font_number_16x20.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/middleware/glib/glib/glib_line.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/middleware/glib/glib/glib_line.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/middleware/glib/glib/glib_polygon.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/middleware/glib/glib/glib_polygon.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/middleware/glib/glib/glib_rectangle.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/middleware/glib/glib/glib_rectangle.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/middleware/glib/glib/glib_string.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/middleware/glib/glib/glib_string.c</locationURI>
 		</link>
 		<link>
 			<name>gecko_sdk_4.1.1/platform/radio/rail_lib/common/rail.h</name>
@@ -781,41 +656,6 @@
 			<locationURI>STUDIO_SDK_LOC/platform/service/mpu/src/sl_mpu.c</locationURI>
 		</link>
 		<link>
-			<name>gecko_sdk_4.1.1/platform/service/sleeptimer/inc/sl_sleeptimer.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/sleeptimer/inc/sl_sleeptimer.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/service/sleeptimer/inc/sli_sleeptimer.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/sleeptimer/inc/sli_sleeptimer.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/service/sleeptimer/src/sl_sleeptimer.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/sleeptimer/src/sl_sleeptimer.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/service/sleeptimer/src/sl_sleeptimer_hal_burtc.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/sleeptimer/src/sl_sleeptimer_hal_burtc.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/service/sleeptimer/src/sl_sleeptimer_hal_prortc.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/sleeptimer/src/sl_sleeptimer_hal_prortc.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/service/sleeptimer/src/sl_sleeptimer_hal_rtcc.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/sleeptimer/src/sl_sleeptimer_hal_rtcc.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/service/sleeptimer/src/sli_sleeptimer_hal.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/sleeptimer/src/sli_sleeptimer_hal.h</locationURI>
-		</link>
-		<link>
 			<name>gecko_sdk_4.1.1/platform/service/system/inc/sl_system_init.h</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/service/system/inc/sl_system_init.h</locationURI>
@@ -869,21 +709,6 @@
 			<name>gecko_sdk_4.1.1/app/flex/component/rail/sl_flex_rail_packet_asm/sl_flex_packet_asm.h</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/app/flex/component/rail/sl_flex_rail_packet_asm/sl_flex_packet_asm.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/hardware/driver/memlcd/inc/memlcd_usart/sl_memlcd_spi.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/hardware/driver/memlcd/inc/memlcd_usart/sl_memlcd_spi.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/hardware/driver/memlcd/src/ls013b7dh03/sl_memlcd_display.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/hardware/driver/memlcd/src/ls013b7dh03/sl_memlcd_display.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/hardware/driver/memlcd/src/memlcd_usart/sl_memlcd_spi.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/hardware/driver/memlcd/src/memlcd_usart/sl_memlcd_spi.c</locationURI>
 		</link>
 		<link>
 			<name>gecko_sdk_4.1.1/hardware/driver/mx25_flash_shutdown/inc/sl_mx25_flash_shutdown_usart/sl_mx25_flash_shutdown.h</name>
@@ -1109,11 +934,6 @@
 			<name>gecko_sdk_4.1.1/platform/Device/SiliconLabs/EFR32MG22/Source/system_efr32mg22.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/Device/SiliconLabs/EFR32MG22/Source/system_efr32mg22.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/middleware/glib/dmd/display/dmd_memlcd.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/middleware/glib/dmd/display/dmd_memlcd.c</locationURI>
 		</link>
 		<link>
 			<name>gecko_sdk_4.1.1/platform/radio/rail_lib/autogen/librail_release/librail_efr32xg22_gcc_release.a</name>

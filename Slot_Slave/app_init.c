@@ -44,11 +44,14 @@
 
 #include "app_init.h"
 #include "em_system.h"
+#include "printf.h"
 
+#if (SL_BOARD_ENABLE_DISPLAY)
 // LCD display
 #include "dmd.h"
 #include "glib.h"
-#include "printf.h"
+#endif // SL_BOARD_ENABLE_DISPLAY
+
 
 #if defined(RAIL0_CHANNEL_GROUP_1_PROFILE_WISUN_OFDM)
 #include "sl_rail_util_pa_config.h"
@@ -104,7 +107,9 @@ const RAIL_AddrConfig_t addrConfig = { .offsets = { 0, 0 }, .sizes = { 1, 0 },.m
 // -----------------------------------------------------------------------------
 /// LCD variables
 /// Context used all over the graphics
+#if (SL_BOARD_ENABLE_DISPLAY)
 static GLIB_Context_t gGlibContext;
+#endif // SL_BOARD_ENABLE_DISPLAY
 
 // -----------------------------------------------------------------------------
 //                          Private Function Definitions
@@ -310,6 +315,7 @@ void config_gpio(void)
  ******************************************************************************/
 void graphics_init(void)
 {
+#if (SL_BOARD_ENABLE_DISPLAY)
     EMSTATUS status;
     char textBuf[32];
 
@@ -348,6 +354,7 @@ void graphics_init(void)
     // Force a redraw
     DMD_updateDisplay();
     PrintStatus(status, "Error DMD_updateDisplay");
+#endif // SL_BOARD_ENABLE_DISPLAY
 }
 
 /*******************************************************************************

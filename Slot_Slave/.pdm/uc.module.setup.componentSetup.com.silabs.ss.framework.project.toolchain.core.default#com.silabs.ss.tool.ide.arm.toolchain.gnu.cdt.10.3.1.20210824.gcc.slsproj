@@ -174,19 +174,6 @@
             <file name="sl_system_process_action.h" uri="studio:/sdk/platform/service/system/inc/sl_system_process_action.h"/>
           </folder>
         </folder>
-        <folder name="sleeptimer">
-          <folder name="src">
-            <file name="sl_sleeptimer.c" uri="studio:/sdk/platform/service/sleeptimer/src/sl_sleeptimer.c"/>
-            <file name="sl_sleeptimer_hal_rtcc.c" uri="studio:/sdk/platform/service/sleeptimer/src/sl_sleeptimer_hal_rtcc.c"/>
-            <file name="sl_sleeptimer_hal_prortc.c" uri="studio:/sdk/platform/service/sleeptimer/src/sl_sleeptimer_hal_prortc.c"/>
-            <file name="sl_sleeptimer_hal_burtc.c" uri="studio:/sdk/platform/service/sleeptimer/src/sl_sleeptimer_hal_burtc.c"/>
-            <file name="sli_sleeptimer_hal.h" uri="studio:/sdk/platform/service/sleeptimer/src/sli_sleeptimer_hal.h"/>
-          </folder>
-          <folder name="inc">
-            <file name="sl_sleeptimer.h" uri="studio:/sdk/platform/service/sleeptimer/inc/sl_sleeptimer.h"/>
-            <file name="sli_sleeptimer.h" uri="studio:/sdk/platform/service/sleeptimer/inc/sli_sleeptimer.h"/>
-          </folder>
-        </folder>
         <folder name="udelay">
           <folder name="src">
             <file name="sl_udelay.c" uri="studio:/sdk/platform/service/udelay/src/sl_udelay.c"/>
@@ -232,52 +219,8 @@
           </folder>
         </folder>
       </folder>
-      <folder name="middleware">
-        <folder name="glib">
-          <folder name="dmd">
-            <folder name="display">
-              <file name="dmd_memlcd.c" uri="studio:/sdk/platform/middleware/glib/dmd/display/dmd_memlcd.c"/>
-            </folder>
-            <file name="dmd.h" uri="studio:/sdk/platform/middleware/glib/dmd/dmd.h"/>
-          </folder>
-          <folder name="glib">
-            <file name="bmp.c" uri="studio:/sdk/platform/middleware/glib/glib/bmp.c"/>
-            <file name="glib.c" uri="studio:/sdk/platform/middleware/glib/glib/glib.c"/>
-            <file name="glib_bitmap.c" uri="studio:/sdk/platform/middleware/glib/glib/glib_bitmap.c"/>
-            <file name="glib_circle.c" uri="studio:/sdk/platform/middleware/glib/glib/glib_circle.c"/>
-            <file name="glib_font_narrow_6x8.c" uri="studio:/sdk/platform/middleware/glib/glib/glib_font_narrow_6x8.c"/>
-            <file name="glib_font_normal_8x8.c" uri="studio:/sdk/platform/middleware/glib/glib/glib_font_normal_8x8.c"/>
-            <file name="glib_font_number_16x20.c" uri="studio:/sdk/platform/middleware/glib/glib/glib_font_number_16x20.c"/>
-            <file name="glib_line.c" uri="studio:/sdk/platform/middleware/glib/glib/glib_line.c"/>
-            <file name="glib_polygon.c" uri="studio:/sdk/platform/middleware/glib/glib/glib_polygon.c"/>
-            <file name="glib_rectangle.c" uri="studio:/sdk/platform/middleware/glib/glib/glib_rectangle.c"/>
-            <file name="glib_string.c" uri="studio:/sdk/platform/middleware/glib/glib/glib_string.c"/>
-            <file name="bmp.h" uri="studio:/sdk/platform/middleware/glib/glib/bmp.h"/>
-            <file name="glib.h" uri="studio:/sdk/platform/middleware/glib/glib/glib.h"/>
-            <file name="glib_color.h" uri="studio:/sdk/platform/middleware/glib/glib/glib_color.h"/>
-          </folder>
-          <file name="em_types.h" uri="studio:/sdk/platform/middleware/glib/em_types.h"/>
-          <file name="bmp_conf.h" uri="studio:/sdk/platform/middleware/glib/bmp_conf.h"/>
-          <file name="bpmfont.h" uri="studio:/sdk/platform/middleware/glib/bpmfont.h"/>
-        </folder>
-      </folder>
       <folder name="emlib">
-        <folder name="src">
-          <file name="em_burtc.c" uri="studio:/sdk/platform/emlib/src/em_burtc.c"/>
-          <file name="em_cmu.c" uri="studio:/sdk/platform/emlib/src/em_cmu.c"/>
-          <file name="em_core.c" uri="studio:/sdk/platform/emlib/src/em_core.c"/>
-          <file name="em_emu.c" uri="studio:/sdk/platform/emlib/src/em_emu.c"/>
-          <file name="em_eusart.c" uri="studio:/sdk/platform/emlib/src/em_eusart.c"/>
-          <file name="em_gpio.c" uri="studio:/sdk/platform/emlib/src/em_gpio.c"/>
-          <file name="em_ldma.c" uri="studio:/sdk/platform/emlib/src/em_ldma.c"/>
-          <file name="em_msc.c" uri="studio:/sdk/platform/emlib/src/em_msc.c"/>
-          <file name="em_prs.c" uri="studio:/sdk/platform/emlib/src/em_prs.c"/>
-          <file name="em_rtcc.c" uri="studio:/sdk/platform/emlib/src/em_rtcc.c"/>
-          <file name="em_system.c" uri="studio:/sdk/platform/emlib/src/em_system.c"/>
-          <file name="em_usart.c" uri="studio:/sdk/platform/emlib/src/em_usart.c"/>
-        </folder>
         <folder name="inc">
-          <file name="em_burtc.h" uri="studio:/sdk/platform/emlib/inc/em_burtc.h"/>
           <file name="em_chip.h" uri="studio:/sdk/platform/emlib/inc/em_chip.h"/>
           <file name="em_cmu.h" uri="studio:/sdk/platform/emlib/inc/em_cmu.h"/>
           <file name="em_cmu_compat.h" uri="studio:/sdk/platform/emlib/inc/em_cmu_compat.h"/>
@@ -295,10 +238,21 @@
           <file name="em_msc.h" uri="studio:/sdk/platform/emlib/inc/em_msc.h"/>
           <file name="em_msc_compat.h" uri="studio:/sdk/platform/emlib/inc/em_msc_compat.h"/>
           <file name="em_prs.h" uri="studio:/sdk/platform/emlib/inc/em_prs.h"/>
-          <file name="em_rtcc.h" uri="studio:/sdk/platform/emlib/inc/em_rtcc.h"/>
           <file name="em_syscfg.h" uri="studio:/sdk/platform/emlib/inc/em_syscfg.h"/>
           <file name="em_system.h" uri="studio:/sdk/platform/emlib/inc/em_system.h"/>
           <file name="em_usart.h" uri="studio:/sdk/platform/emlib/inc/em_usart.h"/>
+        </folder>
+        <folder name="src">
+          <file name="em_cmu.c" uri="studio:/sdk/platform/emlib/src/em_cmu.c"/>
+          <file name="em_core.c" uri="studio:/sdk/platform/emlib/src/em_core.c"/>
+          <file name="em_emu.c" uri="studio:/sdk/platform/emlib/src/em_emu.c"/>
+          <file name="em_eusart.c" uri="studio:/sdk/platform/emlib/src/em_eusart.c"/>
+          <file name="em_gpio.c" uri="studio:/sdk/platform/emlib/src/em_gpio.c"/>
+          <file name="em_ldma.c" uri="studio:/sdk/platform/emlib/src/em_ldma.c"/>
+          <file name="em_msc.c" uri="studio:/sdk/platform/emlib/src/em_msc.c"/>
+          <file name="em_prs.c" uri="studio:/sdk/platform/emlib/src/em_prs.c"/>
+          <file name="em_system.c" uri="studio:/sdk/platform/emlib/src/em_system.c"/>
+          <file name="em_usart.c" uri="studio:/sdk/platform/emlib/src/em_usart.c"/>
         </folder>
       </folder>
       <folder name="radio">
@@ -414,24 +368,6 @@
             <file name="sl_cos.h" uri="studio:/sdk/hardware/driver/configuration_over_swo/inc/sl_cos.h"/>
           </folder>
         </folder>
-        <folder name="memlcd">
-          <folder name="src">
-            <folder name="ls013b7dh03">
-              <file name="sl_memlcd_display.h" uri="studio:/sdk/hardware/driver/memlcd/src/ls013b7dh03/sl_memlcd_display.h"/>
-            </folder>
-            <folder name="memlcd_usart">
-              <file name="sl_memlcd_spi.c" uri="studio:/sdk/hardware/driver/memlcd/src/memlcd_usart/sl_memlcd_spi.c"/>
-            </folder>
-            <file name="sl_memlcd.c" uri="studio:/sdk/hardware/driver/memlcd/src/sl_memlcd.c"/>
-            <file name="sl_memlcd_display.c" uri="studio:/sdk/hardware/driver/memlcd/src/sl_memlcd_display.c"/>
-          </folder>
-          <folder name="inc">
-            <folder name="memlcd_usart">
-              <file name="sl_memlcd_spi.h" uri="studio:/sdk/hardware/driver/memlcd/inc/memlcd_usart/sl_memlcd_spi.h"/>
-            </folder>
-            <file name="sl_memlcd.h" uri="studio:/sdk/hardware/driver/memlcd/inc/sl_memlcd.h"/>
-          </folder>
-        </folder>
         <folder name="mx25_flash_shutdown">
           <folder name="src">
             <folder name="sl_mx25_flash_shutdown_usart">
@@ -481,16 +417,10 @@
   <includePath uri="studio:/sdk/platform/driver/debug/inc"/>
   <includePath uri="studio:/sdk/platform/service/device_init/inc"/>
   <includePath uri="studio:/sdk/platform/emdrv/dmadrv/inc"/>
-  <includePath uri="studio:/sdk/platform/middleware/glib/dmd"/>
-  <includePath uri="studio:/sdk/platform/middleware/glib"/>
   <includePath uri="studio:/sdk/platform/emdrv/common/inc"/>
   <includePath uri="studio:/sdk/platform/emlib/inc"/>
-  <includePath uri="studio:/sdk/platform/middleware/glib/glib"/>
   <includePath uri="studio:/sdk/platform/emdrv/gpiointerrupt/inc"/>
   <includePath uri="studio:/sdk/platform/service/iostream/inc"/>
-  <includePath uri="studio:/sdk/hardware/driver/memlcd/src/ls013b7dh03"/>
-  <includePath uri="studio:/sdk/hardware/driver/memlcd/inc"/>
-  <includePath uri="studio:/sdk/hardware/driver/memlcd/inc/memlcd_usart"/>
   <includePath uri="studio:/sdk/platform/service/mpu/inc"/>
   <includePath uri="studio:/sdk/hardware/driver/mx25_flash_shutdown/inc/sl_mx25_flash_shutdown_usart"/>
   <includePath uri="studio:/sdk/util/third_party/printf"/>
@@ -510,7 +440,6 @@
   <includePath uri="studio:/sdk/app/flex/component/rail/sl_flex_rail_packet_asm"/>
   <includePath uri="studio:/sdk/platform/common/toolchain/inc"/>
   <includePath uri="studio:/sdk/platform/service/system/inc"/>
-  <includePath uri="studio:/sdk/platform/service/sleeptimer/inc"/>
   <includePath uri="studio:/sdk/platform/service/udelay/inc"/>
   <macroDefinition name="EFR32MG22C224F512IM40"/>
   <macroDefinition name="SL_BOARD_NAME" value="&quot;BRD4182A&quot;"/>

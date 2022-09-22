@@ -30,10 +30,8 @@ sdk: {id: gecko_sdk, version: 4.1.1}
 toolchain_settings:
 - {value: debug, option: optimize}
 component:
-- {id: glib}
 - {id: app_log}
 - {id: radio_config_simple_rail_singlephy}
-- {id: memlcd_usart}
 - {id: rail_util_dma}
 - {id: sl_system}
 - {id: iostream_retarget_stdio}
@@ -58,7 +56,6 @@ component:
 - {id: brd4002a}
 - {id: restrictions_profile_base}
 - {id: restrictions_profile_wisun_han}
-- {id: dmd_memlcd}
 - {id: app_assert}
 - {id: rail_util_recommended}
 - {id: restrictions_profile_wisun_ofdm}

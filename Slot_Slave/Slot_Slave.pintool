@@ -25,10 +25,10 @@
     <property object="PB04" propertyId="pin.name" value="EN_UART"/>
     <property object="PB04" propertyId="pin.reserve" value="Reserved"/>
     <property object="PC00" propertyId="pin.name" value="LCD_SPI_MOSI"/>
+    <property object="PC01" propertyId="pin.name" value="LCD_SPI_MISO"/>
     <property object="PC02" propertyId="pin.name" value="LCD_SPI_CLK"/>
     <property object="PC06" propertyId="ABModule.selectedRequirement" value="gpio%T%SL_MEMLCD_SPI_CS%T%sl_memlcd_usart_config.h"/>
-    <property object="PC06" propertyId="pin.name" value="LCD_SPI_CS"/>
-    <property object="PC06" propertyId="pin.reserve" value="Reserved"/>
+    <property object="PC06" propertyId="pin.name" value=""/>
     <property object="PC07" propertyId="ABModule.selectedRequirement" value="gpio%T%SL_BOARD_ENABLE_SENSOR_RHT%T%sl_board_control_config.h"/>
     <property object="PC07" propertyId="pin.name" value="EN_DISPL"/>
     <property object="PC07" propertyId="pin.reserve" value="Reserved"/>
@@ -52,8 +52,10 @@
     <property object="PORTIO" propertyId="portio.pti.location.dframe" value="37"/>
     <property object="PORTIO" propertyId="portio.pti.location.dout" value="36"/>
     <property object="PORTIO" propertyId="portio.usart0.enable.clk" value="Enabled"/>
+    <property object="PORTIO" propertyId="portio.usart0.enable.rx" value="Enabled"/>
     <property object="PORTIO" propertyId="portio.usart0.enable.tx" value="Enabled"/>
     <property object="PORTIO" propertyId="portio.usart0.location.clk" value="34"/>
+    <property object="PORTIO" propertyId="portio.usart0.location.rx" value="33"/>
     <property object="PORTIO" propertyId="portio.usart0.location.tx" value="32"/>
     <property object="PTI" propertyId="ABModule.selectedRequirement" value="pti%T%SL_RAIL_UTIL_PTI%T%sl_rail_util_pti_config.h"/>
     <property object="PTI" propertyId="ABPeripheral.included" value="true"/>
