@@ -17,6 +17,7 @@
 #include "app_log.h"
 #include "sl_debug_swo.h"
 #include "gpiointerrupt.h"
+#include "sl_i2cspm_instances.h"
 #include "sl_iostream_init_eusart_instances.h"
 #include "sl_iostream_stdlib_config.h"
 #include "sl_mpu.h"
@@ -42,6 +43,7 @@ void sl_driver_init(void)
 {
   sl_debug_swo_init();
   GPIOINT_Init();
+  sl_i2cspm_init_instances();
   sl_simple_button_init_instances();
   sl_cos_send_config();
 }

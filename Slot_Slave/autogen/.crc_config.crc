@@ -15,6 +15,7 @@ sl_device_init_dcdc_config.h=-1580606003
 sl_device_init_emu_config.h=622680131
 sl_device_init_hfxo_config.h=757721503
 sl_device_init_lfxo_config.h=1375897478
+sl_i2cspm_temp_sensor_config.h=-1164459548
 sl_iostream_eusart_vcom_config.h=-989351051
 sl_memlcd_usart_config.h=-985479069
 sl_memory_config.h=-1749993755
