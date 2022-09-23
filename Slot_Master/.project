@@ -61,16 +61,6 @@
 			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_debug.h</locationURI>
 		</link>
 		<link>
-			<name>Slot_Common/common_iadc.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_iadc.c</locationURI>
-		</link>
-		<link>
-			<name>Slot_Common/common_iadc.h</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_iadc.h</locationURI>
-		</link>
-		<link>
 			<name>Slot_Common/common_mbox.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_mbox.c</locationURI>

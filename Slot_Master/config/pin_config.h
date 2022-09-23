@@ -111,14 +111,6 @@
 // [I2C0]$
 
 // $[EUART0]
-// EUART0 CTS on PA08
-#define EUART0_CTS_PORT                          gpioPortA
-#define EUART0_CTS_PIN                           8
-
-// EUART0 RTS on PA07
-#define EUART0_RTS_PORT                          gpioPortA
-#define EUART0_RTS_PIN                           7
-
 // EUART0 RX on PA06
 #define EUART0_RX_PORT                           gpioPortA
 #define EUART0_RX_PIN                            6
@@ -130,6 +122,10 @@
 // [EUART0]$
 
 // $[PTI]
+// PTI DCLK on PC06
+#define PTI_DCLK_PORT                            gpioPortC
+#define PTI_DCLK_PIN                             6
+
 // PTI DFRAME on PC05
 #define PTI_DFRAME_PORT                          gpioPortC
 #define PTI_DFRAME_PIN                           5
@@ -144,8 +140,26 @@
 // [MODEM]$
 
 // $[CUSTOM_PIN_NAME]
+#define SWO_DEBUG_PORT                           gpioPortA
+#define SWO_DEBUG_PIN                            3
+
+#define MX25_SD_PORT                             gpioPortA
+#define MX25_SD_PIN                              4
+
+#define UART_TxD_PORT                            gpioPortA
+#define UART_TxD_PIN                             5
+
+#define UART_RxD_PORT                            gpioPortA
+#define UART_RxD_PIN                             6
+
+#define BTN0_PORT                                gpioPortB
+#define BTN0_PIN                                 0
+
 #define DEBUG_1_PORT                             gpioPortB
 #define DEBUG_1_PIN                              1
+
+#define EN_UART_PORT                             gpioPortB
+#define EN_UART_PIN                              4
 
 #define SPI_MOSI_PORT                            gpioPortC
 #define SPI_MOSI_PIN                             0
@@ -156,8 +170,17 @@
 #define SPI_CLK_PORT                             gpioPortC
 #define SPI_CLK_PIN                              2
 
-#define EN_DISPL_PORT                            gpioPortC
-#define EN_DISPL_PIN                             7
+#define PTI_SPI_DOUT_PORT                        gpioPortC
+#define PTI_SPI_DOUT_PIN                         4
+
+#define PTI_SPI_DFRAME_PORT                      gpioPortC
+#define PTI_SPI_DFRAME_PIN                       5
+
+#define PTI_SPI_CLK_PORT                         gpioPortC
+#define PTI_SPI_CLK_PIN                          6
+
+#define XTAL_PORT                                gpioPortD
+#define XTAL_PIN                                 0
 
 #define DEBUG_2_PORT                             gpioPortD
 #define DEBUG_2_PIN                              2

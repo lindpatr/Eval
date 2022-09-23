@@ -1,3 +1,2 @@
 C:\Dev\SiLabs\Eval\Slot_Slave\Slot_Slave.slcp
-i2cspm
-temp_sensor
+device_init_lfxo
