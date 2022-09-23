@@ -179,8 +179,11 @@
 #define PTI_SPI_CLK_PORT                         gpioPortC
 #define PTI_SPI_CLK_PIN                          6
 
-#define XTAL_PORT                                gpioPortD
-#define XTAL_PIN                                 0
+#define XTAL1_PORT                               gpioPortD
+#define XTAL1_PIN                                0
+
+#define XTAL2_PORT                               gpioPortD
+#define XTAL2_PIN                                1
 
 #define DEBUG_2_PORT                             gpioPortD
 #define DEBUG_2_PIN                              2
