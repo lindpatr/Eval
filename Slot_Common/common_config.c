@@ -134,18 +134,18 @@
 
 // Table (non optimized (aligned)) for M-S1-S3-S4 (1+3) with delay 100 us for S1
 // N = 3
-// Sync = 770
+// Sync = 950
 // Auto transition S1: Y
-// Rate = 22.82 ms
+// Rate = 27.42 ms
 #define SHIFT_TIME  100
 PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
 {
     /* ID                Pos    Enable  Addr    Slot time         Is master   Name          */
     {0x385B44FFFEC085D3, 0,     true,   255,    0,                true,       "MASTER\0"},
-    {0x385b44fffec0862b, 1,     true,   1,      0+SHIFT_TIME,     false,      "SLAVE\0"},
-    {0x385b44fffe5f5af2, 2,     false,  2,      575+SHIFT_TIME,   false,      "SLAVE\0"},
-    {0x385b44fffe5f5b23, 3,     true,   3,      185+SHIFT_TIME,   false,      "SLAVE\0"},
-    {0x385b44fffec08638, 4,     true,   4,      395+SHIFT_TIME,   false,      "SLAVE\0"},
+    {0x385b44fffec0862b, 1,     true,   1,      -95+SHIFT_TIME,   false,      "SLAVE\0"},
+    {0x385b44fffe5f5af2, 2,     false,  2,      610+SHIFT_TIME,   false,      "SLAVE\0"},
+    {0x385b44fffe5f5b23, 3,     true,   3,      210+SHIFT_TIME,   false,      "SLAVE\0"},
+    {0x385b44fffec08638, 4,     true,   4,      410+SHIFT_TIME,   false,      "SLAVE\0"},
 };
 
 /**
