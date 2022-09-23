@@ -39,5 +39,6 @@ typedef struct commonAnalogdata
 }commonAnalogdata_t;
 
 extern commonAnalogdata_t gMboxADMes;
+extern uint16_t gMBoxTempCell;
 
 #endif /* COMMON_MBOX_H_ */

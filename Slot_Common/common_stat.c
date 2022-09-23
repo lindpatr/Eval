@@ -9,6 +9,8 @@
 #include "common_stat.h"
 #endif
 
+#include "common_mbox.h"
+
 uint32_t gTX_tab[TAB_POS_LAST] = { 0 };                // 0 = #TX_OK    1 = #TX_Err   2 = #TX_TimeOut   3 = ND              4 = ND                  5 = ND
 uint32_t gRX_tab[MAX_NODE][TAB_POS_LAST] = { 0 };      // 0 = #RX_OK    1 = #RX_Err   2 = #RX_TimeOut   3 = #Gap RX count   4 = Max gap RX count    5 = #CRC_Err
 uint32_t gCAL_tab[TAB_POS_LAST] = { 0 };               // 0 = #CAL_REQ  1 = #CAL_Err 2 = ND             3 = ND              4 = ND                  5 = ND
@@ -81,6 +83,11 @@ static char *gCB_descr_tab[SIZE_UINT64_IN_BITS ] =
         "TIMER_TIMEOUT_RX    ",
         "TIMER_TIMEOUT_TX    "};
 #endif  // qPrintEvents
+
+
+#define CONVERT_TO_DEGRES(temp)     ((float)temp/1000.0f)
+#define CONVERT_TO_DEGRES_2(temp)   (((float)temp/4.0f) - 273.4f)
+#define CONVERT_TO_VOLT(u)          ((float)u * 4.0f * 2.42f / 4095.0f)
 
 /******************************************************************************
  * DisplayReceivedMsg : print received data
@@ -294,6 +301,7 @@ __INLINE void DisplayStat(void)
     {
         app_log_info("#Sync lost                 : %d\n", absSYNCErr);
         app_log_info("Rate                       : %0.2f msg/s\n", statAbsMsgPerSec);
+        app_log_info("AD VDDA/IO/D/TCPU / I2C TA : %0.2fV/%0.2fV/%0.2fV/%0.1f°C/%0.1f°C\n", CONVERT_TO_VOLT(gMboxADMes.u.detail.vdda), CONVERT_TO_VOLT(gMboxADMes.u.detail.ucell), CONVERT_TO_VOLT(gMboxADMes.u.detail.icell), CONVERT_TO_DEGRES_2(gMboxADMes.u.detail.internaltemp), CONVERT_TO_DEGRES(gMBoxTempCell));
     }
 
     // Calibration
