@@ -404,21 +404,6 @@ static __INLINE void prepare_packet_to_tx(void)
 }
 
 /******************************************************************************
- * StartReceive : change to RX mode
- *****************************************************************************/
-static __INLINE void StartReceive(void)
-{
-    // Start RX and check result
-
-    // For oscillo debug purposes
-    DEBUG_PIN_RX_SET;
-
-    // Start RX without timeout
-    RAIL_Status_t status = RAIL_StartRx(gRailHandle, CHANNEL, NULL);
-    PrintStatus(status, "Warning RAIL_StartRx");
-}
-
-/******************************************************************************
  * StartTransmit : prepare buffer and change to TX mode
  *****************************************************************************/
 static __INLINE void StartTransmit(void)
