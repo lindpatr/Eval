@@ -34,8 +34,8 @@
     <property object="PC06" propertyId="ABModule.selectedRequirement" value="gpio%T%SL_MEMLCD_SPI_CS%T%sl_memlcd_usart_config.h"/>
     <property object="PC06" propertyId="pin.name" value="PTI_SPI_CLK"/>
     <property object="PC07" propertyId="pin.name" value=""/>
-    <property object="PD00" propertyId="pin.name" value="XTAL"/>
-    <property object="PD01" propertyId="pin.name" value="XTAL"/>
+    <property object="PD00" propertyId="pin.name" value="XTAL1"/>
+    <property object="PD01" propertyId="pin.name" value="XTAL2"/>
     <property object="PD02" propertyId="ABModule.selectedRequirement" value="gpio%T%SL_SIMPLE_LED_LED0%T%sl_simple_led_led0_config.h"/>
     <property object="PD02" propertyId="pin.name" value="DEBUG_2"/>
     <property object="PD02" propertyId="pin.reserve" value="Reserved"/>
