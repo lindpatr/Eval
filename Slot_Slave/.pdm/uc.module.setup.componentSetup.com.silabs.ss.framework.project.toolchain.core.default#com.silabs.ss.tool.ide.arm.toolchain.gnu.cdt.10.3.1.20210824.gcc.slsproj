@@ -182,6 +182,19 @@
             <file name="sl_system_process_action.h" uri="studio:/sdk/platform/service/system/inc/sl_system_process_action.h"/>
           </folder>
         </folder>
+        <folder name="sleeptimer">
+          <folder name="src">
+            <file name="sl_sleeptimer.c" uri="studio:/sdk/platform/service/sleeptimer/src/sl_sleeptimer.c"/>
+            <file name="sl_sleeptimer_hal_rtcc.c" uri="studio:/sdk/platform/service/sleeptimer/src/sl_sleeptimer_hal_rtcc.c"/>
+            <file name="sl_sleeptimer_hal_prortc.c" uri="studio:/sdk/platform/service/sleeptimer/src/sl_sleeptimer_hal_prortc.c"/>
+            <file name="sl_sleeptimer_hal_burtc.c" uri="studio:/sdk/platform/service/sleeptimer/src/sl_sleeptimer_hal_burtc.c"/>
+            <file name="sli_sleeptimer_hal.h" uri="studio:/sdk/platform/service/sleeptimer/src/sli_sleeptimer_hal.h"/>
+          </folder>
+          <folder name="inc">
+            <file name="sl_sleeptimer.h" uri="studio:/sdk/platform/service/sleeptimer/inc/sl_sleeptimer.h"/>
+            <file name="sli_sleeptimer.h" uri="studio:/sdk/platform/service/sleeptimer/inc/sli_sleeptimer.h"/>
+          </folder>
+        </folder>
         <folder name="udelay">
           <folder name="src">
             <file name="sl_udelay.c" uri="studio:/sdk/platform/service/udelay/src/sl_udelay.c"/>
@@ -228,7 +241,24 @@
         </folder>
       </folder>
       <folder name="emlib">
+        <folder name="src">
+          <file name="em_burtc.c" uri="studio:/sdk/platform/emlib/src/em_burtc.c"/>
+          <file name="em_cmu.c" uri="studio:/sdk/platform/emlib/src/em_cmu.c"/>
+          <file name="em_core.c" uri="studio:/sdk/platform/emlib/src/em_core.c"/>
+          <file name="em_emu.c" uri="studio:/sdk/platform/emlib/src/em_emu.c"/>
+          <file name="em_eusart.c" uri="studio:/sdk/platform/emlib/src/em_eusart.c"/>
+          <file name="em_gpio.c" uri="studio:/sdk/platform/emlib/src/em_gpio.c"/>
+          <file name="em_i2c.c" uri="studio:/sdk/platform/emlib/src/em_i2c.c"/>
+          <file name="em_iadc.c" uri="studio:/sdk/platform/emlib/src/em_iadc.c"/>
+          <file name="em_ldma.c" uri="studio:/sdk/platform/emlib/src/em_ldma.c"/>
+          <file name="em_msc.c" uri="studio:/sdk/platform/emlib/src/em_msc.c"/>
+          <file name="em_prs.c" uri="studio:/sdk/platform/emlib/src/em_prs.c"/>
+          <file name="em_rtcc.c" uri="studio:/sdk/platform/emlib/src/em_rtcc.c"/>
+          <file name="em_system.c" uri="studio:/sdk/platform/emlib/src/em_system.c"/>
+          <file name="em_usart.c" uri="studio:/sdk/platform/emlib/src/em_usart.c"/>
+        </folder>
         <folder name="inc">
+          <file name="em_burtc.h" uri="studio:/sdk/platform/emlib/inc/em_burtc.h"/>
           <file name="em_chip.h" uri="studio:/sdk/platform/emlib/inc/em_chip.h"/>
           <file name="em_cmu.h" uri="studio:/sdk/platform/emlib/inc/em_cmu.h"/>
           <file name="em_cmu_compat.h" uri="studio:/sdk/platform/emlib/inc/em_cmu_compat.h"/>
@@ -243,26 +273,15 @@
           <file name="em_eusart_compat.h" uri="studio:/sdk/platform/emlib/inc/em_eusart_compat.h"/>
           <file name="em_gpio.h" uri="studio:/sdk/platform/emlib/inc/em_gpio.h"/>
           <file name="em_i2c.h" uri="studio:/sdk/platform/emlib/inc/em_i2c.h"/>
+          <file name="em_iadc.h" uri="studio:/sdk/platform/emlib/inc/em_iadc.h"/>
           <file name="em_ldma.h" uri="studio:/sdk/platform/emlib/inc/em_ldma.h"/>
           <file name="em_msc.h" uri="studio:/sdk/platform/emlib/inc/em_msc.h"/>
           <file name="em_msc_compat.h" uri="studio:/sdk/platform/emlib/inc/em_msc_compat.h"/>
           <file name="em_prs.h" uri="studio:/sdk/platform/emlib/inc/em_prs.h"/>
+          <file name="em_rtcc.h" uri="studio:/sdk/platform/emlib/inc/em_rtcc.h"/>
           <file name="em_syscfg.h" uri="studio:/sdk/platform/emlib/inc/em_syscfg.h"/>
           <file name="em_system.h" uri="studio:/sdk/platform/emlib/inc/em_system.h"/>
           <file name="em_usart.h" uri="studio:/sdk/platform/emlib/inc/em_usart.h"/>
-        </folder>
-        <folder name="src">
-          <file name="em_cmu.c" uri="studio:/sdk/platform/emlib/src/em_cmu.c"/>
-          <file name="em_core.c" uri="studio:/sdk/platform/emlib/src/em_core.c"/>
-          <file name="em_emu.c" uri="studio:/sdk/platform/emlib/src/em_emu.c"/>
-          <file name="em_eusart.c" uri="studio:/sdk/platform/emlib/src/em_eusart.c"/>
-          <file name="em_gpio.c" uri="studio:/sdk/platform/emlib/src/em_gpio.c"/>
-          <file name="em_i2c.c" uri="studio:/sdk/platform/emlib/src/em_i2c.c"/>
-          <file name="em_ldma.c" uri="studio:/sdk/platform/emlib/src/em_ldma.c"/>
-          <file name="em_msc.c" uri="studio:/sdk/platform/emlib/src/em_msc.c"/>
-          <file name="em_prs.c" uri="studio:/sdk/platform/emlib/src/em_prs.c"/>
-          <file name="em_system.c" uri="studio:/sdk/platform/emlib/src/em_system.c"/>
-          <file name="em_usart.c" uri="studio:/sdk/platform/emlib/src/em_usart.c"/>
         </folder>
       </folder>
       <folder name="radio">
@@ -347,6 +366,18 @@
           </folder>
         </folder>
       </folder>
+      <folder name="bluetooth">
+        <folder name="common">
+          <folder name="sensor_rht">
+            <file name="sl_sensor_rht.c" uri="studio:/sdk/app/bluetooth/common/sensor_rht/sl_sensor_rht.c"/>
+            <file name="sl_sensor_rht.h" uri="studio:/sdk/app/bluetooth/common/sensor_rht/sl_sensor_rht.h"/>
+          </folder>
+          <folder name="sensor_select">
+            <file name="sl_sensor_select.c" uri="studio:/sdk/app/bluetooth/common/sensor_select/sl_sensor_select.c"/>
+            <file name="sl_sensor_select.h" uri="studio:/sdk/app/bluetooth/common/sensor_select/sl_sensor_select.h"/>
+          </folder>
+        </folder>
+      </folder>
       <folder name="flex">
         <folder name="component">
           <folder name="rail">
@@ -388,6 +419,14 @@
             <folder name="sl_mx25_flash_shutdown_usart">
               <file name="sl_mx25_flash_shutdown.h" uri="studio:/sdk/hardware/driver/mx25_flash_shutdown/inc/sl_mx25_flash_shutdown_usart/sl_mx25_flash_shutdown.h"/>
             </folder>
+          </folder>
+        </folder>
+        <folder name="si70xx">
+          <folder name="src">
+            <file name="sl_si70xx.c" uri="studio:/sdk/hardware/driver/si70xx/src/sl_si70xx.c"/>
+          </folder>
+          <folder name="inc">
+            <file name="sl_si70xx.h" uri="studio:/sdk/hardware/driver/si70xx/inc/sl_si70xx.h"/>
           </folder>
         </folder>
       </folder>
@@ -448,9 +487,13 @@
   <includePath uri="studio:/sdk/platform/radio/rail_lib/plugin/rail_util_protocol"/>
   <includePath uri="studio:/sdk/platform/radio/rail_lib/plugin/rail_util_pti"/>
   <includePath uri="studio:/sdk/platform/radio/rail_lib/plugin/rail_util_rssi"/>
+  <includePath uri="studio:/sdk/app/bluetooth/common/sensor_rht"/>
+  <includePath uri="studio:/sdk/app/bluetooth/common/sensor_select"/>
+  <includePath uri="studio:/sdk/hardware/driver/si70xx/inc"/>
   <includePath uri="studio:/sdk/app/flex/component/rail/sl_flex_rail_packet_asm"/>
   <includePath uri="studio:/sdk/platform/common/toolchain/inc"/>
   <includePath uri="studio:/sdk/platform/service/system/inc"/>
+  <includePath uri="studio:/sdk/platform/service/sleeptimer/inc"/>
   <includePath uri="studio:/sdk/platform/service/udelay/inc"/>
   <macroDefinition name="EFR32MG22C224F512IM40"/>
   <macroDefinition name="SL_BOARD_NAME" value="&quot;BRD4182A&quot;"/>

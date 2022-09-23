@@ -43,7 +43,7 @@
 
 // <q SL_BOARD_ENABLE_SENSOR_RHT> Enable Relative Humidity and Temperature sensor
 // <i> Default: 0
-#define SL_BOARD_ENABLE_SENSOR_RHT              0
+#define SL_BOARD_ENABLE_SENSOR_RHT              1
 
 // <q SL_BOARD_DISABLE_MEMORY_SPI> Disable SPI Flash
 // <i> Default: 1
@@ -65,6 +65,8 @@
 
 // <gpio> SL_BOARD_ENABLE_SENSOR_RHT
 // $[GPIO_SL_BOARD_ENABLE_SENSOR_RHT]
+#define SL_BOARD_ENABLE_SENSOR_RHT_PORT          gpioPortC
+#define SL_BOARD_ENABLE_SENSOR_RHT_PIN           7
 // [GPIO_SL_BOARD_ENABLE_SENSOR_RHT]$
 
 // <<< sl:end pin_tool >>>

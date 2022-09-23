@@ -187,8 +187,11 @@
 #define PWM2_PORT                                gpioPortC
 #define PWM2_PIN                                 7
 
-#define XTAL_PORT                                gpioPortD
-#define XTAL_PIN                                 0
+#define XTAL1_PORT                               gpioPortD
+#define XTAL1_PIN                                0
+
+#define XTAL2_PORT                               gpioPortD
+#define XTAL2_PIN                                1
 
 #define DEBUG_2_PORT                             gpioPortD
 #define DEBUG_2_PIN                              2

@@ -43,6 +43,12 @@
 
 #include "common_stat.h"
 #include "common_debug.h"
+#include "common_iadc.h"
+#include "common_tempi2c.h"
+#include "common_mbox.h"
+
+#include "sl_i2cspm_instances.h"
+#include "sl_si70xx.h"
 
 // Specific to LCD display
 //#include "dmd.h"
@@ -79,7 +85,10 @@ typedef enum
 	kSendingMsg,
 	kMsgSent,
 	kErrorTx,
-	//kScheduleSending,
+    //  ------------
+    //  Acquisition
+    //  ------------
+    kDoAllAcq,
     //  ------------
     //  Calibration
     //  ------------
@@ -500,6 +509,47 @@ static __INLINE void DecodeReceivedMsg(void)
 	}
 }
 
+/******************************************************************************
+ * Analog_read : AD conversions
+ *****************************************************************************/
+static __INLINE void Analog_read(void)
+{
+    bool status = common_getIADCdata();
+    PrintStatus((status == false), "Warning common_getIADCdata timeout");
+}
+
+/******************************************************************************
+ * I2C_temp_read : Temp acquisition via I2C
+ *****************************************************************************/
+static __INLINE void I2C_temp_read(void)
+{
+//    bool status = common_tempi2cReadTemp(kTempChannel, &gMBoxTempCell);
+//    PrintStatus((status == false), "Warning common_tempi2cReadTemp failed");
+     uint32_t rh_data;
+     int32_t temp_data;
+
+     sl_status_t status = sl_si70xx_measure_rh_and_temp(sl_i2cspm_temp_sensor, SI7021_ADDR, &rh_data, &temp_data);
+     PrintStatus((status != SL_STATUS_OK), "Warning sl_si70xx_measure_rh_and_temp failed");
+     gMBoxTempCell = (uint16_t)temp_data;
+}
+
+/******************************************************************************
+ * DoAllAcq : Process all acquisitions
+ *****************************************************************************/
+static __INLINE void DoAllAcq(void)
+{
+    DEBUG_PIN_ACQ_SET;
+
+    // Start AD conversion
+    common_startIADC();
+    // Read temp via I2C
+    I2C_temp_read();
+    // Get results of ADC
+    Analog_read();
+
+    DEBUG_PIN_ACQ_RESET;
+}
+
 // -----------------------------------------------------------------------------
 //                          Public Function Definitions
 // -----------------------------------------------------------------------------
@@ -643,6 +693,25 @@ void app_process_action(void)
 		break;
 
         // -----------------------------------------
+        // Acquisition
+        // -----------------------------------------
+//    case kDoAllAcq:
+//        // Do all acquisition
+//
+//        DEBUG_PIN_ACQ_SET;
+//        // Start AD conversion
+//        common_startIADC();
+//        // Read temp via I2C
+//        //I2C_temp_read();
+//        // Get results of ADC
+//        Analog_read();
+//
+//        DEBUG_PIN_ACQ_RESET;
+//
+//        SetState(kIdle);
+//        break;
+
+        // -----------------------------------------
         // RX
         // -----------------------------------------
 
@@ -659,6 +728,9 @@ void app_process_action(void)
         /// ---------------
     case kSyncReceived:
         //DEBUG_PIN_TX_SET;
+
+        // Do all acquisition
+        DoAllAcq();
 
         // Extract received data from buffer
         DecodeReceivedMsg();
@@ -695,6 +767,7 @@ void app_process_action(void)
             }
 
             SetState(kIdle);
+            //SetState(kDoAllAcq);
             break;
 
             /// Stat print out command

@@ -39,9 +39,11 @@
     <property object="PC05" propertyId="pin.reserve" value="Reserved"/>
     <property object="PC06" propertyId="ABModule.selectedRequirement" value="gpio%T%SL_MEMLCD_SPI_CS%T%sl_memlcd_usart_config.h"/>
     <property object="PC06" propertyId="pin.name" value="PWM1"/>
+    <property object="PC07" propertyId="ABModule.selectedRequirement" value="gpio%T%SL_BOARD_ENABLE_SENSOR_RHT%T%sl_board_control_config.h"/>
     <property object="PC07" propertyId="pin.name" value="PWM2"/>
-    <property object="PD00" propertyId="pin.name" value="XTAL"/>
-    <property object="PD01" propertyId="pin.name" value="XTAL"/>
+    <property object="PC07" propertyId="pin.reserve" value="Reserved"/>
+    <property object="PD00" propertyId="pin.name" value="XTAL1"/>
+    <property object="PD01" propertyId="pin.name" value="XTAL2"/>
     <property object="PD02" propertyId="ABModule.selectedRequirement" value="gpio%T%SL_SIMPLE_LED_LED0%T%sl_simple_led_led0_config.h"/>
     <property object="PD02" propertyId="pin.name" value="DEBUG_2"/>
     <property object="PD02" propertyId="pin.reserve" value="Reserved"/>
@@ -65,7 +67,6 @@
     <property object="PORTIO" propertyId="portio.usart0.location.clk" value="34"/>
     <property object="PORTIO" propertyId="portio.usart0.location.rx" value="33"/>
     <property object="PORTIO" propertyId="portio.usart0.location.tx" value="32"/>
-    <property object="PTI" propertyId="ABModule.selectedRequirement" value="pti%T%SL_RAIL_UTIL_PTI%T%sl_rail_util_pti_config.h"/>
     <property object="PTI" propertyId="ABPeripheral.included" value="true"/>
     <property object="USART0" propertyId="ABModule.selectedRequirement" value="usart%T%SL_MEMLCD_SPI%T%sl_memlcd_usart_config.h"/>
     <property object="USART0" propertyId="ABPeripheral.included" value="true"/>

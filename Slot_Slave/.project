@@ -176,6 +176,11 @@
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_assert.h</locationURI>
 		</link>
 		<link>
+			<name>gecko_sdk_4.1.1/platform/emlib/inc/em_burtc.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_burtc.h</locationURI>
+		</link>
+		<link>
 			<name>gecko_sdk_4.1.1/platform/emlib/inc/em_bus.h</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_bus.h</locationURI>
@@ -231,6 +236,11 @@
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_i2c.h</locationURI>
 		</link>
 		<link>
+			<name>gecko_sdk_4.1.1/platform/emlib/inc/em_iadc.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_iadc.h</locationURI>
+		</link>
+		<link>
 			<name>gecko_sdk_4.1.1/platform/emlib/inc/em_ldma.h</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_ldma.h</locationURI>
@@ -256,6 +266,11 @@
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_ramfunc.h</locationURI>
 		</link>
 		<link>
+			<name>gecko_sdk_4.1.1/platform/emlib/inc/em_rtcc.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_rtcc.h</locationURI>
+		</link>
+		<link>
 			<name>gecko_sdk_4.1.1/platform/emlib/inc/em_syscfg.h</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_syscfg.h</locationURI>
@@ -274,6 +289,11 @@
 			<name>gecko_sdk_4.1.1/platform/emlib/inc/em_version.h</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_version.h</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/platform/emlib/src/em_burtc.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_burtc.c</locationURI>
 		</link>
 		<link>
 			<name>gecko_sdk_4.1.1/platform/emlib/src/em_cmu.c</name>
@@ -306,6 +326,11 @@
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_i2c.c</locationURI>
 		</link>
 		<link>
+			<name>gecko_sdk_4.1.1/platform/emlib/src/em_iadc.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_iadc.c</locationURI>
+		</link>
+		<link>
 			<name>gecko_sdk_4.1.1/platform/emlib/src/em_ldma.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_ldma.c</locationURI>
@@ -319,6 +344,11 @@
 			<name>gecko_sdk_4.1.1/platform/emlib/src/em_prs.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_prs.c</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/platform/emlib/src/em_rtcc.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_rtcc.c</locationURI>
 		</link>
 		<link>
 			<name>gecko_sdk_4.1.1/platform/emlib/src/em_system.c</name>
@@ -339,6 +369,26 @@
 			<name>gecko_sdk_4.1.1/util/third_party/printf/printf.h</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/util/third_party/printf/printf.h</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/app/bluetooth/common/sensor_rht/sl_sensor_rht.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/app/bluetooth/common/sensor_rht/sl_sensor_rht.c</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/app/bluetooth/common/sensor_rht/sl_sensor_rht.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/app/bluetooth/common/sensor_rht/sl_sensor_rht.h</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/app/bluetooth/common/sensor_select/sl_sensor_select.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/app/bluetooth/common/sensor_select/sl_sensor_select.c</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/app/bluetooth/common/sensor_select/sl_sensor_select.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/app/bluetooth/common/sensor_select/sl_sensor_select.h</locationURI>
 		</link>
 		<link>
 			<name>gecko_sdk_4.1.1/app/common/util/app_assert/app_assert.h</name>
@@ -374,6 +424,11 @@
 			<name>gecko_sdk_4.1.1/hardware/driver/configuration_over_swo/src/sl_cos.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/hardware/driver/configuration_over_swo/src/sl_cos.c</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/hardware/driver/si70xx/inc/sl_si70xx.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/hardware/driver/si70xx/inc/sl_si70xx.h</locationURI>
 		</link>
 		<link>
 			<name>gecko_sdk_4.1.1/platform/CMSIS/Core/Include/cmsis_compiler.h</name>
@@ -704,6 +759,41 @@
 			<name>gecko_sdk_4.1.1/platform/service/mpu/src/sl_mpu.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/service/mpu/src/sl_mpu.c</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/platform/service/sleeptimer/inc/sl_sleeptimer.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/service/sleeptimer/inc/sl_sleeptimer.h</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/platform/service/sleeptimer/inc/sli_sleeptimer.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/service/sleeptimer/inc/sli_sleeptimer.h</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/platform/service/sleeptimer/src/sl_sleeptimer.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/service/sleeptimer/src/sl_sleeptimer.c</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/platform/service/sleeptimer/src/sl_sleeptimer_hal_burtc.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/service/sleeptimer/src/sl_sleeptimer_hal_burtc.c</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/platform/service/sleeptimer/src/sl_sleeptimer_hal_prortc.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/service/sleeptimer/src/sl_sleeptimer_hal_prortc.c</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/platform/service/sleeptimer/src/sl_sleeptimer_hal_rtcc.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/service/sleeptimer/src/sl_sleeptimer_hal_rtcc.c</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/platform/service/sleeptimer/src/sli_sleeptimer_hal.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/service/sleeptimer/src/sli_sleeptimer_hal.h</locationURI>
 		</link>
 		<link>
 			<name>gecko_sdk_4.1.1/platform/service/system/inc/sl_system_init.h</name>

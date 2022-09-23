@@ -16,9 +16,11 @@
     <file name="app_log_config.h" generated="true" linked="false"/>
     <file name="sl_cli_config.h" generated="true" linked="false"/>
     <file name="sl_debug_swo_config.h" generated="true" linked="false"/>
+    <file name="sl_i2cspm_sensor_config.h" generated="true" linked="false"/>
     <file name="sl_i2cspm_temp_sensor_config.h" generated="true" linked="false"/>
     <file name="sl_simple_button_config.h" generated="true" linked="false"/>
     <file name="app_assert_config.h" generated="true" linked="false"/>
+    <file name="sl_sleeptimer_config.h" generated="true" linked="false"/>
     <file name="sl_rail_util_callbacks_config.h" generated="true" linked="false"/>
     <file name="sl_rail_util_dma_config.h" generated="true" linked="false"/>
     <file name="sl_cli_config_example.h" generated="true" linked="false"/>

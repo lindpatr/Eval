@@ -59,11 +59,20 @@
 #endif
 
 #include "common_debug.h"
+#include "common_iadc.h"
+#include "common_tempi2c.h"
+
+#include "sl_i2cspm_instances.h"
+#include "sl_si70xx.h"
 
 
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
+
+#define kTempAddr       0x49
+#define kTempAlarmOn    (60.0F)
+#define kTempAlarmOff   (55.0F)
 
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
@@ -422,9 +431,18 @@ void app_init(void)
     // Print out welcome strings on serial COM
     serial_init();
 
+    // Init ADC
+    common_initIADC();
+
+    // Init TMP116
+//    common_tempi2cConfig(kTempChannel, kTempAddr, kTempAlarmOn, kTempAlarmOff);
+//    common_tempi2cSetup();
+    sl_status_t status = sl_si70xx_init(sl_i2cspm_temp_sensor, SI7021_ADDR);
+    PrintStatus((status != SL_STATUS_OK), "Warning sl_si70xx_init failed");
+
     // Set up timers
-    bool ret = !RAIL_ConfigMultiTimer(true);
-    PrintStatus(ret, "Warning RAIL_ConfigMultiTimer failed");
+    bool ret = RAIL_ConfigMultiTimer(true);
+    PrintStatus((ret == false), "Warning RAIL_ConfigMultiTimer failed");
 }
 
 // -----------------------------------------------------------------------------

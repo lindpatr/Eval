@@ -25,9 +25,11 @@ extern "C" {
 #include "sl_i2cspm.h"
 
 
+#define SL_I2CSPM_SENSOR_PRESENT
 #define SL_I2CSPM_TEMP_SENSOR_PRESENT
 
 
+extern sl_i2cspm_t *sl_i2cspm_sensor;
 extern sl_i2cspm_t *sl_i2cspm_temp_sensor;
 
 void sl_i2cspm_init_instances(void);
