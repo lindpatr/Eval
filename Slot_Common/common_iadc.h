@@ -17,9 +17,6 @@
 #include "em_iadc.h"
 
 
-  // Start scan
-#define common_IadcStart() IADC_command(IADC0, iadcCmdStartScan)
-
 /**
  * Init IADC measure.
  */
@@ -31,6 +28,13 @@ void common_initIADC(void);
  * @return  true conversion terminated.
  */
 bool common_isIADCready(void);
+
+/**
+ * Start IADC conversion.
+ *
+ * @return  --.
+ */
+void common_startIADC(void);
 
 /**
  * Make IADC measure, wait until conversion is terminated or timeout.

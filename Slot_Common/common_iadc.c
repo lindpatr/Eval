@@ -172,6 +172,20 @@ bool common_isIADCready(void)
     return ((IADC0->STATUS & (_IADC_STATUS_CONVERTING_MASK | _IADC_STATUS_SINGLEFIFODV_MASK)) == IADC_STATUS_SINGLEFIFODV);
 }
 
+// Start scan
+#define common_IadcStart() IADC_command(IADC0, iadcCmdStartScan)
+
+/**
+ * Start IADC conversion.
+ *
+ * @return  --.
+ */
+void common_startIADC(void)
+{
+    // Start IADC
+    common_IadcStart();
+}
+
 /**
  * Make IADC measure, wait until conversion is terminated or timeout.
  * In case of success save data to mbox measure structure
@@ -183,8 +197,8 @@ bool common_getIADCdata(void)
     RAIL_Time_t startTime = RAIL_GetTime();
     RAIL_Time_t gap;
 
-    // Start IADC
-    common_IadcStart();
+//    // Start IADC
+//    common_IadcStart();
 
     // Wait conversion end or timeout
     while ((IADC0->STATUS & (_IADC_STATUS_CONVERTING_MASK | _IADC_STATUS_SCANFIFODV_MASK)) != IADC_STATUS_SCANFIFODV)
