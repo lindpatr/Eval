@@ -98,13 +98,13 @@ static const sl_cli_command_info_t cli_cmd__slot_time =
 SL_CLI_COMMAND(cli_set_slot_time,
         "Set slot time (us)",
         "10 - 100000 (100 ms) / 0 = default",
-        {   SL_CLI_ARG_UINT16, SL_CLI_ARG_END,});
+        {   SL_CLI_ARG_UINT32, SL_CLI_ARG_END,});
 
 static const sl_cli_command_info_t cli_cmd__sync_period =
 SL_CLI_COMMAND(cli_set_sync_period,
         "Set sync period (us)",
         "400 - 1000000 (1 s) / 0 = default",
-        {   SL_CLI_ARG_UINT16, SL_CLI_ARG_END,});
+        {   SL_CLI_ARG_UINT32, SL_CLI_ARG_END,});
 
 static const sl_cli_command_info_t cli_cmd__sync_timeout =
 SL_CLI_COMMAND(cli_set_sync_timeout,
