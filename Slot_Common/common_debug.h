@@ -36,8 +36,12 @@
 #define DEBUG_PIN_TX_RESET              DEBUG_PIN_RESET(DEBUG_PIN_H09)
 #define DEBUG_PIN_RX_SET                DEBUG_PIN_SET(DEBUG_PIN_H11)
 #define DEBUG_PIN_RX_RESET              DEBUG_PIN_RESET(DEBUG_PIN_H11)
-#define DEBUG_PIN_CB_SET                DEBUG_PIN_SET(DEBUG_PIN_H13)
-#define DEBUG_PIN_CB_RESET              DEBUG_PIN_RESET(DEBUG_PIN_H13)
+#define DEBUG_PIN_CB_SET                /*DEBUG_PIN_SET(DEBUG_PIN_H13)*/
+#define DEBUG_PIN_CB_RESET              /*DEBUG_PIN_RESET(DEBUG_PIN_H13)*/
+
+// IADC conversion time
+#define DEBUG_PIN_ACQ_SET               DEBUG_PIN_SET(DEBUG_PIN_H13)
+#define DEBUG_PIN_ACQ_RESET             DEBUG_PIN_RESET(DEBUG_PIN_H13)
 
 // IADC conversion time
 #define DEBUG_PIN_IADC_SET
