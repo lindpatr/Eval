@@ -32,15 +32,27 @@
 #define RESET                   0
 
 // Use that
-#define DEBUG_PIN_TX_SET            DEBUG_PIN_SET(DEBUG_PIN_H09)
-#define DEBUG_PIN_TX_RESET          DEBUG_PIN_RESET(DEBUG_PIN_H09)
-#define DEBUG_PIN_RX_SET            DEBUG_PIN_SET(DEBUG_PIN_H11)
-#define DEBUG_PIN_RX_RESET          DEBUG_PIN_RESET(DEBUG_PIN_H11)
-#define DEBUG_PIN_CB_SET            DEBUG_PIN_SET(DEBUG_PIN_H13)
-#define DEBUG_PIN_CB_RESET          DEBUG_PIN_RESET(DEBUG_PIN_H13)
+#define DEBUG_PIN_TX_SET                DEBUG_PIN_SET(DEBUG_PIN_H09)
+#define DEBUG_PIN_TX_RESET              DEBUG_PIN_RESET(DEBUG_PIN_H09)
+#define DEBUG_PIN_RX_SET                DEBUG_PIN_SET(DEBUG_PIN_H11)
+#define DEBUG_PIN_RX_RESET              DEBUG_PIN_RESET(DEBUG_PIN_H11)
+#define DEBUG_PIN_CB_SET                DEBUG_PIN_SET(DEBUG_PIN_H13)
+#define DEBUG_PIN_CB_RESET              DEBUG_PIN_RESET(DEBUG_PIN_H13)
 
+// IADC conversion time
 #define DEBUG_PIN_IADC_SET
 #define DEBUG_PIN_IADC_RESET
+
+// I2C Send configuration register
+#define DEBUG_PIN_I2C_CFG_SET           /*DEBUG_PIN_SET(DEBUG_PIN_H09)*/
+#define DEBUG_PIN_I2C_CFG_RESET         /*DEBUG_PIN_RESET(DEBUG_PIN_H09)*/
+// I2C Send R/W request/get temperature
+#define DEBUG_PIN_I2C_RW_TEMP_SET       /*DEBUG_PIN_SET(DEBUG_PIN_H11)*/
+#define DEBUG_PIN_I2C_RW_TEMP_RESET     /*DEBUG_PIN_RESET(DEBUG_PIN_H11)*/
+// I2C Get temperature
+#define DEBUG_PIN_I2C_RO_TEMP_SET       /*DEBUG_PIN_SET(DEBUG_PIN_H13)*/
+#define DEBUG_PIN_I2C_RO_TEMP_RESET     /*DEBUG_PIN_RESET(DEBUG_PIN_H13)*/
+
 
 /******************************************************************************
  * InitGPIODebug : Setup GPIO debug specific pins
