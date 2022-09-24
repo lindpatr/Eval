@@ -220,7 +220,12 @@ __INLINE void DisplayStat(void)
     // Messages pro second
     statAbsMsgPerSec = (float)(absAllCounter) / relElapsedTime;
     // Then compare to the key transmission rate of 1 master + 100 slaves @10ms
-    statAbsMsgPerSecRef = REF_MSG_PER_SEC / statAbsMsgPerSec;
+    //statAbsMsgPerSecRef = REF_MSG_PER_SEC / statAbsMsgPerSec;
+    uint8_t n_slaves = common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED);
+    float calc_sync_period = ((1000000.0f * (1.0f / statAbsMsgPerSec)) * (n_slaves + 1));
+    uint32_t th_sync_period = (TIME_SLOT_MASTER_TX + TIME_SLOT_ACQ + (common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED) * TIME_SLOT_SLAVE)  - TIME_SLOT_CORR);
+    uint32_t deduc = TIME_SLOT_MASTER_TX + TIME_SLOT_ACQ + ((uint32_t)calc_sync_period - (th_sync_period + TIME_SLOT_CORR))/* = TIME_SLOT_RES*/;
+    statAbsMsgPerSecRef = (((float)MAX_SLAVE * (float)((calc_sync_period - deduc) / (float)n_slaves)) + deduc) / 1000.0f;
 
     uint32_t absTXOk = gTX_tab[TAB_POS_TX_OK];
     uint32_t absCalOk = gCAL_tab[TAB_POS_CAL_REQ];
@@ -237,6 +242,7 @@ __INLINE void DisplayStat(void)
     // RX error rate
     uint32_t absRXErr = gRX_tab[myDevice][TAB_POS_RX_ERR];
     uint32_t absRXTimeOut = gRX_tab[myDevice][TAB_POS_RX_TIMEOUT];
+    float cycle = 1000.0f / ((float)absTXOk / (float)relElapsedTime);
 
     // Detect never responding slaves
     if (isMaster)   // From a master point of view
@@ -294,12 +300,12 @@ __INLINE void DisplayStat(void)
     // Transmission rate
     if (isMaster)
     {
-        app_log_info("Rate (loop 100)            : %0.2f msg/s (%0.2f ms)\n", statAbsMsgPerSec, statAbsMsgPerSecRef);
+        app_log_info("Est. loop/100 (sync/rate)  : %0.2f ms (%0.3f ms/%0.2f msg/s)\n", statAbsMsgPerSecRef, cycle, statAbsMsgPerSec);
     }
     else
     {
         app_log_info("#Sync lost                 : %d\n", absSYNCErr);
-        app_log_info("Rate                       : %0.2f msg/s\n", statAbsMsgPerSec);
+        app_log_info("Sync period                : %0.3f ms\n", cycle);
         app_log_info("AD VDDA/IO/D/TCPU / I2C TA : %0.2fV/%0.2fV/%0.2fV/%0.1f°C/%0.1f°C\n", CONVERT_TO_VOLT(gMboxADMes.u.detail.vdda), CONVERT_TO_VOLT(gMboxADMes.u.detail.ucell), CONVERT_TO_VOLT(gMboxADMes.u.detail.icell), CONVERT_TO_DEGRES_2(gMboxADMes.u.detail.internaltemp), CONVERT_TO_DEGRES(gMBoxTempCell));
     }
 

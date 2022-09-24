@@ -16,10 +16,11 @@
 
 //#define SLAVE_IN_SYSTEM (4)                   // Netowrk is composed of X slaves
 //#define TIME_SLOT_DEF   (190U)                // in us --> only if time slot of a slave is defined as (Addr-1)*TIME_SLOT_DEF; current implementation is setting a specific time slot for each slave!
-#define TIME_SLOT_ACQ   (200U)                  // in us
+#define TIME_SLOT_ACQ   (210U)                  // in us
 #define TIME_SLOT_MASTER_TX   (220U)            // in us
+#define TIME_SLOT_RES   (115U)                  // in us
 #define TIME_SLOT_SLAVE (190U)                  // in us
-#define TIME_SLOT_CORR  (20U)                   // in us
+#define TIME_SLOT_CORR  (30U)                   // in us
 #define TIME_SLOT_MIN   (10U)                   // in us
 #define TIME_SLOT_MAX   (100000U)               // in us
 
