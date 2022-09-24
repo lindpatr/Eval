@@ -86,10 +86,6 @@ typedef enum
 	kMsgSent,
 	kErrorTx,
     //  ------------
-    //  Acquisition
-    //  ------------
-    kDoAllAcq,
-    //  ------------
     //  Calibration
     //  ------------
     kCalReq,
@@ -693,25 +689,6 @@ void app_process_action(void)
 		break;
 
         // -----------------------------------------
-        // Acquisition
-        // -----------------------------------------
-//    case kDoAllAcq:
-//        // Do all acquisition
-//
-//        DEBUG_PIN_ACQ_SET;
-//        // Start AD conversion
-//        common_startIADC();
-//        // Read temp via I2C
-//        //I2C_temp_read();
-//        // Get results of ADC
-//        Analog_read();
-//
-//        DEBUG_PIN_ACQ_RESET;
-//
-//        SetState(kIdle);
-//        break;
-
-        // -----------------------------------------
         // RX
         // -----------------------------------------
 
@@ -909,7 +886,7 @@ void app_process_action(void)
         }
         else
         {
-            SetState(kStatistics);          // Start stat print out pcrocess
+            SetState(kStatistics);          // Start stat print out pcrocess --> no more possible (only stat sync on Master (timer or btn pressed on Master)
         }
         break;
 
