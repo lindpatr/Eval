@@ -22,6 +22,7 @@
 #include "sl_iostream_init_eusart_instances.h"
 #include "sl_iostream_stdlib_config.h"
 #include "sl_mpu.h"
+#include "sl_pwm_instances.h"
 #include "sl_simple_button_instances.h"
 #include "sl_cli_instances.h"
 #include "sl_iostream_init_instances.h"
@@ -45,6 +46,7 @@ void sl_driver_init(void)
   sl_debug_swo_init();
   GPIOINT_Init();
   sl_i2cspm_init_instances();
+  sl_pwm_init_instances();
   sl_simple_button_init_instances();
   sl_cos_send_config();
 }

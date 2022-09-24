@@ -31,29 +31,41 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
-#include <stdint.h>
-#include "sl_component_catalog.h"
-#include "app_assert.h"
-#include "app_log.h"
-#include "rail.h"
-#include "app_process.h"
+
+// Base components
+// ---------------
+#include <stdint.h>                 // Standard lib
+#include "sl_component_catalog.h"   // Installed components
+#include "app_assert.h"             // Assert functions
+#include "app_log.h"                // Log functions
+#include "rail.h"                   // Radio functions
+#include "rail_config.h"            // Radio config
+
+
+// Additional components
+// ---------------------
+#include "printf.h"                 // Tiny printf
 #include "sl_simple_button_instances.h"
-#include "rail_config.h"
-#include "sl_flex_packet_asm.h"
-
-#include "common_stat.h"
-#include "common_debug.h"
-#include "common_iadc.h"
-#include "common_tempi2c.h"
-#include "common_mbox.h"
-
-#include "sl_i2cspm_instances.h"
-#include "sl_si70xx.h"
+                                    // Button functions
+#include "sl_flex_packet_asm.h"     // Flex packet
+#include "sl_i2cspm_instances.h"    // I2C functions
+#include "sl_si70xx.h"              // Temp and humidity via I2C
+#include "sl_pwm_instances.h"       // PWM functions
 
 // Specific to LCD display
-//#include "dmd.h"
-//#include "glib.h"
-#include "printf.h"
+//#include "dmd.h"                  // LCD driver
+//#include "glib.h"                 // Graphics lib
+
+
+// User components
+// ---------------
+#include "app_process.h"            // Main app
+#include "common_debug.h"           // Debug functions
+#include "common_mbox.h"            // Global var container
+#include "common_stat.h"            // Statistics functions
+#include "common_iadc.h"            // ADC functions
+#include "common_tempi2c.h"         // Temp via I2C
+
 
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
@@ -553,7 +565,7 @@ static __INLINE void DoAllAcq(void)
 /******************************************************************************
  * Application state machine, called infinitely
  *****************************************************************************/
-//static RAIL_RadioStateDetail_t radio_old_state_detail = RAIL_RF_STATE_DETAIL_INACTIVE;
+static uint16_t pwm_count = 1;
 
 void app_process_action(void)
 {
@@ -742,6 +754,14 @@ void app_process_action(void)
                 gElapsedTime = RAIL_GetTime();
                 gOldElapsedTime = gElapsedTime;
             }
+
+            // TEST PURPOSES
+            sl_pwm_set_duty_cycle(&sl_pwm_pwm0, pwm_count);
+            sl_pwm_set_duty_cycle(&sl_pwm_pwm1, (uint16_t)(1000-pwm_count));
+
+            if (++pwm_count > 1000)
+                pwm_count = 0;
+            // -------------
 
             SetState(kIdle);
             //SetState(kDoAllAcq);

@@ -108,6 +108,14 @@
             <file name="sl_i2cspm.h" uri="studio:/sdk/platform/driver/i2cspm/inc/sl_i2cspm.h"/>
           </folder>
         </folder>
+        <folder name="pwm">
+          <folder name="src">
+            <file name="sl_pwm.c" uri="studio:/sdk/platform/driver/pwm/src/sl_pwm.c"/>
+          </folder>
+          <folder name="inc">
+            <file name="sl_pwm.h" uri="studio:/sdk/platform/driver/pwm/inc/sl_pwm.h"/>
+          </folder>
+        </folder>
       </folder>
       <folder name="service">
         <folder name="cli">
@@ -255,6 +263,7 @@
           <file name="em_prs.c" uri="studio:/sdk/platform/emlib/src/em_prs.c"/>
           <file name="em_rtcc.c" uri="studio:/sdk/platform/emlib/src/em_rtcc.c"/>
           <file name="em_system.c" uri="studio:/sdk/platform/emlib/src/em_system.c"/>
+          <file name="em_timer.c" uri="studio:/sdk/platform/emlib/src/em_timer.c"/>
           <file name="em_usart.c" uri="studio:/sdk/platform/emlib/src/em_usart.c"/>
         </folder>
         <folder name="inc">
@@ -281,6 +290,7 @@
           <file name="em_rtcc.h" uri="studio:/sdk/platform/emlib/inc/em_rtcc.h"/>
           <file name="em_syscfg.h" uri="studio:/sdk/platform/emlib/inc/em_syscfg.h"/>
           <file name="em_system.h" uri="studio:/sdk/platform/emlib/inc/em_system.h"/>
+          <file name="em_timer.h" uri="studio:/sdk/platform/emlib/inc/em_timer.h"/>
           <file name="em_usart.h" uri="studio:/sdk/platform/emlib/inc/em_usart.h"/>
         </folder>
       </folder>
@@ -475,6 +485,7 @@
   <includePath uri="studio:/sdk/hardware/driver/mx25_flash_shutdown/inc/sl_mx25_flash_shutdown_usart"/>
   <includePath uri="studio:/sdk/util/third_party/printf"/>
   <includePath uri="studio:/sdk/util/third_party/printf/inc"/>
+  <includePath uri="studio:/sdk/platform/driver/pwm/inc"/>
   <includePath uri="studio:/sdk/platform/radio/rail_lib/common"/>
   <includePath uri="studio:/sdk/platform/radio/rail_lib/protocol/ble"/>
   <includePath uri="studio:/sdk/platform/radio/rail_lib/protocol/ieee802154"/>

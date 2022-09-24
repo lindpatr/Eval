@@ -26,7 +26,7 @@
 // <i> Frequency in Hz of the reference clock.
 // <i> Select 0 to use the frequency of the currently selected clock.
 // <i> Default: 0
-#define SL_I2CSPM_TEMP_SENSOR_REFERENCE_CLOCK 2
+#define SL_I2CSPM_TEMP_SENSOR_REFERENCE_CLOCK 0
 
 // <o SL_I2CSPM_TEMP_SENSOR_SPEED_MODE> Speed mode
 // <0=> Standard mode (100kbit/s)

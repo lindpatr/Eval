@@ -31,39 +31,50 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
-#include <stdint.h>
-#include "sl_component_catalog.h"
-#include "rail.h"
-#include "sl_rail_util_init.h"
-#include "app_process.h"
-#include "app_log.h"
-#include "sl_rail_util_init_inst0_config.h"
-#include "sl_rail_util_protocol_types.h"
-#include "rail_config.h"
-#include "app_assert.h"
 
-#include "app_init.h"
-#include "em_system.h"
-#include "printf.h"
+// Base components
+// ---------------
+#include <stdint.h>                 // Standard lib
+#include "sl_component_catalog.h"   // Installed components
+#include "app_assert.h"             // Assert functions
+#include "app_log.h"                // Log functions
+#include "rail.h"                   // Radio functions
+#include "rail_config.h"            // Radio config
+
+
+// Additional components
+// ---------------------
+#include "em_system.h"              // System functions
+#include "printf.h"                 // Tiny printf
+
+#include "sl_rail_util_init.h"      // Radio tools
+#include "sl_rail_util_init_inst0_config.h"
+                                    // Radio instance config
+#include "sl_rail_util_protocol_types.h"
+                                    // Radio protocol
 
 #if (SL_BOARD_ENABLE_DISPLAY)
 // LCD display
-#include "dmd.h"
-#include "glib.h"
+#include "dmd.h"                    // LCD driver
+#include "glib.h"                   // Graphics lib
 #endif // SL_BOARD_ENABLE_DISPLAY
-
 
 #if defined(RAIL0_CHANNEL_GROUP_1_PROFILE_WISUN_OFDM)
 #include "sl_rail_util_pa_config.h"
 #include "rail_chip_specific.h"
 #endif
 
-#include "common_debug.h"
-#include "common_iadc.h"
-#include "common_tempi2c.h"
+#include "sl_i2cspm_instances.h"    // I2C functions
+#include "sl_si70xx.h"              // Temp and humidity via I2C
+#include "sl_pwm_instances.h"       // PWM functions
 
-#include "sl_i2cspm_instances.h"
-#include "sl_si70xx.h"
+// User components
+// ---------------
+#include "app_init.h"               // Initialize functions
+#include "app_process.h"            // Main app
+#include "common_debug.h"           // Debug functions
+#include "common_iadc.h"            // ADC functions
+#include "common_tempi2c.h"         // Temp via I2C
 
 
 // -----------------------------------------------------------------------------
@@ -318,6 +329,46 @@ void config_gpio(void)
 }
 
 /*******************************************************************************
+ * @brief Initializes the needed PWM.
+ * @note This function overwrite some settings of the PWM configurator!
+
+ ******************************************************************************/
+void config_pwm(void)
+{
+//    sl_pwm_instance_t sl_pwm_0 = {
+//      .timer    = TIMER0,
+//      .channel  = 0,                  // TIMER0.CC1
+//      .port     = gpioPortC,
+//      .pin      = 6,                  // PC06
+//      .location = 0,
+//    };
+//    sl_pwm_instance_t sl_pwm_1 = {
+//      .timer    = TIMER0,
+//      .channel  = 1,                  // TIMER0.CC1
+//      .port     = gpioPortA,
+//      .pin      = 0,                  // PA00
+//      .location = 0,
+//    };
+//
+//    sl_pwm_config_t pwm_config = {
+//      .frequency = 90000,             // Limited < 100kHz
+//      .polarity  = PWM_ACTIVE_HIGH,
+//    };
+//
+//    // Initialize PWM
+//    sl_pwm_init(&sl_pwm_pwm0, &pwm_config);
+//    sl_pwm_init(&sl_pwm_pwm1, &pwm_config);
+
+    // Set duty cycle to 0%
+    sl_pwm_set_duty_cycle(&sl_pwm_pwm0, 0);
+    sl_pwm_set_duty_cycle(&sl_pwm_pwm1, 0);
+
+    // Enable PWM output
+    sl_pwm_start(&sl_pwm_pwm0);
+    sl_pwm_start(&sl_pwm_pwm1);
+}
+
+/*******************************************************************************
  * @brief Initializes the graphics stack.
  * @note This function will /hang/ if errors occur (usually
  *       caused by faulty displays.
@@ -433,6 +484,9 @@ void app_init(void)
 
     // Init ADC
     common_initIADC();
+
+    // Init PWM
+    config_pwm();
 
     // Init TMP116
 //    common_tempi2cConfig(kTempChannel, kTempAddr, kTempAlarmOn, kTempAlarmOff);
