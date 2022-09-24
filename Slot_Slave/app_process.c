@@ -534,11 +534,14 @@ static __INLINE void I2C_temp_read(void)
 //    bool status = common_tempi2cReadTemp(kTempChannel, &gMBoxTempCell);
 //    PrintStatus((status == false), "Warning common_tempi2cReadTemp failed");
      uint32_t rh_data;
-     int32_t temp_data;
+     int32_t t_data;
 
-     sl_status_t status = sl_si70xx_measure_rh_and_temp(sl_i2cspm_temp_sensor, SI7021_ADDR, &rh_data, &temp_data);
+     // TODO BEGIN TEST PURPOSES
+     //sl_status_t status = sl_si70xx_measure_rh_and_temp(sl_i2cspm_sensor, SI7021_ADDR, &rh_data, &t_data);
+     sl_status_t status = sl_si70xx_read_rh_and_temp(sl_i2cspm_sensor, SI7021_ADDR, &rh_data, &t_data);
      PrintStatus((status != SL_STATUS_OK), "Warning sl_si70xx_measure_rh_and_temp failed");
-     gMBoxTempCell = (uint16_t)temp_data;
+     gMBoxTempCell = (int32_t)t_data;
+     // TODO END TEST PURPOSES
 }
 
 /******************************************************************************
@@ -755,14 +758,6 @@ void app_process_action(void)
                 gOldElapsedTime = gElapsedTime;
             }
 
-            // TEST PURPOSES
-            sl_pwm_set_duty_cycle(&sl_pwm_pwm0, pwm_count);
-            sl_pwm_set_duty_cycle(&sl_pwm_pwm1, (uint16_t)(1000-pwm_count));
-
-            if (++pwm_count > 1000)
-                pwm_count = 0;
-            // -------------
-
             SetState(kIdle);
             //SetState(kDoAllAcq);
             break;
@@ -825,6 +820,14 @@ void app_process_action(void)
             DisplaySentMsg();
 //            // Indicate TX in progress on LED1
 //            sl_led_toggle(&sl_led_led1);
+
+            // TODO BEGIN TEST PURPOSES
+            sl_pwm_set_duty_cycle(&sl_pwm_pwm0, pwm_count);
+            sl_pwm_set_duty_cycle(&sl_pwm_pwm1, (uint16_t)(1000-pwm_count));
+
+            if (++pwm_count > 1000)
+                pwm_count = 0;
+            // TODO END TEST PURPOSES
         }
 
         // Auto transition to RX after successfull transmit
@@ -925,6 +928,12 @@ void app_process_action(void)
         // On timeout delay || Button pressed || CLI command
         if (PrintStatistics())
         {
+            // TODO BEGIN TEST PURPOSES
+            // Start a new temp measure via I2C; measure will be read later
+            sl_status_t status = sl_si70xx_start_no_hold_measure_rh_and_temp(sl_i2cspm_sensor, SI7021_ADDR);
+            PrintStatus((status != SL_STATUS_OK), "Warning sl_si70xx_start_no_hold_measure_rh_and_temp failed");
+            // TODO END TEST PURPOSES
+
             SetState(kInit);                // Restart the cycle
         }
         else                                // Start stat print out pcrocess (wait next sync period to synchronize the process)

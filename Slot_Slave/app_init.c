@@ -494,8 +494,13 @@ void app_init(void)
     // Init TMP116
 //    common_tempi2cConfig(kTempChannel, kTempAddr, kTempAlarmOn, kTempAlarmOff);
 //    common_tempi2cSetup();
-    sl_status_t status = sl_si70xx_init(sl_i2cspm_temp_sensor, SI7021_ADDR);
+    // TODO BEGIN TEST PURPOSES
+    sl_status_t status = sl_si70xx_init(sl_i2cspm_sensor, SI7021_ADDR);
     PrintStatus((status != SL_STATUS_OK), "Warning sl_si70xx_init failed");
+    // Start a new temp measure via I2C; measure will be read later
+    status = sl_si70xx_start_no_hold_measure_rh_and_temp(sl_i2cspm_sensor, SI7021_ADDR);
+    PrintStatus((status != SL_STATUS_OK), "Warning sl_si70xx_start_no_hold_measure_rh_and_temp failed");
+    // TODO END TEST PURPOSES
 
     // Set up timers
     bool ret = RAIL_ConfigMultiTimer(true);

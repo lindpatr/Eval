@@ -31,6 +31,9 @@
 /** Si70xx Read Temperature Command */
 #define SI70XX_READ_TEMP       0xE0  /* Read previous T data from RH measurement
                                       * command*/
+#define SI70XX_READ_TEMP_H     0xE3
+#define SI70XX_READ_TEMP_NH    0xF3
+
 /** Si70xx Read RH Command */
 #define SI70XX_MEASURE_RH      0xE5  /* Perform RH (and T) measurement. */
 /** Si70xx Read RH (no hold) Command */
@@ -116,7 +119,7 @@ sl_status_t sl_si70xx_get_firmware_revision(sl_i2cspm_t *i2cspm, uint8_t addr, u
 sl_status_t sl_si70xx_start_no_hold_measure_rh_and_temp(sl_i2cspm_t *i2cspm, uint8_t addr)
 {
   sl_status_t retval;
-  retval = sl_si70xx_start_no_hold_measure(i2cspm, addr, SI70XX_MEASURE_RH_NH);
+  retval = sl_si70xx_start_no_hold_measure(i2cspm, addr, SI70XX_READ_TEMP_NH/*SI70XX_MEASURE_RH_NH*/);
 
   return retval;
 }
@@ -128,21 +131,31 @@ sl_status_t sl_si70xx_read_rh_and_temp(sl_i2cspm_t *i2cspm, uint8_t addr, uint32
                                        int32_t *tData)
 {
   sl_status_t status;
-  status = sl_si70xx_read_data(i2cspm, addr, rhData);
+  (void) rhData;
 
-  if (status != SL_STATUS_OK) {
-    return status;
-  }
+//  status = sl_si70xx_read_data(i2cspm, addr, rhData);
+//
+//  if (status != SL_STATUS_OK) {
+//    return status;
+//  }
+//
+//  *rhData = sl_si70xx_get_percent_relative_humidity(*rhData);
 
-  *rhData = sl_si70xx_get_percent_relative_humidity(*rhData);
+//  status = sl_si70xx_send_command(i2cspm, addr, (uint32_t *) tData, SI70XX_READ_TEMP_NH/*SI70XX_READ_TEMP*/);
+//
+//  if (status != SL_STATUS_OK) {
+//    return status;
+//  }
+//
+//  *tData = sl_si70xx_get_celcius_temperature(*tData);
 
-  status = sl_si70xx_send_command(i2cspm, addr, (uint32_t *) tData, SI70XX_READ_TEMP);
+    status = sl_si70xx_read_data(i2cspm, addr, (uint32_t *) tData);
 
-  if (status != SL_STATUS_OK) {
-    return status;
-  }
+    if (status != SL_STATUS_OK) {
+      return status;
+    }
 
-  *tData = sl_si70xx_get_celcius_temperature(*tData);
+    *tData = sl_si70xx_get_celcius_temperature(*tData);
 
   return status;
 }
@@ -153,6 +166,8 @@ sl_status_t sl_si70xx_read_rh_and_temp(sl_i2cspm_t *i2cspm, uint8_t addr, uint32
 sl_status_t sl_si70xx_measure_rh_and_temp(sl_i2cspm_t *i2cspm, uint8_t addr, uint32_t *rhData,
                                           int32_t *tData)
 {
+    (void) rhData;
+//    (void) tData;
   sl_status_t retval;
 //  retval = sl_si70xx_send_command(i2cspm, addr, rhData, SI70XX_MEASURE_RH);
 //
