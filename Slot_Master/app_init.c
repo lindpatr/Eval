@@ -260,10 +260,10 @@ void config_protocol(void)
     gTimeSlot  = gDeviceCfgAddr->slotTime;                                                     // Consistency between all devices participating to the network is the responsability of the dev
 
     // Sync period (when the master shall send a sync frame)
-    gSyncPeriod = SYNC_PERIOD; //(RAIL_Time_t) (common_getMaxSlotTime() + TIME_SLOT_LAST);
+    gSyncPeriod = (RAIL_Time_t) (TIME_SLOT_MASTER_TX + TIME_SLOT_ACQ + (common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED) * TIME_SLOT_SLAVE)  - TIME_SLOT_CORR);
 
     // Sync timeout (when a slave is considering no more receiving sync from a master)
-    gSyncTimeOut = (RAIL_Time_t) (gSyncPeriod * SYNC_TIMEOUT_NB);       // Consistency with gSyncPeriod (gSyncTimeOut > gSyncPeriod) is the responsability of the dev
+    gSyncTimeOut = (RAIL_Time_t) ((float)gSyncPeriod * (1.0f+SYNC_TIMEOUT_VAR) * (float)SYNC_TIMEOUT_NB);       // Consistency with gSyncPeriod (gSyncTimeOut > gSyncPeriod) is the responsability of the dev
 
 //    if (!gDeviceCfgAddr->ismaster && (gDeviceCfgAddr->internalAddr > 1))
 //    {

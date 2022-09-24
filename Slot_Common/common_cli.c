@@ -272,7 +272,11 @@ void cli_set_sync_period(sl_cli_command_arg_t *arguments)
             }
             else    // Default value
             {
-                gSyncPeriod = (RAIL_Time_t) (common_getMaxSlotTime() + TIME_SLOT_LAST);
+                // Sync period (when the master shall send a sync frame)
+                gSyncPeriod = (RAIL_Time_t) (TIME_SLOT_MASTER_TX + TIME_SLOT_ACQ + (common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED) * TIME_SLOT_SLAVE)  - TIME_SLOT_CORR);
+
+                // Sync timeout (when a slave is considering no more receiving sync from a master)
+                gSyncTimeOut = (RAIL_Time_t) ((float)gSyncPeriod * (1.0f+SYNC_TIMEOUT_VAR) * (float)SYNC_TIMEOUT_NB);       // Consistency with gSyncPeriod (gSyncTimeOut > gSyncPeriod) is the responsability of the dev
 
                 str = strDefault;
             }
@@ -314,7 +318,7 @@ void cli_set_sync_timeout(sl_cli_command_arg_t *arguments)
             }
             else     // Default value
             {
-                gSyncTimeOut = (RAIL_Time_t) (gSyncPeriod * SYNC_TIMEOUT_NB);
+                gSyncTimeOut = (RAIL_Time_t) ((float)gSyncPeriod * (1.0f+SYNC_TIMEOUT_VAR) * (float)SYNC_TIMEOUT_NB);       // Consistency with gSyncPeriod (gSyncTimeOut > gSyncPeriod) is the responsability of the dev
 
                 str = strDefault;
             }
