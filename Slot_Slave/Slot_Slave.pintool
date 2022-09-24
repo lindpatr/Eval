@@ -6,7 +6,7 @@
     <property object="EUART0" propertyId="ABPeripheral.included" value="true"/>
     <property object="GPIO" propertyId="ABModule.selectedRequirement" value="gpio%T%SL_DEBUG%T%sl_debug_swo_config.h"/>
     <property object="GPIO" propertyId="ABPeripheral.included" value="true"/>
-    <property object="I2C0" propertyId="ABModule.selectedRequirement" value="i2c%T%SL_I2CSPM_TEMP_SENSOR%T%sl_i2cspm_temp_sensor_config.h"/>
+    <property object="I2C0" propertyId="ABModule.selectedRequirement" value="i2c%T%SL_I2CSPM_SENSOR%T%sl_i2cspm_sensor_config.h"/>
     <property object="I2C0" propertyId="ABPeripheral.included" value="true"/>
     <property object="PA00" propertyId="ABModule.selectedRequirement" value="gpio%T%SL_MEMLCD_EXTCOMIN%T%sl_memlcd_usart_config.h"/>
     <property object="PA00" propertyId="pin.name" value="PWM2"/>
@@ -75,7 +75,7 @@
     <property object="PORTIO" propertyId="portio.usart0.location.rx" value="33"/>
     <property object="PORTIO" propertyId="portio.usart0.location.tx" value="32"/>
     <property object="PTI" propertyId="ABPeripheral.included" value="true"/>
-    <property object="TIMER0" propertyId="ABModule.selectedRequirement" value="timer%T%SL_PWM_PWM0%T%sl_pwm_init_pwm0_config.h"/>
+    <property object="TIMER0" propertyId="ABModule.selectedRequirement" value="timer%T%SL_PWM_PWM1%T%sl_pwm_init_pwm1_config.h"/>
     <property object="TIMER0" propertyId="ABPeripheral.included" value="true"/>
     <property object="TIMER0" propertyId="channel.0.name" value="OUTPUT"/>
     <property object="TIMER0" propertyId="channel.1.name" value=""/>
