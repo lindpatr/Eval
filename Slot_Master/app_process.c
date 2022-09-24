@@ -31,21 +31,30 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
-#include <stdint.h>
-#include "sl_component_catalog.h"
-#include "app_assert.h"
-#include "app_log.h"
-#include "rail.h"
-#include "app_process.h"
+
+// Base components
+// ---------------
+#include <stdint.h>                 // Standard lib
+#include "sl_component_catalog.h"   // Installed components
+#include "app_assert.h"             // Assert functions
+#include "app_log.h"                // Log functions
+#include "rail.h"                   // Radio functions
+#include "rail_config.h"            // Radio config
+
+// Additional components
+// ---------------------
+#include "printf.h"                 // Tiny printf
 #include "sl_simple_button_instances.h"
-#include "rail_config.h"
-#include "sl_flex_packet_asm.h"
+                                    // Button functions
+#include "sl_flex_packet_asm.h"     // Flex packet
 
-#include "common_stat.h"
-#include "app_init.h"
-#include "common_debug.h"
+// User components
+// ---------------
+#include "app_init.h"               // Initialize functions
+#include "app_process.h"            // Main app
+#include "common_debug.h"           // Debug functions
+#include "common_stat.h"            // Statistics functions
 
-#include "printf.h"
 
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs

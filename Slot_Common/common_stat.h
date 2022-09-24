@@ -8,11 +8,11 @@
 #ifndef COMMON_STAT_H_
 #define COMMON_STAT_H_
 
+
 #include <stdint.h>
+#include "app_init.h"
 #include "app_process.h"
 #include "app_log.h"
-#include "app_init.h"
-
 
 
 #define TIMER_TIMEOUT_RX_SHIFT  (RAIL_EVENT_DETECT_RSSI_THRESHOLD_SHIFT+1)

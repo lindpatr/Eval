@@ -31,25 +31,31 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
-#include <stdint.h>
-#include "sl_component_catalog.h"
-#include "rail.h"
-#include "sl_rail_util_init.h"
-#include "app_process.h"
-#include "app_log.h"
-#include "sl_rail_util_init_inst0_config.h"
-#include "sl_rail_util_protocol_types.h"
-#include "rail_config.h"
-#include "app_assert.h"
 
-#include "app_init.h"
-#include "em_system.h"
-#include "printf.h"
+// Base components
+// ---------------
+#include <stdint.h>                 // Standard lib
+#include "sl_component_catalog.h"   // Installed components
+#include "app_assert.h"             // Assert functions
+#include "app_log.h"                // Log functions
+#include "rail.h"                   // Radio functions
+#include "rail_config.h"            // Radio config
+
+// Additional components
+// ---------------------
+#include "em_system.h"              // System functions
+#include "printf.h"                 // Tiny printf
+
+#include "sl_rail_util_init.h"      // Radio tools
+#include "sl_rail_util_init_inst0_config.h"
+                                    // Radio instance config
+#include "sl_rail_util_protocol_types.h"
+                                    // Radio protocol
 
 // LCD display
 #if (SL_BOARD_ENABLE_DISPLAY)
-#include "dmd.h"
-#include "glib.h"
+#include "dmd.h"                    // LCD driver
+#include "glib.h"                   // Graphics lib
 #endif // SL_BOARD_ENABLE_DISPLAY
 
 #if defined(RAIL0_CHANNEL_GROUP_1_PROFILE_WISUN_OFDM)
@@ -57,7 +63,11 @@
 #include "rail_chip_specific.h"
 #endif
 
-#include "common_debug.h"
+// User components
+// ---------------
+#include "app_init.h"               // Initialize functions
+#include "app_process.h"            // Main app
+#include "common_debug.h"           // Debug functions
 
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs

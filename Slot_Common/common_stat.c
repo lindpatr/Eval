@@ -5,11 +5,10 @@
  *      Author: BEL-LinPat
  */
 
-#ifndef COMMON_STAT_H_
-#include "common_stat.h"
-#endif
 
+#include "common_stat.h"
 #include "common_mbox.h"
+
 
 uint32_t gTX_tab[TAB_POS_LAST] = { 0 };                // 0 = #TX_OK    1 = #TX_Err   2 = #TX_TimeOut   3 = ND              4 = ND                  5 = ND
 uint32_t gRX_tab[MAX_NODE][TAB_POS_LAST] = { 0 };      // 0 = #RX_OK    1 = #RX_Err   2 = #RX_TimeOut   3 = #Gap RX count   4 = Max gap RX count    5 = #CRC_Err
