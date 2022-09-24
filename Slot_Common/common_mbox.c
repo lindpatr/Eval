@@ -11,4 +11,4 @@
 #endif
 
 commonAnalogdata_t gMboxADMes;     // contains analog measures
-uint16_t gMBoxTempCell;
+int32_t gMBoxTempCell;
