@@ -44,6 +44,16 @@
 //#else
 //#define qDebug        0           // Release
 //#endif  // SL_DEBUG
+
+// Assign the debug pins
+#define DEBUG_PIN_TX_SET                DEBUG_PIN_SET(DEBUG_PIN_H09)
+#define DEBUG_PIN_TX_RESET              DEBUG_PIN_RESET(DEBUG_PIN_H09)
+#define DEBUG_PIN_RX_SET                DEBUG_PIN_SET(DEBUG_PIN_H11)
+#define DEBUG_PIN_RX_RESET              DEBUG_PIN_RESET(DEBUG_PIN_H11)
+#define DEBUG_PIN_CB_SET                DEBUG_PIN_SET(DEBUG_PIN_H13)
+#define DEBUG_PIN_CB_RESET              DEBUG_PIN_RESET(DEBUG_PIN_H13)
+
+
 #define qPrintTX        0     // Print out sent data on serial COM
 #define qPrintRX        0     // Print out received data on serial COM
 #define qPrintEvents    1     // Print out events on serial COM
