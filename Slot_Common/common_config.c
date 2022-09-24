@@ -134,9 +134,9 @@
 
 // Table (non optimized (aligned)) for M-S1-S3-S4 (1+3) with delay 100 us for S1
 // N = 3
-// Sync = 950
+// Sync = 970
 // Auto transition S1: Y
-// Rate = 27.42 ms
+// Rate = 28.21 ms
 #define SHIFT_TIME  100
 PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
 {
