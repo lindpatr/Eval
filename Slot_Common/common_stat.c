@@ -275,6 +275,14 @@ __INLINE void DisplayStat(void)
     if (statAbsRXErr > 100.0f)
         statAbsRXErr = 100.0f;
 
+    // RX quality
+    int8_t statAbsRssiMoy = (int8_t)gRX_tab[myDevice][TAB_POS_RX_RSSI_MOY];
+    int8_t statAbsRssiMin = (int8_t)gRX_tab[myDevice][TAB_POS_RX_RSSI_MIN];
+    int8_t statAbsRssiMax = (int8_t)gRX_tab[myDevice][TAB_POS_RX_RSSI_MAX];
+    uint8_t statAbsLqiMoy = (uint8_t)gRX_tab[myDevice][TAB_POS_RX_LQI_MOY];
+    uint8_t statAbsLqiMin = (uint8_t)gRX_tab[myDevice][TAB_POS_RX_LQI_MIN];
+    uint8_t statAbsLqiMax = (uint8_t)gRX_tab[myDevice][TAB_POS_RX_LQI_MAX];
+
     // Printing
     // --------
     // Print on serial COM
@@ -296,6 +304,8 @@ __INLINE void DisplayStat(void)
     // Errors TX and RX
     app_log_info("TX Err (#err/#TO)          : %03.1f ppm/%0.3f%% (%d/%d)\n", statAbsTXErr * 10000.0f, statAbsTXErr, absTXErr, absTXTimeOut);
     app_log_info("RX Err (#err/#TO/#CRC/#gap): %03.1f ppm/%0.3f%% (%d/%d/%d/%d)\n", statAbsRXErr * 10000.0f, statAbsRXErr, absRXErr, absRXTimeOut, absCRCErr, remainingAbsRXGap);
+    // RX quality
+    app_log_info("RX rssi/lqi (min/max)      : %d dbm (%d/%d) / %d (%d/%d)\n", statAbsRssiMoy, statAbsRssiMin, statAbsRssiMax, statAbsLqiMoy, statAbsLqiMin, statAbsLqiMax);
 
     // Transmission rate
     if (isMaster)
@@ -350,4 +360,19 @@ __INLINE void DisplayStat(void)
     memcpy(gTX_tab_old, gTX_tab, sizeof(gTX_tab));
     memcpy(gRX_tab_old, gRX_tab, sizeof(gRX_tab));
     memcpy(gCAL_tab_old, gCAL_tab, sizeof(gCAL_tab));
+}
+
+/******************************************************************************
+ * StatInit : init statistics
+ *****************************************************************************/
+void StatInit(void)
+{
+    for (int i = 0; i < MAX_NODE; i++)
+    {
+        gRX_tab[i][TAB_POS_RX_RSSI_MIN] = 127;
+        gRX_tab[i][TAB_POS_RX_RSSI_MAX] = -128;
+
+        gRX_tab[i][TAB_POS_RX_LQI_MIN] = 255;
+        gRX_tab[i][TAB_POS_RX_LQI_MAX] = 0;
+    }
 }

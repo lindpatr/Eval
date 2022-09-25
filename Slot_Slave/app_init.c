@@ -73,6 +73,7 @@
 #include "app_init.h"               // Initialize functions
 #include "app_process.h"            // Main app
 #include "common_debug.h"           // Debug functions
+#include "common_stat.h"            // Statistics functions
 #include "common_iadc.h"            // ADC functions
 #include "common_tempi2c.h"         // Temp via I2C
 
@@ -501,6 +502,9 @@ void app_init(void)
     status = sl_si70xx_start_no_hold_measure_rh_and_temp(sl_i2cspm_sensor, SI7021_ADDR);
     PrintStatus((status != SL_STATUS_OK), "Warning sl_si70xx_start_no_hold_measure_rh_and_temp failed");
     // TODO END TEST PURPOSES
+
+    // Init statistics
+    StatInit();
 
     // Set up timers
     bool ret = RAIL_ConfigMultiTimer(true);

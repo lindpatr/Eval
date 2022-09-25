@@ -177,11 +177,11 @@ static bool gPauseCycleReq = false;             // Flag to indicate that a print
 static uint8_t me;                                              // Position in the config file (for address, time slot, ...)
 /// Value, indicating print stat delay on CLI
 extern volatile RAIL_Time_t gStatDelay;
+static bool tx_request = false;
 
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
 // -----------------------------------------------------------------------------
-//static __INLINE void StartTransmit(void);
 
 
 // -----------------------------------------------------------------------------
@@ -420,6 +420,8 @@ static __INLINE void StartTransmit(void)
     // Initialize radio buffer
     prepare_packet_to_tx();
 
+    tx_request = false;
+
     // For oscillo debug purposes
     DEBUG_PIN_TX_SET;
 
@@ -432,13 +434,20 @@ static __INLINE void StartTransmit(void)
 /******************************************************************************
  * DecodeReceivedMsg : decode received data
  *****************************************************************************/
+static uint32_t count_packet = 0U;
+static int64_t sum_rssi = 0;
+static uint64_t sum_lqi = 0U;
+
 static __INLINE void DecodeReceivedMsg(void)
 {
     // RAIL Rx packet handles
     RAIL_RxPacketHandle_t rx_packet_handle;
     RAIL_RxPacketInfo_t packet_info;
+    RAIL_RxPacketDetails_t packet_info_detail;
     // Status indicator of the RAIL API calls
     RAIL_Status_t status = RAIL_STATUS_NO_ERROR;
+    int8_t rssi;
+    uint8_t lqi;
 
     // Packet received:
     //  - Check whether RAIL_HoldRxPacket() was successful, i.e. packet handle is valid
@@ -451,10 +460,11 @@ static __INLINE void DecodeReceivedMsg(void)
     {
         if (packet_info.packetStatus != RAIL_RX_PACKET_RECEIVING)
         {
+            // Unpack and decode
             uint8_t *start_of_packet = 0;
             uint16_t packet_size = unpack_packet_from_rx(gRX_fifo, &packet_info, &start_of_packet);
-            status = RAIL_ReleaseRxPacket(gRailHandle, rx_packet_handle);
-            PrintStatus(status, "Warning ReleaseRxPacket");
+//            status = RAIL_ReleaseRxPacket(gRailHandle, rx_packet_handle);
+//            PrintStatus(status, "Warning ReleaseRxPacket");
 
             if (packet_info.packetStatus == RAIL_RX_PACKET_READY_SUCCESS)
             {
@@ -479,11 +489,37 @@ static __INLINE void DecodeReceivedMsg(void)
                 }
                 else
                     gRX_tab[addr][TAB_POS_RX_OK]++;
+
+                if (tx_request)
+                {
+                    status = RAIL_GetRxPacketDetails(gRailHandle, rx_packet_handle, &packet_info_detail);
+                    PrintStatus(status, "Warning RAIL_GetRxPacketDetails");
+
+                    // Count received packet
+                    count_packet++;
+                    // Get quality information: rssi and lqi
+                    rssi = packet_info_detail.rssi;
+                    sum_rssi += rssi;
+                    gRX_tab[me][TAB_POS_RX_RSSI_MOY] = (int8_t)(sum_rssi/count_packet);
+                    gRX_tab[me][TAB_POS_RX_RSSI_MIN] = (rssi < (int8_t)gRX_tab[me][TAB_POS_RX_RSSI_MIN] ? rssi : (int8_t)gRX_tab[me][TAB_POS_RX_RSSI_MIN]);
+                    gRX_tab[me][TAB_POS_RX_RSSI_MAX] = (rssi > (int8_t)gRX_tab[me][TAB_POS_RX_RSSI_MAX] ? rssi : (int8_t)gRX_tab[me][TAB_POS_RX_RSSI_MAX]);
+                    lqi = packet_info_detail.lqi;
+                    sum_lqi += lqi;
+                    gRX_tab[me][TAB_POS_RX_LQI_MOY] = (uint8_t)(sum_lqi/count_packet);
+                    gRX_tab[me][TAB_POS_RX_LQI_MIN] = (lqi < (uint8_t)gRX_tab[me][TAB_POS_RX_LQI_MIN] ? lqi : gRX_tab[me][TAB_POS_RX_LQI_MIN]);
+                    gRX_tab[me][TAB_POS_RX_LQI_MAX] = (lqi > (uint8_t)gRX_tab[me][TAB_POS_RX_LQI_MAX] ? lqi : gRX_tab[me][TAB_POS_RX_LQI_MAX]);
+
+                    tx_request = false;
+                }
             }
             else if (packet_info.packetStatus == RAIL_RX_PACKET_READY_CRC_ERROR)
             {
                 gRX_tab[me][TAB_POS_RX_CRC_ERR]++;
             }
+
+            // Release packet in radio buffer
+            status = RAIL_ReleaseRxPacket(gRailHandle, rx_packet_handle);
+            PrintStatus(status, "Warning ReleaseRxPacket");
 
 //            // Indicate RX in progress on LED0
 //            sl_led_toggle(&sl_led_led0);
@@ -719,6 +755,9 @@ void app_process_action(void)
                 gElapsedTime = RAIL_GetTime();
                 gOldElapsedTime = gElapsedTime;
             }
+
+            if (!tx_request)
+                tx_request = true;
 
             DisplaySentMsg();
 //            // Indicate TX in progress on LED1

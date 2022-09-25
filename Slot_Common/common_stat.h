@@ -38,6 +38,12 @@ typedef enum
     TAB_POS_RX_GAP_MAX  = 4,
     TAB_POS_RX_CRC_ERR  = 5,
     TAB_POS_RX_SYNC_LOST= 6,
+    TAB_POS_RX_RSSI_MOY = 7,
+    TAB_POS_RX_RSSI_MIN = 8,
+    TAB_POS_RX_RSSI_MAX = 9,
+    TAB_POS_RX_LQI_MOY  = 10,
+    TAB_POS_RX_LQI_MIN  = 11,
+    TAB_POS_RX_LQI_MAX  = 12,
 
     TAB_POS_TX_OK       = 0,
     TAB_POS_TX_ERR      = 1,                            // RAIL_EVENT_TX_ABORTED + RAIL_EVENT_TX_BLOCKED + RAIL_EVENT_TX_UNDERFLOW + RAIL_EVENT_TX_CHANNEL_BUSY + RAIL_EVENT_TX_SCHEDULED_TX_MISSED
@@ -46,6 +52,12 @@ typedef enum
     //                  = 4,
     //                  = 5,
     //                  = 6,
+    //                  = 7,
+    //                  = 8,
+    //                  = 9,
+    //                  = 10,
+    //                  = 11,
+    //                  = 12,
 
     TAB_POS_CAL_REQ     = 0,
     TAB_POS_CAL_ERR     = 1,
@@ -54,13 +66,19 @@ typedef enum
     //                  = 4,
     //                  = 5,
     //                  = 6,
+    //                  = 7,
+    //                  = 8,
+    //                  = 9,
+    //                  = 10,
+    //                  = 11,
+    //                  = 12,
 
-    TAB_POS_LAST        = 7
+    TAB_POS_LAST        = 13
 
 } TabPosEnum;
 
 extern uint32_t gTX_tab[TAB_POS_LAST];                 // 0 = #TX_OK  	1 = #TX_Err   2 = #TX_TimeOut 	3 = ND             	4 = ND          		5 = ND
-extern uint32_t gRX_tab[MAX_NODE][TAB_POS_LAST];       // 0 = #RX_OK  	1 = #RX_Err   2 = #RX_TimeOut 	3 = #Gap RX count 	4 = Max gap RX count  	5 = #CRC_Err    6 = #SYNC_LOST
+extern uint32_t gRX_tab[MAX_NODE][TAB_POS_LAST];       // 0 = #RX_OK  	1 = #RX_Err   2 = #RX_TimeOut 	3 = #Gap RX count 	4 = Max gap RX count  	5 = #CRC_Err    6 = #SYNC_LOST  7/8/9: RSSI 10/11/12: LQI
 extern uint32_t gCAL_tab[TAB_POS_LAST];                // 0 = #CAL_REQ  1 = #CAL_Err  2 = ND      		3 = ND        		4 = ND          		5 = ND
 
 extern uint32_t gTX_tab_old[TAB_POS_LAST];
@@ -74,6 +92,11 @@ extern volatile RAIL_Time_t gOldElapsedTime;
 extern volatile uint32_t gCountPrintStat;              // Stat print counter (how many times)
 extern volatile RAIL_Time_t gStatDelay;                 // Value, indicating stat period on CLI
 
+
+/******************************************************************************
+ * StatInit : init statistics
+ *****************************************************************************/
+void StatInit(void);
 
 /******************************************************************************
  * DisplayReceivedMsg : print received data

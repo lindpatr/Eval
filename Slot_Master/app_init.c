@@ -68,6 +68,8 @@
 #include "app_init.h"               // Initialize functions
 #include "app_process.h"            // Main app
 #include "common_debug.h"           // Debug functions
+#include "common_stat.h"            // Statistics functions
+
 
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
@@ -411,6 +413,9 @@ void app_init(void)
 
     // Print out welcome strings on serial COM
     serial_init();
+
+    // Init statistics
+    StatInit();
 
 	// Set up timers
 	bool ret = !RAIL_ConfigMultiTimer(true);
