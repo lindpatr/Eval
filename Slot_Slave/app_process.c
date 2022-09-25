@@ -891,6 +891,8 @@ void app_process_action(void)
 
         gRX_tab[me][TAB_POS_RX_SYNC_LOST]++;
 
+        gStartProcess = false;
+
         PrintInfo("\nWarning Master sync lost!\n");
 
         SetState(kInit);
