@@ -294,8 +294,8 @@ __INLINE void DisplayStat(void)
     app_log_info("#Counter (%s)          : %d\n", (isMaster ? "Slaves" : "Master"), absRXOk);
 
     // Errors TX and RX
-    app_log_info("TX Err (#err/#TO)          : %0.1f ppm/%0.3f%% (%d/%d)\n", statAbsTXErr * 10000.0f, statAbsTXErr, absTXErr, absTXTimeOut);
-    app_log_info("RX Err (#err/#TO/#CRC/#gap): %0.1f ppm/%0.3f%% (%d/%d/%d/%d)\n", statAbsRXErr * 10000.0f, statAbsRXErr, absRXErr, absRXTimeOut, absCRCErr, remainingAbsRXGap);
+    app_log_info("TX Err (#err/#TO)          : %03.1f ppm/%0.3f%% (%d/%d)\n", statAbsTXErr * 10000.0f, statAbsTXErr, absTXErr, absTXTimeOut);
+    app_log_info("RX Err (#err/#TO/#CRC/#gap): %03.1f ppm/%0.3f%% (%d/%d/%d/%d)\n", statAbsRXErr * 10000.0f, statAbsRXErr, absRXErr, absRXTimeOut, absCRCErr, remainingAbsRXGap);
 
     // Transmission rate
     if (isMaster)
@@ -327,7 +327,7 @@ __INLINE void DisplayStat(void)
                 uint8_t addr = common_getConfigTable(i)->internalAddr;
     //            if (gRX_counter[pos].u32 > 0UL)
     //            {
-                    app_log_info("%03d Err (#cnt/#TO/#gap/max): %0.1f ppm (%d/%d/%d/%d)\n",
+                    app_log_info("%03d Err (#cnt/#TO/#gap/max): %03.1f ppm (%d/%d/%d/%d)\n",
                             addr,
                             (1000000.0f *(gRX_tab[pos][TAB_POS_TX_TIMEOUT]+gRX_tab[pos][TAB_POS_RX_GAP]))/(float)gRX_tab[pos][TAB_POS_RX_OK],
                             gRX_tab[pos][TAB_POS_RX_OK],
