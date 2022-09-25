@@ -242,7 +242,7 @@ __INLINE void DisplayStat(void)
     // RX error rate
     uint32_t absRXErr = gRX_tab[myDevice][TAB_POS_RX_ERR];
     uint32_t absRXTimeOut = gRX_tab[myDevice][TAB_POS_RX_TIMEOUT];
-    float cycle = 1000.0f / ((float)absTXOk / (float)relElapsedTime);
+    float period = 1000.0f / ((float)absTXOk / (float)relElapsedTime);
 
     // Detect never responding slaves
     if (isMaster)   // From a master point of view
@@ -294,18 +294,18 @@ __INLINE void DisplayStat(void)
     app_log_info("#Counter (%s)          : %d\n", (isMaster ? "Slaves" : "Master"), absRXOk);
 
     // Errors TX and RX
-    app_log_info("TX Err (#err/#TO)          : %0.3f%% (%d/%d)\n", statAbsTXErr, absTXErr, absTXTimeOut);
-    app_log_info("RX Err (#err/#TO/#CRC/#gap): %0.3f%% (%d/%d/%d/%d)\n", statAbsRXErr, absRXErr, absRXTimeOut, absCRCErr, remainingAbsRXGap);
+    app_log_info("TX Err (#err/#TO)          : %0.1f ppm/%0.3f%% (%d/%d)\n", statAbsTXErr * 10000.0f, statAbsTXErr, absTXErr, absTXTimeOut);
+    app_log_info("RX Err (#err/#TO/#CRC/#gap): %0.1f ppm/%0.3f%% (%d/%d/%d/%d)\n", statAbsRXErr * 10000.0f, statAbsRXErr, absRXErr, absRXTimeOut, absCRCErr, remainingAbsRXGap);
 
     // Transmission rate
     if (isMaster)
     {
-        app_log_info("Est. loop/100 (sync/rate)  : %0.2f ms (%0.3f ms/%0.2f msg/s)\n", statAbsMsgPerSecRef, cycle, statAbsMsgPerSec);
+        app_log_info("Est. loop/100 (sync/rate)  : %0.2f ms (%0.3f ms/%0.2f msg/s)\n", statAbsMsgPerSecRef, period, statAbsMsgPerSec);
     }
     else
     {
         app_log_info("#Sync lost                 : %d\n", absSYNCErr);
-        app_log_info("Sync period                : %0.3f ms\n", cycle);
+        app_log_info("Sync period                : %0.3f ms\n", period);
         app_log_info("AD VDDA/IO/D/TCPU / I2C TA : %0.2fV/%0.2fV/%0.2fV/%0.1f°C/%0.1f°C\n", CONVERT_TO_VOLT(gMboxADMes.u.detail.vdda), CONVERT_TO_VOLT(gMboxADMes.u.detail.ucell), CONVERT_TO_VOLT(gMboxADMes.u.detail.icell), CONVERT_TO_DEGRES_2(gMboxADMes.u.detail.internaltemp), CONVERT_TO_DEGRES(gMBoxTempCell));
     }
 
@@ -327,8 +327,9 @@ __INLINE void DisplayStat(void)
                 uint8_t addr = common_getConfigTable(i)->internalAddr;
     //            if (gRX_counter[pos].u32 > 0UL)
     //            {
-                    app_log_info("#%03d #cnt (#RX-TO/#gap/max): %d (%d/%d/%d)\n",
+                    app_log_info("%03d Err (#cnt/#TO/#gap/max): %0.1f ppm (%d/%d/%d/%d)\n",
                             addr,
+                            (1000000.0f *(gRX_tab[pos][TAB_POS_TX_TIMEOUT]+gRX_tab[pos][TAB_POS_RX_GAP]))/(float)gRX_tab[pos][TAB_POS_RX_OK],
                             gRX_tab[pos][TAB_POS_RX_OK],
                             gRX_tab[pos][TAB_POS_TX_TIMEOUT],
                             gRX_tab[pos][TAB_POS_RX_GAP],
