@@ -152,6 +152,9 @@
 #define UART_RxD_PORT                            gpioPortA
 #define UART_RxD_PIN                             6
 
+#define EN_SPI_FLASH_PORT                        gpioPortA
+#define EN_SPI_FLASH_PIN                         7
+
 #define BTN0_PORT                                gpioPortB
 #define BTN0_PIN                                 0
 
