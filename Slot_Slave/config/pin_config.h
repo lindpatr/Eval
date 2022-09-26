@@ -159,12 +159,6 @@
 #define UART_RxD_PORT                            gpioPortA
 #define UART_RxD_PIN                             6
 
-#define ADC_2P_PORT                              gpioPortA
-#define ADC_2P_PIN                               7
-
-#define ADC_2N_PORT                              gpioPortA
-#define ADC_2N_PIN                               8
-
 #define BTN_0_PORT                               gpioPortB
 #define BTN_0_PIN                                0
 
@@ -192,11 +186,11 @@
 #define ERR_TEMP_PORT                            gpioPortC
 #define ERR_TEMP_PIN                             3
 
-#define ADC_1P_PORT                              gpioPortC
-#define ADC_1P_PIN                               4
+#define ADC_1_PORT                               gpioPortC
+#define ADC_1_PIN                                4
 
-#define ADC_1N_PORT                              gpioPortC
-#define ADC_1N_PIN                               5
+#define ADC_2_PORT                               gpioPortC
+#define ADC_2_PIN                                5
 
 #define PWM2_PORT                                gpioPortC
 #define PWM2_PIN                                 6
