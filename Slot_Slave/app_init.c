@@ -116,6 +116,7 @@ RAIL_StateTiming_t gRailStateTimings;
 volatile RAIL_Time_t gSyncPeriod = 0;       // Value, indicating sync period on CLI
 volatile RAIL_Time_t gSyncTimeOut = 0;      // Value, indicating sync timeout for Slave on CLI
 volatile uint32_t gTimeSlot = 0;            // Value, indicating time of a slot in the protocol on CLI
+volatile RAIL_TxPower_t gTxPower = TX_POWER;// Value, indicating tx power on CLI
 
 /// A static var that contains config data for the device
 PROT_AddrMap_t* gDeviceCfgAddr;
@@ -268,6 +269,8 @@ void config_rail_events_callback(void)
  ******************************************************************************/
 void config_rail(void)
 {
+    RAIL_Status_t status = RAIL_STATUS_NO_ERROR;
+
     // Get RAIL handle, used later by the application
     gRailHandle = sl_rail_util_get_handle(SL_RAIL_UTIL_HANDLE_INST0);
     app_assert(gRailHandle != NULL, "Error No valid RAIL handle for SL_RAIL_UTIL_HANDLE_INST0 (0x%llX)\n", gRailHandle);
@@ -285,10 +288,17 @@ void config_rail(void)
     // Configuration du filtrage des adresses
     // Filtrage sur 1 byte avec un offset de 0 byte depuis le débute de la trame.
     RAIL_ConfigAddressFilter(gRailHandle, &addrConfig);
+    PrintStatus(status, "Warning RAIL_ConfigAddressFilter");
     // set de la valeur d'adresse à filtrer
     RAIL_SetAddressFilterAddress(gRailHandle, 0, 1, &addr, 1);
+    PrintStatus(status, "Warning RAIL_SetAddressFilterAddress");
     // activation
-    RAIL_EnableAddressFilter(gRailHandle, true);
+    bool ret = RAIL_EnableAddressFilter(gRailHandle, true);
+    PrintStatus((ret == false), "Warning RAIL_SetAddressFilterAddress");
+
+    // TX power
+    status = RAIL_SetTxPowerDbm(gRailHandle, (RAIL_TxPower_t)gTxPower);
+    PrintStatus(status, "Warning RAIL_SetTxPowerDbm");
 }
 
 /*******************************************************************************

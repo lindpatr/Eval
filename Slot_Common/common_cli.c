@@ -57,6 +57,7 @@ void cli_req_stat(sl_cli_command_arg_t *arguments);
 void cli_set_slot_time(sl_cli_command_arg_t *arguments);
 void cli_set_sync_period(sl_cli_command_arg_t *arguments);
 void cli_set_sync_timeout(sl_cli_command_arg_t *arguments);
+void cli_set_tx_power(sl_cli_command_arg_t *arguments);
 
 
 // -----------------------------------------------------------------------------
@@ -77,6 +78,8 @@ extern volatile uint32_t gTimeSlot;
 extern volatile RAIL_Time_t gSyncPeriod;
 /// Value, indicating sync timeout for Slave on CLI
 extern volatile RAIL_Time_t gSyncTimeOut;
+/// Value, indicating tx power on CLI
+extern volatile RAIL_TxPower_t gTxPower;
 
 /// A static var for TX schedule config
 extern RAIL_ScheduleTxConfig_t gRailScheduleCfgTX;
@@ -124,6 +127,12 @@ SL_CLI_COMMAND(cli_req_stat,
 		"",
         {SL_CLI_ARG_END, });
 
+static const sl_cli_command_info_t cli_cmd__tx_power =
+SL_CLI_COMMAND(cli_set_tx_power,
+        "Set TX power (dbm)",
+        "-60 - 60 / 0 = default",
+        {   SL_CLI_ARG_INT16, SL_CLI_ARG_END,});
+
 // User command table
 const sl_cli_command_entry_t cli_my_command_table[] =
 {
@@ -133,6 +142,7 @@ const sl_cli_command_entry_t cli_my_command_table[] =
 { "sync_to", &cli_cmd__sync_timeout, false },
 { "start", &cli_cmd__start_process, false },
 { "print_stat", &cli_cmd__req_stat, false },
+{ "power", &cli_cmd__tx_power, false },
 { NULL, NULL, false }, };
 
 // User CLI grouo
@@ -156,19 +166,37 @@ void cli_info(sl_cli_command_arg_t *arguments)
 
     app_log_info("Info:\n");
     app_log_info("  MCU Id     : 0x%llx\n", SYSTEM_GetUnique());
+
+    app_log_info("Radio network:\n");
     app_log_info("  Enable     : %s\n", (gDeviceCfgAddr->enable ? "true" : "false"));
     app_log_info("  Role       : %s\n", gDeviceCfgAddr->name);
     app_log_info("  Addr       : %03d\n", gDeviceCfgAddr->internalAddr);
-    app_log_info("  Slot time  : %d us\n", gTimeSlot);
+    app_log_info("  TX power   : %0.1f dB\n", (float)gTxPower/10.0f);
+    app_log_info("  Transition : %s\n", (TRANSITION_TIMING_BEST_EFFORT ? "Best effort" : "Standard"));
     if (gDeviceCfgAddr->ismaster)
     {
-        app_log_info("  Sync period: %d us\n", gSyncPeriod);
         app_log_info("  Nbr slaves : %d\n", common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED));
+        app_log_info("  Sync period: %d us\n", gSyncPeriod);
+        app_log_info("  ACQ time   : %d us\n", TIME_SLOT_ACQ);
+        app_log_info("  TX master  : %d us\n", TIME_SLOT_MASTER_TX);
+        app_log_info("  TX slave   : %d us\n", TIME_SLOT_SLAVE);
+        app_log_info("  Corr. time : %d us\n", TIME_SLOT_CORR);
     }
     else
     {
+        app_log_info("  Slot time  : %d us\n", gTimeSlot);
         app_log_info("  Sync TO    : %d us\n", gSyncTimeOut);
     }
+
+    app_log_info("Options:\n");
+    app_log_info("  DEBUG         : %s\n", (qDebug ? "Y" : "N"));
+    app_log_info("  PRINT INFO    : %s\n", (qPrintInfo ? "Y" : "N"));
+    app_log_info("  PRINT STAT    : %s\n", (qPrintStat ? "Y" : "N"));
+    app_log_info("  PRINT EVENT   : %s\n", (qPrintEvents ? "Y" : "N"));
+    app_log_info("  PRINT ERR L1  : %s\n", (qPrintErrorsL1 ? "Y" : "N"));
+    app_log_info("  PRINT ERR L2  : %s\n", (qPrintErrorsL2 ? "Y" : "N"));
+    app_log_info("  PRINT TX DATA : %s\n", (qPrintTX ? "Y" : "N"));
+    app_log_info("  PRINT RX DATA : %s\n", (qPrintRX ? "Y" : "N"));
 }
 
 /******************************************************************************
@@ -246,7 +274,6 @@ void cli_set_slot_time(sl_cli_command_arg_t *arguments)
     {
         app_log_warning("Warning Only available before starting process -> do a reset to use it!\n");
     }
-
 }
 
 /******************************************************************************
@@ -385,6 +412,43 @@ void cli_req_stat(sl_cli_command_arg_t *arguments)
     {
         app_log_info("Info Statistics print requested\n");
         app_log_warning("Warning On slaves, statistics print is an asynchron process!\n");
+    }
+}
+
+/******************************************************************************
+ * CLI - Set TX power in dBm
+ *****************************************************************************/
+void cli_set_tx_power(sl_cli_command_arg_t *arguments)
+{
+    int16_t arg = sl_cli_get_argument_int16(arguments, 0);
+    char *str;
+
+    if (!gStartProcess)
+    {
+            if (arg != 0)
+            {
+                arg = MIN(arg, TX_POWER_MAX);
+                arg = MAX(arg, TX_POWER_MIN);
+
+                gTxPower = arg;
+
+                str = strNew;
+            }
+            else    // Default value
+            {
+                gTxPower = TX_POWER;
+
+                str = strDefault;
+            }
+
+            RAIL_Status_t status = RAIL_SetTxPowerDbm(gRailHandle, (RAIL_TxPower_t)gTxPower);
+            PrintStatus(status, "Warning RAIL_SetTxPowerDbm");
+
+            app_log_info("Info Set TX_POWER to %d dBm (%s)\n", gTxPower, str);
+    }
+    else
+    {
+        app_log_warning("Warning Only available before starting process -> do a reset to use it!\n");
     }
 }
 
