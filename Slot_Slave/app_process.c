@@ -515,7 +515,7 @@ static __INLINE void DecodeReceivedMsg(void)
 
 	            if (gRX_msg_type == kStatMsg)
 	            {
-	                status = RAIL_GetRxPacketDetails(gRailHandle, rx_packet_handle, &packet_info_detail);
+	                status = RAIL_GetRxPacketDetailsAlt(gRailHandle, rx_packet_handle, &packet_info_detail);
 	                PrintStatus(status, "Warning RAIL_GetRxPacketDetails");
 
 	                // Count received packet
