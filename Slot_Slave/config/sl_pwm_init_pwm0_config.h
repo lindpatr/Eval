@@ -48,9 +48,9 @@ extern "C"
 #define SL_PWM_PWM0_PERIPHERAL_NO                0
 
 #define SL_PWM_PWM0_OUTPUT_CHANNEL               0
-// TIMER0 CC0 on PC06
-#define SL_PWM_PWM0_OUTPUT_PORT                  gpioPortC
-#define SL_PWM_PWM0_OUTPUT_PIN                   6
+// TIMER0 CC0 on PA00
+#define SL_PWM_PWM0_OUTPUT_PORT                  gpioPortA
+#define SL_PWM_PWM0_OUTPUT_PIN                   0
 // [TIMER_SL_PWM_PWM0]$
 
 // <<< sl:end pin_tool >>>

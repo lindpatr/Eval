@@ -63,13 +63,13 @@
 // [GPIO]$
 
 // $[TIMER0]
-// TIMER0 CC0 on PC06
-#define TIMER0_CC0_PORT                          gpioPortC
-#define TIMER0_CC0_PIN                           6
+// TIMER0 CC0 on PA00
+#define TIMER0_CC0_PORT                          gpioPortA
+#define TIMER0_CC0_PIN                           0
 
-// TIMER0 CC1 on PA00
-#define TIMER0_CC1_PORT                          gpioPortA
-#define TIMER0_CC1_PIN                           0
+// TIMER0 CC1 on PC06
+#define TIMER0_CC1_PORT                          gpioPortC
+#define TIMER0_CC1_PIN                           6
 
 // [TIMER0]$
 
@@ -144,8 +144,8 @@
 // [MODEM]$
 
 // $[CUSTOM_PIN_NAME]
-#define PWM2_PORT                                gpioPortA
-#define PWM2_PIN                                 0
+#define PWM1_PORT                                gpioPortA
+#define PWM1_PIN                                 0
 
 #define SWO_DEBUG_PORT                           gpioPortA
 #define SWO_DEBUG_PIN                            3
@@ -198,8 +198,8 @@
 #define ADC_1N_PORT                              gpioPortC
 #define ADC_1N_PIN                               5
 
-#define PWM1_PORT                                gpioPortC
-#define PWM1_PIN                                 6
+#define PWM2_PORT                                gpioPortC
+#define PWM2_PIN                                 6
 
 #define XTAL1_PORT                               gpioPortD
 #define XTAL1_PIN                                0

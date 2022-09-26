@@ -57,7 +57,7 @@ static sl_status_t sl_si70xx_start_no_hold_measure(sl_i2cspm_t *i2cspm, uint8_t 
 static sl_status_t sl_si70xx_read_data(sl_i2cspm_t *i2cspm, uint8_t addr, uint32_t *data);
 static sl_status_t sl_si70xx_write_user_register_2(sl_i2cspm_t *i2cspm, uint8_t addr, int8_t data);
 static int32_t sl_si70xx_get_celcius_temperature(int32_t temp_data);
-static uint32_t sl_si70xx_get_percent_relative_humidity(uint32_t rh_data);
+//static uint32_t sl_si70xx_get_percent_relative_humidity(uint32_t rh_data);
 /** @endcond */
 
 /***************************************************************************//**
@@ -418,10 +418,10 @@ static sl_status_t sl_si70xx_write_user_register_2(sl_i2cspm_t *i2cspm, uint8_t 
  * @return
  *   The converted relative humidity data
  *****************************************************************************/
-static uint32_t sl_si70xx_get_percent_relative_humidity(uint32_t rh_data)
-{
-  return (((rh_data) * 15625L) >> 13) - 6000;
-}
+//static uint32_t sl_si70xx_get_percent_relative_humidity(uint32_t rh_data)
+//{
+//  return (((rh_data) * 15625L) >> 13) - 6000;
+//}
 
 /**************************************************************************//**
  * @brief
