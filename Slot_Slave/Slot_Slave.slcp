@@ -30,14 +30,15 @@ sdk: {id: gecko_sdk, version: 4.1.1}
 toolchain_settings:
 - {value: debug, option: optimize}
 component:
-- {id: radio_config_simple_rail_singlephy}
 - {id: rail_util_dma}
+- {id: radio_config_simple_rail_singlephy}
 - {id: iostream_retarget_stdio}
 - instance: [btn0]
   id: simple_button
 - instance: [example]
   id: cli
 - {id: brd4182a_b06}
+- {id: nvm3_lib}
 - {id: mpu}
 - {id: restrictions_profile_sun}
 - {id: sl_flex_rail_packet_asm}
@@ -50,8 +51,11 @@ component:
 - {id: restrictions_profile_base}
 - {id: restrictions_profile_wisun_han}
 - {id: rail_util_recommended}
+- {id: nvm3_default}
 - {id: emlib_iadc}
 - {id: app_log}
+- instance: [alarm_temp]
+  id: emlib_gpio_simple_init
 - {id: sl_system}
 - {id: restrictions_profile_wisun_fan_1_0}
 - instance: [inst0]
@@ -83,6 +87,10 @@ template_contribution:
     help: Turn ON/OFF received message forwarding on CLI
     argument:
     - {type: uint8, help: ON/OFF}
+- {name: memory_ram_start, priority: 0, value: 536870912}
+- {name: memory_ram_size, priority: 0, value: 32768}
+- {name: memory_flash_start, priority: 0, value: 0}
+- {name: memory_flash_size, priority: 0, value: 516096}
 requires:
 - {name: a_radio_config}
 - condition: [kernel]

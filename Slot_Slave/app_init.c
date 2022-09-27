@@ -45,6 +45,9 @@
 // Additional components
 // ---------------------
 #include "em_system.h"              // System functions
+#include "em_msc.h"                 // Memory access functions
+#include "nvm3.h"                   // NVM Flash Memory functions
+#include "nvm3_hal_flash.h"         // NVM Flash Memory instance
 #include "printf.h"                 // Tiny printf
 
 #include "sl_rail_util_init.h"      // Radio tools
@@ -138,6 +141,118 @@ static GLIB_Context_t gGlibContext;
 // -----------------------------------------------------------------------------
 
 /*******************************************************************************
+ * @brief Read config data in Flash
+ ******************************************************************************/
+void get_config_flash(void)
+{
+    // TODO BEGIN TEST store in User Data (UD) Flash
+    // Very simple just for testing purposes --> to be enhanced and moved in other files
+
+    /// --------------
+    /// User Data Bank
+    /// --------------
+
+    // --> IDEA: UD Flash will be used for production default settings like
+    // SW + HW version / revision
+    // Calibration data
+    // Radio network configuration
+    // SW configuration (SW/compile directive)
+
+    // Use Simplicity Commander to set data in USERDATA space
+    // Tool: C:\SiliconLabs\SimplicityStudio\v5\developer\adapter_packs\commander
+    // 0x0FE00000 : 1kBytes
+    // READ:
+    //  commander readmem --serialno 440264107 --range 0x0fe00000:+40
+    //  commander readmem --serialno 440264107 --region @userdata --outfile userpage.hex
+    // WRITE:
+    //  commander flash userpage.hex --serialno 440264107 --region @userdata --serialno 440264107
+
+
+    // Address of the User Data bank
+#define USERDATA_BASE   (0x0FE00000UL)
+#define USER_DATA       ((uint32_t *)USERDATA_BASE)
+    // Address of the stored config
+#define CONFIG_DATA     ((PROT_AddrMap_t *)USERDATA_BASE)
+
+    // Test if something already stored; if not, store config
+    if (CONFIG_DATA->uinqueId == 0xFFFFFFFFFFFFFFFF)
+    {
+        MSC_Init();
+        MSC_ErasePage(USER_DATA);
+        MSC_WriteWord(USER_DATA, gDeviceCfgAddr, sizeof(PROT_AddrMap_t));
+        MSC_Deinit();
+    }
+
+    /// -----------------
+    /// Main Flash (NVM3)
+    /// -----------------
+
+    // --> IDEA: NVM3 Flash will be used for actual settings like
+    // Calibration data (init with default values)
+    // Radio network configuration  (init with default values)
+    // Counters (lifetime, charge time, nb of charge, critical errors, ...)
+
+
+    Ecode_t status;
+    PROT_AddrMap_t current_network_cfg = {0};
+    size_t len;
+
+#define NVM3_OBJ_NETWORK_CONFIG_DEFAULT (1)
+#define NVM3_OBJ_NETWORK_CONFIG_CURRENT (2)
+    size_t numberOfObjects;
+    uint32_t objectType;
+
+    // Check the number of stored objects
+    numberOfObjects = nvm3_countObjects(nvm3_defaultHandle);
+
+    // Shall be 2 in this test; if not, clear page and store them
+    if (numberOfObjects < 2)
+    {
+        status = nvm3_eraseAll(nvm3_defaultHandle);
+        if (status != ECODE_NVM3_OK)
+        {
+            PrintStatus(status, "Warning nvm3_eraseAll");
+        }
+        else
+        {
+            status = nvm3_writeData(nvm3_defaultHandle, NVM3_OBJ_NETWORK_CONFIG_DEFAULT, gDeviceCfgAddr, sizeof(PROT_AddrMap_t));
+            PrintStatus(status, "Warning nvm3_writeData NVM3_OBJ_NETWORK_CONFIG_DEFAULT");
+            // Current config set to 0
+            status = nvm3_writeData(nvm3_defaultHandle, NVM3_OBJ_NETWORK_CONFIG_CURRENT, &current_network_cfg, sizeof(PROT_AddrMap_t));
+            PrintStatus(status, "Warning nvm3_writeData NVM3_OBJ_NETWORK_CONFIG_CURRENT");
+        }
+    }
+
+    // Find size of data for object with specified key identifier and read out
+    status = nvm3_getObjectInfo(nvm3_defaultHandle, NVM3_OBJ_NETWORK_CONFIG_DEFAULT, &objectType, &len);
+
+    if (status != ECODE_NVM3_OK)
+    {
+        PrintStatus(status, "Warning nvm3_getObjectInfo");
+    }
+    else
+    {
+        if (objectType == NVM3_OBJECTTYPE_DATA)
+        {
+          // Read default and apply it to current config
+          status = nvm3_readData(nvm3_defaultHandle, NVM3_OBJ_NETWORK_CONFIG_DEFAULT, &current_network_cfg, len);
+          PrintStatus(status, "Warning nvm3_readData NVM3_OBJ_NETWORK_CONFIG_DEFAULT");
+        }
+    }
+
+    // Do repacking if needed
+    if (nvm3_repackNeeded(nvm3_defaultHandle))
+    {
+      status = nvm3_repack(nvm3_defaultHandle);
+      if (status != ECODE_NVM3_OK)
+      {
+          PrintStatus(status, "Warning nvm3_repack");
+      }
+    }
+    // TODO END TEST store in User Data (UD) Flash
+}
+
+/*******************************************************************************
  * @brief Read config data
  ******************************************************************************/
 void get_config(void)
@@ -156,6 +271,9 @@ void get_config(void)
     app_assert((common_getNbrDeviceOfType(MASTER_TYPE, ENABLED) == 1), "More than one Master (%d) enabled in network (isMaster is true in addr_table)\n", common_getNbrDeviceOfType(MASTER_TYPE, ENABLED));
     // At least one Slave must be enabled
     app_assert((common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED) > 0), "No Slave (%d) enabled in network (isMaster is false in addr_table)\n", common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED));
+
+    // TODO For test purposes -> shall replace common_getConfig ...
+    get_config_flash();
 }
 
 /*******************************************************************************
@@ -290,15 +408,19 @@ void config_rail(void)
     RAIL_ConfigAddressFilter(gRailHandle, &addrConfig);
     PrintStatus(status, "Warning RAIL_ConfigAddressFilter");
     // set de la valeur d'adresse à filtrer
-    RAIL_SetAddressFilterAddress(gRailHandle, 0, 1, &addr, 1);
+    RAIL_SetAddressFilterAddress(gRailHandle, 0, 1, &addr, true);
     PrintStatus(status, "Warning RAIL_SetAddressFilterAddress");
     // activation
     bool ret = RAIL_EnableAddressFilter(gRailHandle, true);
-    PrintStatus((ret == false), "Warning RAIL_SetAddressFilterAddress");
+    PrintStatus((ret == true), "Warning RAIL_EnableAddressFilter");        // RAIL_EnableAddressFilter return true if filter was already enabled
 
     // TX power
     status = RAIL_SetTxPowerDbm(gRailHandle, (RAIL_TxPower_t)gTxPower);
     PrintStatus(status, "Warning RAIL_SetTxPowerDbm");
+
+    // RX options
+    status = RAIL_ConfigRxOptions(gRailHandle, RAIL_RX_OPTION_REMOVE_APPENDED_INFO, (RSSI_LQI_MES ? 0 : RAIL_RX_OPTION_REMOVE_APPENDED_INFO));
+    PrintStatus(status, "Warning RAIL_ConfigRxOptions");
 }
 
 /*******************************************************************************

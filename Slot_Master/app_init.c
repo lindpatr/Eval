@@ -44,6 +44,9 @@
 // Additional components
 // ---------------------
 #include "em_system.h"              // System functions
+#include "em_msc.h"                 // Memory access functions
+#include "nvm3.h"                   // NVM Flash Memory functions
+#include "nvm3_hal_flash.h"         // NVM Flash Memory instance
 #include "printf.h"                 // Tiny printf
 
 #include "sl_rail_util_init.h"      // Radio tools

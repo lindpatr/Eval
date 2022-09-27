@@ -3,6 +3,7 @@ app_assert_config.h=1351236558
 app_log_config.h=854633757
 dmadrv_config.h=1207334949
 emlib_core_debug_config.h=-551881347
+nvm3_default_config.h=44458093
 rail/profile_base.restriction=-1980215595
 rail/profile_connect.restriction=295472632
 rail/profile_long_range.restriction=-793959153

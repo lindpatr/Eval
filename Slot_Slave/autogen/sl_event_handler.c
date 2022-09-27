@@ -17,11 +17,13 @@
 #include "sl_sleeptimer.h"
 #include "app_log.h"
 #include "sl_debug_swo.h"
+#include "sl_emlib_gpio_simple_init.h"
 #include "gpiointerrupt.h"
 #include "sl_i2cspm_instances.h"
 #include "sl_iostream_init_eusart_instances.h"
 #include "sl_iostream_stdlib_config.h"
 #include "sl_mpu.h"
+#include "nvm3_default.h"
 #include "sl_pwm_instances.h"
 #include "sl_simple_button_instances.h"
 #include "sl_cli_instances.h"
@@ -39,11 +41,13 @@ void sl_platform_init(void)
   sl_device_init_clocks();
   sl_device_init_emu();
   sl_board_init();
+  nvm3_initDefault();
 }
 
 void sl_driver_init(void)
 {
   sl_debug_swo_init();
+  sl_emlib_gpio_simple_init();
   GPIOINT_Init();
   sl_i2cspm_init_instances();
   sl_pwm_init_instances();

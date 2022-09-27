@@ -20,6 +20,7 @@
 #include "sl_iostream_init_eusart_instances.h"
 #include "sl_iostream_stdlib_config.h"
 #include "sl_mpu.h"
+#include "nvm3_default.h"
 #include "sl_simple_button_instances.h"
 #include "sl_cli_instances.h"
 #include "sl_iostream_init_instances.h"
@@ -36,6 +37,7 @@ void sl_platform_init(void)
   sl_device_init_clocks();
   sl_device_init_emu();
   sl_board_init();
+  nvm3_initDefault();
 }
 
 void sl_driver_init(void)
