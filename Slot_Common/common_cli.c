@@ -36,6 +36,7 @@
 #include "em_chip.h"
 #include "app_log.h"
 #include "sl_cli.h"
+#include "sl_common.h"
 
 #include "app_init.h"
 #include "common_stat.h"
@@ -45,8 +46,7 @@
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#define MAX(a,b) (((a)>(b))?(a):(b))
+
 
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
@@ -209,8 +209,8 @@ void cli_set_stat_period(sl_cli_command_arg_t *arguments)
 
 	if (arg > 0)
 	{
-	    arg = MIN(arg, STAT_PERIOD_MAX);
-	    arg = MAX(arg, 1);
+	    arg = SL_MIN(arg, STAT_PERIOD_MAX);
+	    arg = SL_MAX(arg, 1);
 
 	    gStatDelay = (RAIL_Time_t)(arg * SEC);
 
@@ -238,8 +238,8 @@ void cli_set_slot_time(sl_cli_command_arg_t *arguments)
         {
             if (arg > 0)
             {
-                arg = MIN(arg, TIME_SLOT_MAX);
-                arg = MAX(arg, TIME_SLOT_MIN);
+                arg = SL_MIN(arg, TIME_SLOT_MAX);
+                arg = SL_MAX(arg, TIME_SLOT_MIN);
 
                 gTimeSlot = arg;
 
@@ -290,8 +290,8 @@ void cli_set_sync_period(sl_cli_command_arg_t *arguments)
         {
             if (arg > 0)
             {
-                arg = MIN(arg, SYNC_PERIOD_MAX);
-                arg = MAX(arg, SYNC_PERIOD_MIN);
+                arg = SL_MIN(arg, SYNC_PERIOD_MAX);
+                arg = SL_MAX(arg, SYNC_PERIOD_MIN);
 
                 gSyncPeriod = arg;
 
@@ -336,8 +336,8 @@ void cli_set_sync_timeout(sl_cli_command_arg_t *arguments)
         {
             if (arg > 0)
             {
-                arg = MIN(arg, SYNC_TIMOUT_MAX);
-                arg = MAX(arg, SYNC_TIMOUT_MIN);
+                arg = SL_MIN(arg, SYNC_TIMOUT_MAX);
+                arg = SL_MAX(arg, SYNC_TIMOUT_MIN);
 
                 gSyncTimeOut = arg;
 
@@ -427,8 +427,8 @@ void cli_set_tx_power(sl_cli_command_arg_t *arguments)
     {
             if (arg != 0)
             {
-                arg = MIN(arg, TX_POWER_MAX);
-                arg = MAX(arg, TX_POWER_MIN);
+                arg = SL_MIN(arg, TX_POWER_MAX);
+                arg = SL_MAX(arg, TX_POWER_MIN);
 
                 gTxPower = arg;
 
