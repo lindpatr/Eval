@@ -81,6 +81,9 @@
 #define qPrintStat      1     // Print out statistics serial COM
 
 #define TRANSITION_TIMING_BEST_EFFORT  1
+                              // 1 = let the uC try to optimize the transition timings
+                              // 0 = use the defined transition timings
+#define RSSI_LQI_MES    1     // 1 = print statistics for rssi and lqi
 
 #define kTempChannel    0     // I2C TMP116 channel
 

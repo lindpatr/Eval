@@ -275,6 +275,7 @@ __INLINE void DisplayStat(void)
     if (statAbsRXErr > 100.0f)
         statAbsRXErr = 100.0f;
 
+#if (RSSI_LQI_MES)
     // RX quality
     int8_t statAbsRssiMoy = (int8_t)gRX_tab[myDevice][TAB_POS_RX_RSSI_MOY];
     int8_t statAbsRssiMin = (int8_t)gRX_tab[myDevice][TAB_POS_RX_RSSI_MIN];
@@ -282,6 +283,7 @@ __INLINE void DisplayStat(void)
     uint8_t statAbsLqiMoy = (uint8_t)gRX_tab[myDevice][TAB_POS_RX_LQI_MOY];
     uint8_t statAbsLqiMin = (uint8_t)gRX_tab[myDevice][TAB_POS_RX_LQI_MIN];
     uint8_t statAbsLqiMax = (uint8_t)gRX_tab[myDevice][TAB_POS_RX_LQI_MAX];
+#endif  // RSSI_LQI_MES
 
     // Printing
     // --------
@@ -304,8 +306,10 @@ __INLINE void DisplayStat(void)
     // Errors TX and RX
     app_log_info("TX Err (#err/#TO)          : %03.1f ppm/%0.3f%% (%d/%d)\n", statAbsTXErr * 10000.0f, statAbsTXErr, absTXErr, absTXTimeOut);
     app_log_info("RX Err (#err/#TO/#CRC/#gap): %03.1f ppm/%0.3f%% (%d/%d/%d/%d)\n", statAbsRXErr * 10000.0f, statAbsRXErr, absRXErr, absRXTimeOut, absCRCErr, remainingAbsRXGap);
+#if (RSSI_LQI_MES)
     // RX quality
     app_log_info("RX rssi/lqi (min/max)      : %d dbm (%d/%d) / %d (%d/%d)\n", statAbsRssiMoy, statAbsRssiMin, statAbsRssiMax, statAbsLqiMoy, statAbsLqiMin, statAbsLqiMax);
+#endif  // RSSI_LQI_MES
 
     // Transmission rate
     if (isMaster)

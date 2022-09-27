@@ -268,6 +268,10 @@ void config_rail(void)
     // TX power
     status = RAIL_SetTxPowerDbm(gRailHandle, (RAIL_TxPower_t)gTxPower);
     PrintStatus(status, "Warning RAIL_SetTxPowerDbm");
+
+    // RX options
+    status = RAIL_ConfigRxOptions(gRailHandle, RAIL_RX_OPTION_REMOVE_APPENDED_INFO, (RSSI_LQI_MES ? 0 : RAIL_RX_OPTION_REMOVE_APPENDED_INFO));
+    PrintStatus(status, "Warning RAIL_ConfigRxOptions");
 }
 
 /*******************************************************************************
@@ -425,7 +429,7 @@ void app_init(void)
     StatInit();
 
 	// Set up timers
-	bool ret = !RAIL_ConfigMultiTimer(true);
-	PrintStatus(ret, "Warning RAIL_ConfigMultiTimer failed");
+	bool ret = RAIL_ConfigMultiTimer(true);
+	PrintStatus((ret == false), "Warning RAIL_ConfigMultiTimer failed");
 }
 

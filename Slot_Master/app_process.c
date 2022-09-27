@@ -434,20 +434,24 @@ static __INLINE void StartTransmit(void)
 /******************************************************************************
  * DecodeReceivedMsg : decode received data
  *****************************************************************************/
+#if (RSSI_LQI_MES)
 static uint32_t count_packet = 0U;
 static int64_t sum_rssi = 0;
 static uint64_t sum_lqi = 0U;
+#endif  // RSSI_LQI_MES
 
 static __INLINE void DecodeReceivedMsg(void)
 {
     // RAIL Rx packet handles
     RAIL_RxPacketHandle_t rx_packet_handle;
     RAIL_RxPacketInfo_t packet_info;
-    RAIL_RxPacketDetails_t packet_info_detail;
     // Status indicator of the RAIL API calls
     RAIL_Status_t status = RAIL_STATUS_NO_ERROR;
+#if (RSSI_LQI_MES)
+    RAIL_RxPacketDetails_t packet_info_detail;
     int8_t rssi;
     uint8_t lqi;
+#endif  // RSSI_LQI_MES
 
     // Packet received:
     //  - Check whether RAIL_HoldRxPacket() was successful, i.e. packet handle is valid
@@ -463,8 +467,10 @@ static __INLINE void DecodeReceivedMsg(void)
             // Unpack and decode
             uint8_t *start_of_packet = 0;
             uint16_t packet_size = unpack_packet_from_rx(gRX_fifo, &packet_info, &start_of_packet);
-//            status = RAIL_ReleaseRxPacket(gRailHandle, rx_packet_handle);
-//            PrintStatus(status, "Warning ReleaseRxPacket");
+#if (!RSSI_LQI_MES)
+            status = RAIL_ReleaseRxPacket(gRailHandle, rx_packet_handle);
+            PrintStatus(status, "Warning ReleaseRxPacket");
+#endif  // !RSSI_LQI_MES
 
             if (packet_info.packetStatus == RAIL_RX_PACKET_READY_SUCCESS)
             {
@@ -490,6 +496,7 @@ static __INLINE void DecodeReceivedMsg(void)
                 else
                     gRX_tab[addr][TAB_POS_RX_OK]++;
 
+#if (RSSI_LQI_MES)
                 if (tx_request)
                 {
                     status = RAIL_GetRxPacketDetailsAlt(gRailHandle, rx_packet_handle, &packet_info_detail);
@@ -511,15 +518,18 @@ static __INLINE void DecodeReceivedMsg(void)
 
                     tx_request = false;
                 }
+#endif  // RSSI_LQI_MES
             }
             else if (packet_info.packetStatus == RAIL_RX_PACKET_READY_CRC_ERROR)
             {
                 gRX_tab[me][TAB_POS_RX_CRC_ERR]++;
             }
 
+#if (RSSI_LQI_MES)
             // Release packet in radio buffer
             status = RAIL_ReleaseRxPacket(gRailHandle, rx_packet_handle);
             PrintStatus(status, "Warning ReleaseRxPacket");
+#endif  // RSSI_LQI_MES
 
 //            // Indicate RX in progress on LED0
 //            sl_led_toggle(&sl_led_led0);
