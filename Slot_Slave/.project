@@ -556,6 +556,56 @@
 			<locationURI>STUDIO_SDK_LOC/platform/emdrv/gpiointerrupt/src/gpiointerrupt.c</locationURI>
 		</link>
 		<link>
+			<name>gecko_sdk_4.1.1/platform/emdrv/nvm3/inc/nvm3.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emdrv/nvm3/inc/nvm3.h</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/platform/emdrv/nvm3/inc/nvm3_default.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emdrv/nvm3/inc/nvm3_default.h</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/platform/emdrv/nvm3/inc/nvm3_hal.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emdrv/nvm3/inc/nvm3_hal.h</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/platform/emdrv/nvm3/inc/nvm3_hal_flash.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emdrv/nvm3/inc/nvm3_hal_flash.h</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/platform/emdrv/nvm3/inc/nvm3_lock.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emdrv/nvm3/inc/nvm3_lock.h</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/platform/emdrv/nvm3/lib/libnvm3_CM33_gcc.a</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emdrv/nvm3/lib/libnvm3_CM33_gcc.a</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/platform/emdrv/nvm3/src/nvm3_default_common_linker.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emdrv/nvm3/src/nvm3_default_common_linker.c</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/platform/emdrv/nvm3/src/nvm3_hal_flash.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emdrv/nvm3/src/nvm3_hal_flash.c</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/platform/emdrv/nvm3/src/nvm3_lock.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emdrv/nvm3/src/nvm3_lock.c</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.1/platform/emlib/init/gpio_simple/sl_emlib_gpio_simple_init.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emlib/init/gpio_simple/sl_emlib_gpio_simple_init.h</locationURI>
+		</link>
+		<link>
 			<name>gecko_sdk_4.1.1/platform/radio/rail_lib/common/rail.h</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/radio/rail_lib/common/rail.h</locationURI>
