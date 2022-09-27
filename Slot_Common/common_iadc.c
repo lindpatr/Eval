@@ -33,13 +33,13 @@
  *
  * ...for port A, port B, and port C/D pins, even and odd, respectively.
  */
-#define IADC_INPUT_0_PORT_PIN     iadcPosInputPortBPin0;
-#define IADC_INPUT_1_PORT_PIN     iadcPosInputPortBPin1;
+#define IADC_INPUT_0_PORT_PIN     iadcPosInputPortCPin4;
+#define IADC_INPUT_1_PORT_PIN     iadcPosInputPortCPin5;
 
-#define IADC_INPUT_0_BUS          BBUSALLOC
-#define IADC_INPUT_0_BUSALLOC     GPIO_BBUSALLOC_BEVEN0_ADC0
-#define IADC_INPUT_1_BUS          BBUSALLOC
-#define IADC_INPUT_1_BUSALLOC     GPIO_BBUSALLOC_BODD0_ADC0
+#define IADC_INPUT_0_BUS          CDBUSALLOC
+#define IADC_INPUT_0_BUSALLOC     GPIO_CDBUSALLOC_CDEVEN0_ADC0
+#define IADC_INPUT_1_BUS          CDBUSALLOC
+#define IADC_INPUT_1_BUSALLOC     GPIO_CDBUSALLOC_CDODD0_ADC0
 
 #define IADC_TIMEOUT (20)
 
@@ -122,32 +122,16 @@ void common_initIADC(void)
      * Configure entries in the scan table.  CH0 is single-ended from
      * input 0; CH1 is single-ended from input 1.
      */
-//    scanTable.entries[0].posInput = IADC_INPUT_0_PORT_PIN;
-//    scanTable.entries[0].negInput = iadcNegInputGnd;
-//    scanTable.entries[0].includeInScan = true;
-//
-//    scanTable.entries[1].posInput = IADC_INPUT_1_PORT_PIN;
-//    scanTable.entries[1].negInput = iadcNegInputGnd;
-//    scanTable.entries[1].includeInScan = true;
-//
-//    scanTable.entries[2].posInput = iadcPosInputAvdd;      // Add AVDD to scan for demonstration purposes
-//    scanTable.entries[2].negInput = iadcNegInputGnd | 1;   // When measuring a supply, PINNEG must be odd (1, 3, 5,...)
-//    scanTable.entries[2].includeInScan = true;
-
     scanTable.entries[0].posInput = iadcPosInputAvdd;      // Add AVDD to scan for demonstration purposes
     scanTable.entries[0].negInput = iadcNegInputGnd | 1;   // When measuring a supply, PINNEG must be odd (1, 3, 5,...)
     scanTable.entries[0].includeInScan = true;
 
-    scanTable.entries[1].posInput = iadcPosInputVddio;     // Add VDDIO to scan for demonstration purposes
-    scanTable.entries[1].negInput = iadcNegInputGnd | 1;   // When measuring a supply, PINNEG must be odd (1, 3, 5,...)
+    scanTable.entries[1].posInput = IADC_INPUT_0_PORT_PIN;
+    scanTable.entries[1].negInput = iadcNegInputGnd;
     scanTable.entries[1].includeInScan = true;
 
-//    scanTable.entries[2].posInput = iadcPosInputVss;       // Add VSS to scan for demonstration purposes
-//    scanTable.entries[2].negInput = iadcNegInputGnd | 1;   // When measuring a supply, PINNEG must be odd (1, 3, 5,...)
-//    scanTable.entries[2].includeInScan = true;            // FIFO is only 4 entries deep
-
-    scanTable.entries[2].posInput = iadcPosInputDvdd;      // Add DVDD to scan for demonstration purposes
-    scanTable.entries[2].negInput = iadcNegInputGnd | 1;   // When measuring a supply, PINNEG must be odd (1, 3, 5,...)
+    scanTable.entries[2].posInput = IADC_INPUT_1_PORT_PIN;
+    scanTable.entries[2].negInput = iadcNegInputGnd;
     scanTable.entries[2].includeInScan = true;
 
     // Initialize IADC
@@ -157,8 +141,8 @@ void common_initIADC(void)
     IADC_initScan(IADC0, &initScan, &scanTable);
 
     // Allocate the analog bus for ADC0 inputs
-//    GPIO->IADC_INPUT_0_BUS |= IADC_INPUT_0_BUSALLOC;
-//    GPIO->IADC_INPUT_1_BUS |= IADC_INPUT_1_BUSALLOC;
+    GPIO->IADC_INPUT_0_BUS |= IADC_INPUT_0_BUSALLOC;
+    GPIO->IADC_INPUT_1_BUS |= IADC_INPUT_1_BUSALLOC;
 }
 
 /**
@@ -172,9 +156,6 @@ bool common_isIADCready(void)
     return ((IADC0->STATUS & (_IADC_STATUS_CONVERTING_MASK | _IADC_STATUS_SINGLEFIFODV_MASK)) == IADC_STATUS_SINGLEFIFODV);
 }
 
-// Start scan
-#define common_IadcStart() IADC_command(IADC0, iadcCmdStartScan)
-
 /**
  * Start IADC conversion.
  *
@@ -183,7 +164,7 @@ bool common_isIADCready(void)
 void common_startIADC(void)
 {
     // Start IADC
-    common_IadcStart();
+    IADC_command(IADC0, iadcCmdStartScan);
 }
 
 /**
@@ -197,9 +178,6 @@ bool common_getIADCdata(void)
     RAIL_Time_t startTime = RAIL_GetTime();
     RAIL_Time_t gap;
 
-//    // Start IADC
-//    common_IadcStart();
-
     // Wait conversion end or timeout
     while ((IADC0->STATUS & (_IADC_STATUS_CONVERTING_MASK | _IADC_STATUS_SCANFIFODV_MASK)) != IADC_STATUS_SCANFIFODV)
     {
@@ -212,11 +190,21 @@ bool common_getIADCdata(void)
     }
 
     // Get ADC result
-    for (uint32_t i = 0; i < endofIADCmeas; i++)
+    IADC_Result_t sample;
+    while (IADC_getScanFifoCnt(IADC0))
     {
-        gMboxADMes.u.dataTab[i] = IADC_pullScanFifoResult(IADC0).data;
+        // Pull a scan result from the FIFO
+        sample = IADC_pullScanFifoResult(IADC0);
 
-        //double value = ((double)sample[i].data * 2.42 / 0xFFF) * 4.0; // convert to Volts (*4 for internal supply)
+        if (sample.id <= endofIADCmeas)
+        {
+            gMboxADMes.u.dataTab[sample.id] = sample.data;
+        }
+        else
+        {
+            app_assert(false, "Invalid AD id (out of range).");
+        }
+
     }
 
     // convert in Celsius ((float) ((gMboxADMes[internalTemp].u.detail.internaltemp) >> _EMU_TEMP_TEMPLSB_SHIFT) ) / 4.0f - EMU_TEMP_ZERO_C_IN_KELVIN /*273.4*/);

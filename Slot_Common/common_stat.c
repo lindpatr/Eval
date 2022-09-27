@@ -87,7 +87,7 @@ static char *gCB_descr_tab[SIZE_UINT64_IN_BITS ] =
 #define CONVERT_TO_DEGRES(temp)     ((float)temp/1000.0f)
 #define CONVERT_TO_DEGRES_2(temp)   (((float)temp/4.0f) - 273.4f)
 #define CONVERT_TO_VOLT(u)          ((float)u * 4.0f * 2.42f / 4095.0f)
-
+#define CONVERT_TO_VOLT_2(u)        ((float)u * 2.42f / 4095.0f)
 /******************************************************************************
  * DisplayReceivedMsg : print received data
  *****************************************************************************/
@@ -316,7 +316,7 @@ __INLINE void DisplayStat(void)
     {
         app_log_info("#Sync lost                 : %d\n", absSYNCErr);
         app_log_info("Sync period                : %0.3f ms\n", period);
-        app_log_info("AD VDDA/IO/D/TCPU / I2C TA : %0.2fV/%0.2fV/%0.2fV/%0.1f°C/%0.1f°C\n", CONVERT_TO_VOLT(gMboxADMes.u.detail.vdda), CONVERT_TO_VOLT(gMboxADMes.u.detail.ucell), CONVERT_TO_VOLT(gMboxADMes.u.detail.icell), CONVERT_TO_DEGRES_2(gMboxADMes.u.detail.internaltemp), CONVERT_TO_DEGRES(gMBoxTempCell));
+        app_log_info("AD VDDA/IO/D/TCPU / I2C TA : %0.2fV/%0.2fV/%0.2fV/%0.1f°C/%0.1f°C\n", CONVERT_TO_VOLT(gMboxADMes.u.detail.vdda), CONVERT_TO_VOLT_2(gMboxADMes.u.detail.ucell), CONVERT_TO_VOLT_2(gMboxADMes.u.detail.icell), CONVERT_TO_DEGRES_2(gMboxADMes.u.detail.internaltemp), CONVERT_TO_DEGRES(gMBoxTempCell));
     }
 
     // Calibration
