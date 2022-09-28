@@ -56,8 +56,9 @@
 
 #define ADDR_INTERNAL_NAME_STRING_SIZE (10)
 
-#define TX_POWER_MIN    (-60)                   // in dBm
+#define TX_POWER_MIN    (-20)                   // in dBm
 #define TX_POWER_MAX    (60)                    // in dBm (60 = 6 dB)
+#define TX_POWER_DEF    (1)                     // 0.1 dB
 #define TX_POWER        TX_POWER_MAX            // Default value
 
 // Kind of possible messages
