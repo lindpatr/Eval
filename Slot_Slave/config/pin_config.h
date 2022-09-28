@@ -67,10 +67,6 @@
 #define TIMER0_CC0_PORT                          gpioPortA
 #define TIMER0_CC0_PIN                           0
 
-// TIMER0 CC1 on PC06
-#define TIMER0_CC1_PORT                          gpioPortC
-#define TIMER0_CC1_PIN                           6
-
 // [TIMER0]$
 
 // $[TIMER1]
@@ -116,14 +112,6 @@
 // [IADC0]$
 
 // $[I2C0]
-// I2C0 SCL on PB02
-#define I2C0_SCL_PORT                            gpioPortB
-#define I2C0_SCL_PIN                             2
-
-// I2C0 SDA on PB03
-#define I2C0_SDA_PORT                            gpioPortB
-#define I2C0_SDA_PIN                             3
-
 // [I2C0]$
 
 // $[EUART0]
@@ -147,11 +135,17 @@
 #define PWM1_PORT                                gpioPortA
 #define PWM1_PIN                                 0
 
+#define SWCLK_DEBUG_PORT                         gpioPortA
+#define SWCLK_DEBUG_PIN                          1
+
+#define SWDIO_DEBUG_PORT                         gpioPortA
+#define SWDIO_DEBUG_PIN                          2
+
 #define SWO_DEBUG_PORT                           gpioPortA
 #define SWO_DEBUG_PIN                            3
 
-#define ERR_TEMP_PORT                            gpioPortA
-#define ERR_TEMP_PIN                             4
+#define SPI_CS_TEMP_PORT                         gpioPortA
+#define SPI_CS_TEMP_PIN                          4
 
 #define UART_TxD_PORT                            gpioPortA
 #define UART_TxD_PIN                             5
@@ -159,20 +153,14 @@
 #define UART_RxD_PORT                            gpioPortA
 #define UART_RxD_PIN                             6
 
-#define EN_SPI_FLASH_PORT                        gpioPortA
-#define EN_SPI_FLASH_PIN                         7
-
 #define BTN_0_PORT                               gpioPortB
 #define BTN_0_PIN                                0
 
 #define DEBUG_1_PORT                             gpioPortB
 #define DEBUG_1_PIN                              1
 
-#define TEMP_I2C_SCL_PORT                        gpioPortB
-#define TEMP_I2C_SCL_PIN                         2
-
-#define TEMP_I2C_SDA_PORT                        gpioPortB
-#define TEMP_I2C_SDA_PIN                         3
+#define ADC_3_PORT                               gpioPortB
+#define ADC_3_PIN                                2
 
 #define EN_UART_PORT                             gpioPortB
 #define EN_UART_PIN                              4
@@ -186,8 +174,8 @@
 #define SPI_CLK_PORT                             gpioPortC
 #define SPI_CLK_PIN                              2
 
-#define SPI_CS_PORT                              gpioPortC
-#define SPI_CS_PIN                               3
+#define SPI_CS_DAC_PORT                          gpioPortC
+#define SPI_CS_DAC_PIN                           3
 
 #define ADC_1_PORT                               gpioPortC
 #define ADC_1_PIN                                4
@@ -195,17 +183,11 @@
 #define ADC_2_PORT                               gpioPortC
 #define ADC_2_PIN                                5
 
-#define PWM2_PORT                                gpioPortC
-#define PWM2_PIN                                 6
+#define LF_XTAL1_PORT                            gpioPortD
+#define LF_XTAL1_PIN                             0
 
-#define EN_I2C_HT_SENSOR_PORT                    gpioPortC
-#define EN_I2C_HT_SENSOR_PIN                     7
-
-#define XTAL1_PORT                               gpioPortD
-#define XTAL1_PIN                                0
-
-#define XTAL2_PORT                               gpioPortD
-#define XTAL2_PIN                                1
+#define LF_XTAL2_PORT                            gpioPortD
+#define LF_XTAL2_PIN                             1
 
 #define DEBUG_2_PORT                             gpioPortD
 #define DEBUG_2_PIN                              2
