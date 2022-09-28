@@ -384,7 +384,6 @@ void cli_start_process(sl_cli_command_arg_t *arguments)
         if (!gStartProcess)
         {
             gBtnPressed = true;
-            gStartProcess = true;
         }
         else
             app_log_warning("Warning Process already started!\n");
