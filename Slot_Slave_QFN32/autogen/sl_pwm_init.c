@@ -1,6 +1,6 @@
 /***************************************************************************//**
  * @file
- * @brief I2C simple poll-based master mode driver instances
+ * @brief PWM Driver Instance Initialization
  *******************************************************************************
  * # License
  * <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
@@ -14,28 +14,34 @@
  * sections of the MSLA applicable to Source Code.
  *
  ******************************************************************************/
- 
-#ifndef SL_I2CSPM_INSTANCES_H
-#define SL_I2CSPM_INSTANCES_H
 
-#ifdef __cplusplus
-extern "C" {
+#include "sl_pwm.h"
+
+#include "sl_pwm_init_pwm0_config.h"
+
+
+#include "em_gpio.h"
+
+
+sl_pwm_instance_t sl_pwm_pwm0 = {
+  .timer = SL_PWM_PWM0_PERIPHERAL,
+  .channel = (uint8_t)(SL_PWM_PWM0_OUTPUT_CHANNEL),
+  .port = (uint8_t)(SL_PWM_PWM0_OUTPUT_PORT),
+  .pin = (uint8_t)(SL_PWM_PWM0_OUTPUT_PIN),
+#if defined(SL_PWM_PWM0_OUTPUT_LOC)
+  .location = (uint8_t)(SL_PWM_PWM0_OUTPUT_LOC),
 #endif
-
-#include "sl_i2cspm.h"
-
-
-#define SL_I2CSPM_SENSOR_PRESENT
-#define SL_I2CSPM_TEMP_SENSOR_PRESENT
+};
 
 
-extern sl_i2cspm_t *sl_i2cspm_sensor;
-extern sl_i2cspm_t *sl_i2cspm_temp_sensor;
+void sl_pwm_init_instances(void)
+{
 
-void sl_i2cspm_init_instances(void);
+  sl_pwm_config_t pwm_pwm0_config = {
+    .frequency = SL_PWM_PWM0_FREQUENCY,
+    .polarity = SL_PWM_PWM0_POLARITY,
+  };
 
-#ifdef __cplusplus
+  sl_pwm_init(&sl_pwm_pwm0, &pwm_pwm0_config);
+
 }
-#endif
-
-#endif // SL_I2CSPM_INSTANCES_H
