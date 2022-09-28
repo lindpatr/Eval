@@ -29,7 +29,7 @@ extern "C"
 
 // <o SL_PWM_PWM1_FREQUENCY> PWM frequency [Hz]
 // <i> Default: 10000
-#define SL_PWM_PWM1_FREQUENCY       80000
+#define SL_PWM_PWM1_FREQUENCY       90000
 
 // <o SL_PWM_PWM1_POLARITY> Polarity
 // <PWM_ACTIVE_HIGH=> Active high
@@ -44,13 +44,13 @@ extern "C"
 
 // <timer channel=OUTPUT> SL_PWM_PWM1
 // $[TIMER_SL_PWM_PWM1]
-#define SL_PWM_PWM1_PERIPHERAL                   TIMER1
-#define SL_PWM_PWM1_PERIPHERAL_NO                1
+#define SL_PWM_PWM1_PERIPHERAL                   TIMER0
+#define SL_PWM_PWM1_PERIPHERAL_NO                0
 
-#define SL_PWM_PWM1_OUTPUT_CHANNEL               0
-// TIMER1 CC0 on PC07
+#define SL_PWM_PWM1_OUTPUT_CHANNEL               1
+// TIMER0 CC1 on PC06
 #define SL_PWM_PWM1_OUTPUT_PORT                  gpioPortC
-#define SL_PWM_PWM1_OUTPUT_PIN                   7
+#define SL_PWM_PWM1_OUTPUT_PIN                   6
 // [TIMER_SL_PWM_PWM1]$
 
 // <<< sl:end pin_tool >>>

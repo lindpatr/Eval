@@ -15,19 +15,14 @@
     <file name="sl_board_control_config.h" generated="true" linked="false"/>
     <file name="app_log_config.h" generated="true" linked="false"/>
     <file name="sl_cli_config.h" generated="true" linked="false"/>
-    <file name="sl_emlib_gpio_init_alarm_temp_config.h" generated="true" linked="false"/>
     <file name="sl_debug_swo_config.h" generated="true" linked="false"/>
-    <file name="sl_i2cspm_sensor_config.h" generated="true" linked="false"/>
-    <file name="sl_i2cspm_temp_sensor_config.h" generated="true" linked="false"/>
     <file name="sl_simple_button_config.h" generated="true" linked="false"/>
     <file name="app_assert_config.h" generated="true" linked="false"/>
-    <file name="sl_sleeptimer_config.h" generated="true" linked="false"/>
     <file name="sl_rail_util_callbacks_config.h" generated="true" linked="false"/>
     <file name="sl_rail_util_dma_config.h" generated="true" linked="false"/>
     <file name="sl_cli_config_example.h" generated="true" linked="false"/>
     <file name="sl_device_init_lfxo_config.h" generated="true" linked="false"/>
     <file name="sl_pwm_init_pwm0_config.h" generated="true" linked="false"/>
-    <file name="sl_pwm_init_pwm1_config.h" generated="true" linked="false"/>
     <file name="dmadrv_config.h" generated="true" linked="false"/>
     <file name="sl_rail_util_pti_config.h" generated="true" linked="false"/>
     <file name="nvm3_default_config.h" generated="true" linked="false"/>

@@ -67,8 +67,6 @@
 #include "rail_chip_specific.h"
 #endif
 
-#include "sl_i2cspm_instances.h"    // I2C functions
-#include "sl_si70xx.h"              // Temp and humidity via I2C
 #include "sl_pwm_instances.h"       // PWM functions
 
 // User components
@@ -78,7 +76,6 @@
 #include "common_debug.h"           // Debug functions
 #include "common_stat.h"            // Statistics functions
 #include "common_iadc.h"            // ADC functions
-#include "common_tempi2c.h"         // Temp via I2C
 
 
 // -----------------------------------------------------------------------------
@@ -119,7 +116,7 @@ RAIL_StateTiming_t gRailStateTimings;
 volatile RAIL_Time_t gSyncPeriod = 0;       // Value, indicating sync period on CLI
 volatile RAIL_Time_t gSyncTimeOut = 0;      // Value, indicating sync timeout for Slave on CLI
 volatile uint32_t gTimeSlot = 0;            // Value, indicating time of a slot in the protocol on CLI
-volatile RAIL_TxPower_t gTxPower = TX_POWER;// Value, indicating tx power on CLI
+volatile RAIL_TxPower_t gTxPower = TX_POWER_DEF;// Value, indicating tx power on CLI
 
 /// A static var that contains config data for the device
 PROT_AddrMap_t* gDeviceCfgAddr;
@@ -476,13 +473,6 @@ void config_pwm(void)
       .pin      = 0,                  // PA00
       .location = 0,
     };
-    sl_pwm_instance_t sl_pwm_1 = {
-      .timer    = TIMER0,
-      .channel  = 1,                  // TIMER0.CC1
-      .port     = gpioPortC,
-      .pin      = 6,                  // PC06
-      .location = 0,
-    };
 
     sl_pwm_config_t pwm_config = {
       .frequency = 90000,             // Limited < 100kHz
@@ -491,19 +481,15 @@ void config_pwm(void)
 
     // Overwrite instance from configurator
     sl_pwm_pwm0 = sl_pwm_0;
-    sl_pwm_pwm1 = sl_pwm_1;
 
     // Initialize PWM
     sl_pwm_init(&sl_pwm_pwm0, &pwm_config);
-    sl_pwm_init(&sl_pwm_pwm1, &pwm_config);
 
     // Set duty cycle to 0%
     sl_pwm_set_duty_cycle(&sl_pwm_pwm0, 0);
-    sl_pwm_set_duty_cycle(&sl_pwm_pwm1, 0);
 
     // Enable PWM output
     sl_pwm_start(&sl_pwm_pwm0);
-    sl_pwm_start(&sl_pwm_pwm1);
 }
 
 /*******************************************************************************
@@ -629,13 +615,7 @@ void app_init(void)
     // Init TMP116
 //    common_tempi2cConfig(kTempChannel, kTempAddr, kTempAlarmOn, kTempAlarmOff);
 //    common_tempi2cSetup();
-    // TODO BEGIN TEST PURPOSES
-    sl_status_t status = sl_si70xx_init(sl_i2cspm_sensor, SI7021_ADDR);
-    PrintStatus((status != SL_STATUS_OK), "Warning sl_si70xx_init failed");
-    // Start a new temp measure via I2C; measure will be read later
-    status = sl_si70xx_start_no_hold_measure_rh_and_temp(sl_i2cspm_sensor, SI7021_ADDR);
-    PrintStatus((status != SL_STATUS_OK), "Warning sl_si70xx_start_no_hold_measure_rh_and_temp failed");
-    // TODO END TEST PURPOSES
+
 
     // Init statistics
     StatInit();
