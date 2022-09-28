@@ -20,15 +20,37 @@
 // Sync = 1040
 // Auto transition S1: Y (but not active as S1 slot > 0
 // Rate = 19.57 ms (NEW)
-#define SHIFT_TIME  100
+#define SHIFT_TIME  (100)
+#define FIRST_TIME_SLOT (10)
+#define DELTA_TIME_SLOT (TIME_SLOT_SLAVE+10)
+
+//PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
+//{
+//    /* ID                Pos    Enable  Addr    Slot time         Is master   Name          */
+//    {0x385B44FFFEC085D3, 0,     true,   255,    0,                true,       "MASTER\0"},
+//    {0x385b44fffec0862b, 1,     true,   1,      -95+SHIFT_TIME,   false,      "SLAVE\0"},
+//    {0x385b44fffe5f5af2, 2,     false,  2,      610+SHIFT_TIME,   false,      "SLAVE\0"},
+//    {0x385b44fffe5f5b23, 3,     true,   3,      210+SHIFT_TIME,   false,      "SLAVE\0"},
+//    {0x385b44fffec08638, 4,     true,   4,      410+SHIFT_TIME,   false,      "SLAVE\0"},
+//    {0x040D84FFFE88A3DF, 5,     true,   5,      610+SHIFT_TIME,   false,      "SLAVE\0"},
+//    {0x040D84FFFE88A50A, 6,     true,   6,      810+SHIFT_TIME,   false,      "SLAVE\0"},
+//    {0x040D84FFFE88A766, 7,     true,   7,     1010+SHIFT_TIME,   false,      "SLAVE\0"},
+//    {0x040D84FFFE88AD13, 8,     true,   8,     1210+SHIFT_TIME,   false,      "SLAVE\0"},
+//    {0x040D84FFFE88AB60, 9,     true,   9,     1410+SHIFT_TIME,   false,      "SLAVE\0"},
+//};
 PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
 {
     /* ID                Pos    Enable  Addr    Slot time         Is master   Name          */
-    {0x385B44FFFEC085D3, 0,     true,   255,    0,                true,       "MASTER\0"},
-    {0x385b44fffec0862b, 1,     true,   1,      -95+SHIFT_TIME,   false,      "SLAVE\0"},
-    {0x385b44fffe5f5af2, 2,     false,  2,      610+SHIFT_TIME,   false,      "SLAVE\0"},
-    {0x385b44fffe5f5b23, 3,     true,   3,      210+SHIFT_TIME,   false,      "SLAVE\0"},
-    {0x385b44fffec08638, 4,     true,   4,      410+SHIFT_TIME,   false,      "SLAVE\0"},
+    {0x385B44FFFEC085D3, 0,     true,   255,    0,                                              true,       "MASTER\0"},
+    {0x385b44fffec0862b, 1,     true,   1,      (0*DELTA_TIME_SLOT)+SHIFT_TIME-95,              false,      "SLAVE\0"},
+    {0x385b44fffe5f5af2, 2,     false,  2,      (8*DELTA_TIME_SLOT)+SHIFT_TIME+FIRST_TIME_SLOT, false,      "SLAVE\0"},
+    {0x385b44fffe5f5b23, 3,     true,   3,      (1*DELTA_TIME_SLOT)+SHIFT_TIME+FIRST_TIME_SLOT, false,      "SLAVE\0"},
+    {0x385b44fffec08638, 4,     true,   4,      (2*DELTA_TIME_SLOT)+SHIFT_TIME+FIRST_TIME_SLOT, false,      "SLAVE\0"},
+    {0x040D84FFFE88A3DF, 5,     true,   5,      (3*DELTA_TIME_SLOT)+SHIFT_TIME+FIRST_TIME_SLOT, false,      "SLAVE\0"},
+    {0x040D84FFFE88A50A, 6,     true,   6,      (4*DELTA_TIME_SLOT)+SHIFT_TIME+FIRST_TIME_SLOT, false,      "SLAVE\0"},
+    {0x040D84FFFE88A766, 7,     true,   7,      (5*DELTA_TIME_SLOT)+SHIFT_TIME+FIRST_TIME_SLOT, false,      "SLAVE\0"},
+    {0x040D84FFFE88AD13, 8,     true,   8,      (6*DELTA_TIME_SLOT)+SHIFT_TIME+FIRST_TIME_SLOT, false,      "SLAVE\0"},
+    {0x040D84FFFE88AB60, 9,     true,   9,      (7*DELTA_TIME_SLOT)+SHIFT_TIME+FIRST_TIME_SLOT, false,      "SLAVE\0"},
 };
 
 /**
