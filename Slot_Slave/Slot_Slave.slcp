@@ -30,8 +30,8 @@ sdk: {id: gecko_sdk, version: 4.1.1}
 toolchain_settings:
 - {value: debug, option: optimize}
 component:
-- {id: rail_util_dma}
 - {id: radio_config_simple_rail_singlephy}
+- {id: rail_util_dma}
 - {id: iostream_retarget_stdio}
 - instance: [btn0]
   id: simple_button
