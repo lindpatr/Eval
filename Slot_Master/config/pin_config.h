@@ -140,6 +140,12 @@
 // [MODEM]$
 
 // $[CUSTOM_PIN_NAME]
+#define SWCLK_DEBUG_PORT                         gpioPortA
+#define SWCLK_DEBUG_PIN                          1
+
+#define SWDIO_DEBUG_PORT                         gpioPortA
+#define SWDIO_DEBUG_PIN                          2
+
 #define SWO_DEBUG_PORT                           gpioPortA
 #define SWO_DEBUG_PIN                            3
 
