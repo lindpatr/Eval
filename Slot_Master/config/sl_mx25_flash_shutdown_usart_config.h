@@ -21,8 +21,8 @@
 // <<< sl:start pin_tool >>>
 // {usart signal=TX,RX,CLK} SL_MX25_FLASH_SHUTDOWN
 // [USART_SL_MX25_FLASH_SHUTDOWN]
-#define SL_MX25_FLASH_SHUTDOWN_PERIPHERAL        USART0
-#define SL_MX25_FLASH_SHUTDOWN_PERIPHERAL_NO     0
+//#define SL_MX25_FLASH_SHUTDOWN_PERIPHERAL        USART0
+//#define SL_MX25_FLASH_SHUTDOWN_PERIPHERAL_NO     0
 
 // USART0 TX on PC00
 #define SL_MX25_FLASH_SHUTDOWN_TX_PORT           gpioPortC
@@ -41,8 +41,6 @@
 // <gpio> SL_MX25_FLASH_SHUTDOWN_CS
 
 // $[GPIO_SL_MX25_FLASH_SHUTDOWN_CS]
-#define SL_MX25_FLASH_SHUTDOWN_CS_PORT           gpioPortA
-#define SL_MX25_FLASH_SHUTDOWN_CS_PIN            7
 // [GPIO_SL_MX25_FLASH_SHUTDOWN_CS]$
 
 // <<< sl:end pin_tool >>>
