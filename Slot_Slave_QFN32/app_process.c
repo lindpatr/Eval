@@ -177,6 +177,7 @@ uint32_t gRX_counter_prev[MAX_NODE] = {0UL};
 
 /// Various flags
 volatile bool gStartProcess = false;			// Flag, indicating a start process request (button was pressed / CLI start request has occurred)
+volatile bool gResetProcess = false;            // Flag, indicating a reset process request (CLI reset request has occurred)
 static bool gRX_first = false;					// Indicate first RX packet received on Slave to start statistics
 volatile bool gBtnPressed = false;              // Button pressed simulation with CLI, start process
 static bool gPauseCycleConf = false;            // Flag to indicate a end of cycle of transmission with the slaves in order to avoid side effect of the print statistics
@@ -689,6 +690,14 @@ void app_process_action(void)
         gBtnPressed = false;
 
         SetState(kBtnPressed);
+    }
+    /// Reset process via CLI
+    /// ------------------------------
+    else if (gResetProcess)
+    {
+        gResetProcess = false;
+
+        NVIC_SystemReset();
     }
     /// Stat print out request via CLI
     /// ------------------------------

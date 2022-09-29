@@ -53,6 +53,7 @@
 // -----------------------------------------------------------------------------
 void cli_set_stat_period(sl_cli_command_arg_t *arguments);
 void cli_start_process(sl_cli_command_arg_t *arguments);
+void cli_reset_process(sl_cli_command_arg_t *arguments);
 void cli_req_stat(sl_cli_command_arg_t *arguments);
 void cli_set_slot_time(sl_cli_command_arg_t *arguments);
 void cli_set_sync_period(sl_cli_command_arg_t *arguments);
@@ -65,6 +66,8 @@ void cli_set_tx_power(sl_cli_command_arg_t *arguments);
 // -----------------------------------------------------------------------------
 /// Flag, indicating a start process request (button was pressed / CLI start request has occurred)
 extern volatile bool gStartProcess;
+/// Flag, indicating a reset process request (CLI reset request has occurred)
+extern volatile bool gResetProcess;
 /// Flag, indicating a request to print statistics (button was pressed / CLI statistics request has occurred)
 extern volatile bool gStatReq;
 /// Button pressed simulation with CLI, start process
@@ -121,6 +124,12 @@ SL_CLI_COMMAND(cli_start_process,
 		"",
         {SL_CLI_ARG_END, });
 
+static const sl_cli_command_info_t cli_cmd__reset_process =
+SL_CLI_COMMAND(cli_reset_process,
+        "Reset process",
+        "",
+        {SL_CLI_ARG_END, });
+
 static const sl_cli_command_info_t cli_cmd__req_stat =
 SL_CLI_COMMAND(cli_req_stat,
 		"Print statistics",
@@ -141,6 +150,7 @@ const sl_cli_command_entry_t cli_my_command_table[] =
 { "sync", &cli_cmd__sync_period, false },
 { "sync_to", &cli_cmd__sync_timeout, false },
 { "start", &cli_cmd__start_process, false },
+{ "reset", &cli_cmd__reset_process, false },
 { "print_stat", &cli_cmd__req_stat, false },
 { "power", &cli_cmd__tx_power, false },
 { NULL, NULL, false }, };
@@ -392,6 +402,21 @@ void cli_start_process(sl_cli_command_arg_t *arguments)
     {
         app_log_warning("Warning Command only available on Master\n");
     }
+}
+
+/******************************************************************************
+ * CLI - Reset process: Sets a flag indicating that process is reset
+ *****************************************************************************/
+void cli_reset_process(sl_cli_command_arg_t *arguments)
+{
+    (void) arguments;
+
+//    if (gStartProcess)
+//    {
+        gResetProcess = true;
+//    }
+//    else
+//        app_log_warning("Warning Process not yet started!\n");
 }
 
 /******************************************************************************
