@@ -153,8 +153,8 @@
 #define UART_RxD_PORT                            gpioPortA
 #define UART_RxD_PIN                             6
 
-#define BTN_0_PORT                               gpioPortB
-#define BTN_0_PIN                                0
+#define ALARM_TEMP_PORT                          gpioPortB
+#define ALARM_TEMP_PIN                           0
 
 #define SPI_CS_TEMP_PORT                         gpioPortB
 #define SPI_CS_TEMP_PIN                          1
