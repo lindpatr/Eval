@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ASCII"?>
-<device:XMLDevice xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:device="http://www.silabs.com/ss/hwconfig/document/device.ecore" name="pin_tool.EFR32MG22C224F512IM40" partId="mcu.arm.efr32.mg22.efr32mg22c224f512im40" contextId="com.silabs.sdk.stack.super:4.1.1._650515524">
+<device:XMLDevice xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:device="http://www.silabs.com/ss/hwconfig/document/device.ecore" name="pin_tool.EFR32MG22C224F512IM40" partId="mcu.arm.efr32.mg22.efr32mg22c224f512im40" contextId="com.silabs.sdk.stack.super:4.1.2._650515524">
   <mode name="DefaultMode">
     <property object="DefaultMode" propertyId="mode.diagramLocation" value="100, 100"/>
     <property object="EUART0" propertyId="ABModule.selectedRequirement" value="eusart%T%SL_IOSTREAM_EUSART_VCOM%T%sl_iostream_eusart_vcom_config.h"/>
@@ -15,7 +15,6 @@
     <property object="PA05" propertyId="pin.name" value="UART_TxD"/>
     <property object="PA06" propertyId="pin.name" value="UART_RxD"/>
     <property object="PA07" propertyId="pin.name" value="EN_SPI_FLASH"/>
-    <property object="PA07" propertyId="pin.reserve" value="Reserved"/>
     <property object="PA08" propertyId="pin.name" value=""/>
     <property object="PB00" propertyId="ABModule.selectedRequirement" value="gpio%T%SL_SIMPLE_BUTTON_BTN0%T%sl_simple_button_btn0_config.h"/>
     <property object="PB00" propertyId="pin.name" value="BTN0"/>
@@ -31,8 +30,9 @@
     <property object="PC00" propertyId="pin.name" value="SPI_MOSI"/>
     <property object="PC01" propertyId="pin.name" value="SPI_MISO"/>
     <property object="PC02" propertyId="pin.name" value="SPI_CLK"/>
+    <property object="PC03" propertyId="pin.name" value="SPI_CS"/>
     <property object="PC04" propertyId="pin.name" value="PTI_SPI_DOUT"/>
-    <property object="PC05" propertyId="pin.name" value="PTI_SPI_DFRAME"/>
+    <property object="PC05" propertyId="pin.name" value="PTI_SPI_CS"/>
     <property object="PC06" propertyId="ABModule.selectedRequirement" value="gpio%T%SL_MEMLCD_SPI_CS%T%sl_memlcd_usart_config.h"/>
     <property object="PC06" propertyId="pin.name" value="PTI_SPI_CLK"/>
     <property object="PC07" propertyId="pin.name" value=""/>
@@ -56,9 +56,11 @@
     <property object="PORTIO" propertyId="portio.pti.location.dframe" value="37"/>
     <property object="PORTIO" propertyId="portio.pti.location.dout" value="36"/>
     <property object="PORTIO" propertyId="portio.usart0.enable.clk" value="Enabled"/>
+    <property object="PORTIO" propertyId="portio.usart0.enable.cs" value="Enabled"/>
     <property object="PORTIO" propertyId="portio.usart0.enable.rx" value="Enabled"/>
     <property object="PORTIO" propertyId="portio.usart0.enable.tx" value="Enabled"/>
     <property object="PORTIO" propertyId="portio.usart0.location.clk" value="34"/>
+    <property object="PORTIO" propertyId="portio.usart0.location.cs" value="35"/>
     <property object="PORTIO" propertyId="portio.usart0.location.rx" value="33"/>
     <property object="PORTIO" propertyId="portio.usart0.location.tx" value="32"/>
     <property object="PTI" propertyId="ABModule.selectedRequirement" value="pti%T%SL_RAIL_UTIL_PTI%T%sl_rail_util_pti_config.h"/>

@@ -55,12 +55,6 @@
 #include "sl_rail_util_protocol_types.h"
                                     // Radio protocol
 
-// LCD display
-#if (SL_BOARD_ENABLE_DISPLAY)
-#include "dmd.h"                    // LCD driver
-#include "glib.h"                   // Graphics lib
-#endif // SL_BOARD_ENABLE_DISPLAY
-
 #if defined(RAIL0_CHANNEL_GROUP_1_PROFILE_WISUN_OFDM)
 #include "sl_rail_util_pa_config.h"
 #include "rail_chip_specific.h"
@@ -120,11 +114,7 @@ PROT_AddrMap_t* gDeviceCfgAddr;
 // -----------------------------------------------------------------------------
 //                                Static Variables
 // -----------------------------------------------------------------------------
-/// LCD variables
-/// Context used all over the graphics
-#if (SL_BOARD_ENABLE_DISPLAY)
-static GLIB_Context_t gGlibContext;
-#endif // SL_BOARD_ENABLE_DISPLAY
+
 
 // -----------------------------------------------------------------------------
 //                          Private Function Definitions
