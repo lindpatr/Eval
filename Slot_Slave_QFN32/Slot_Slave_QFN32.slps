@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ASCII"?>
 <model:MDescriptors xmlns:model="http://www.silabs.com/ss/Studio.ecore">
   <descriptors name="Slot_Slave_QFN32">
-    <properties key="projectCommon.sdkId" value="com.silabs.sdk.stack.super:4.1.1._650515524"/>
+    <properties key="projectCommon.sdkId" value="com.silabs.sdk.stack.super:4.1.2._650515524"/>
     <properties key="universalConfig.generationDirectory" value=""/>
     <properties key="universalConfig.toolchainCompatibility" value="iar gcc"/>
     <properties key="projectCommon.boardIds" value="brd4183a:0.0.0 brd4002a:0.0.0.A06"/>
