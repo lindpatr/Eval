@@ -1,0 +1,5 @@
+# (c) Ember - InSight Desktop
+# Decryption type: Real
+# Security level: 5
+# StackID: 23000000
+[296651666 576 16908329 Packet D65F] [000440263902] [FC FF AA 6B DD 0B 00 39 87 FD 00 00 01]

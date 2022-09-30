@@ -1,0 +1,25 @@
+# (c) Ember - InSight Desktop
+# Decryption type: Real
+# Security level: 5
+# StackID: 23000000
+[327181159 576 16908329 Packet 4B56] [000440263902] [FC FF AA F1 11 0C 00 EE 6B FD 00 00 01]
+
+Slot frame decoder
+   - Addr_1: 0x01
+   - Reserved_1: 0x00
+   - Count_4: 0x034B1800
+Radio Info EFR32 [7 bytes]
+   - Crc2: 83 7B
+   - HW End: Rx Success (0xF9)
+   - Rssi Offset32: -37 dBm (0x0D)
+   - Radio info: 0x00
+   -    0... .... = Antenna Select: 0x00
+   -    .0.. .... = Sync Word Select: 0x00
+   -    ..00 0000 = Channel Number: 0 (0)
+   - Status byte: 0x00
+   -    0000 .... = Error Code: Success (0)
+   -    .... 0000 = Protocol ID: Custom (0)
+   - Info Configuration: 0x49
+   -    .1.. .... = TxRx Indicator: Rx (1)
+   -    ..00 1... = Appended info Length: 0x01
+   -    .... .001 = Appended Info Version: 0x01
