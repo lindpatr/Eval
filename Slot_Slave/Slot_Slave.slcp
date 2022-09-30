@@ -26,7 +26,7 @@ include:
   file_list:
   - {path: app_init.h}
   - {path: app_process.h}
-sdk: {id: gecko_sdk, version: 4.1.1}
+sdk: {id: gecko_sdk, version: 4.1.2}
 toolchain_settings:
 - {value: debug, option: optimize}
 component:
@@ -34,8 +34,8 @@ component:
 - {id: app_log}
 - {id: radio_config_simple_rail_singlephy}
 - {id: rail_util_dma}
-- {id: iostream_retarget_stdio}
 - {id: sl_system}
+- {id: iostream_retarget_stdio}
 - instance: [btn0]
   id: simple_button
 - {id: restrictions_profile_wisun_fan_1_0}
@@ -49,9 +49,9 @@ component:
 - {id: restrictions_profile_sun}
 - {id: sl_flex_rail_packet_asm}
 - {id: iostream_recommended_stream}
+- {id: restrictions_profile_long_range}
 - instance: [pwm0]
   id: pwm
-- {id: restrictions_profile_long_range}
 - {id: printf}
 - {id: restrictions_profile_connect}
 - {id: EFR32MG22C224F512IM40}
