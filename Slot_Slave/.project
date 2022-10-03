@@ -91,16 +91,6 @@
 			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_stat.h</locationURI>
 		</link>
 		<link>
-			<name>gecko_sdk_4.1.1/platform/emlib/inc/em_i2c.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_i2c.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.1/platform/emlib/src/em_i2c.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_i2c.c</locationURI>
-		</link>
-		<link>
 			<name>gecko_sdk_4.1.2/hardware/board/inc/sl_board_control.h</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/hardware/board/inc/sl_board_control.h</locationURI>
