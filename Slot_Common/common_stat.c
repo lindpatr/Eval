@@ -373,10 +373,10 @@ void StatInit(void)
 {
     for (int i = 0; i < MAX_NODE; i++)
     {
-        gRX_tab[i][TAB_POS_RX_RSSI_MIN] = 127;
-        gRX_tab[i][TAB_POS_RX_RSSI_MAX] = -128;
+        gRX_tab[i][TAB_POS_RX_RSSI_MIN] = INT8_MAX;
+        gRX_tab[i][TAB_POS_RX_RSSI_MAX] = INT8_MIN;
 
-        gRX_tab[i][TAB_POS_RX_LQI_MIN] = 255;
+        gRX_tab[i][TAB_POS_RX_LQI_MIN] = UINT8_MAX;
         gRX_tab[i][TAB_POS_RX_LQI_MAX] = 0;
     }
 }
