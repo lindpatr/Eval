@@ -1,7 +1,7 @@
 #ifndef SL_IOSTREAM_HANDLES_H
 #define SL_IOSTREAM_HANDLES_H
 #include "sl_iostream.h"
-#include "sl_iostream_init_eusart_instances.h"
+#include "sl_iostream_swo.h"
 
 
 #ifdef __cplusplus

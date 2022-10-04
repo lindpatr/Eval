@@ -34,13 +34,12 @@ component:
 - {id: app_log}
 - {id: rail_util_dma}
 - {id: radio_config_simple_rail_singlephy}
-- {id: sl_system}
 - {id: iostream_retarget_stdio}
-- instance: [btn0]
-  id: simple_button
+- {id: sl_system}
 - {id: restrictions_profile_wisun_fan_1_0}
 - instance: [example]
   id: cli
+- {id: iostream_swo}
 - {id: nvm3_lib}
 - {id: mpu}
 - instance: [inst0]

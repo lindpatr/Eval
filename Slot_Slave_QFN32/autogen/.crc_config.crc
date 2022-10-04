@@ -22,6 +22,7 @@ sl_i2cspm_sensor_config.h=498251017
 sl_i2cspm_sl_i2cspm_sensor_config.h=-1611989958
 sl_i2cspm_temp_sensor_config.h=-1164459548
 sl_iostream_eusart_vcom_config.h=-989351051
+sl_iostream_swo_config.h=-928064663
 sl_memlcd_usart_config.h=-985479069
 sl_memory_config.h=-1749993755
 sl_mx25_flash_shutdown_usart_config.h=906629526

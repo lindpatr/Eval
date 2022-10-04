@@ -16,15 +16,11 @@
     <file name="sl_iostream_handles.h" builtin="true" generated="true"/>
     <file name="sl_iostream_handles.c" builtin="true" generated="true"/>
     <file name="sl_iostream_init_instances.h" builtin="true" generated="true"/>
-    <file name="sl_iostream_init_eusart_instances.c" builtin="true" generated="true"/>
-    <file name="sl_iostream_init_eusart_instances.h" builtin="true" generated="true"/>
     <file name="sl_pwm_init.c" builtin="true" generated="true"/>
     <file name="sl_pwm_instances.h" builtin="true" generated="true"/>
     <file name="sl_rail_util_callbacks.c" builtin="true" generated="true"/>
     <file name="sl_rail_util_init.c" builtin="true" generated="true"/>
     <file name="sl_rail_util_init.h" builtin="true" generated="true"/>
-    <file name="sl_simple_button_instances.c" builtin="true" generated="true"/>
-    <file name="sl_simple_button_instances.h" builtin="true" generated="true"/>
     <file name="linkerfile.ld" builtin="true" generated="true"/>
   </folder>
   <includePath uri="studio:/project/autogen"/>
