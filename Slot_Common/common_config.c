@@ -29,14 +29,14 @@
 //    /* ID                Pos    Enable  Addr    Slot time         Is master   Name          */
 //    {0x385B44FFFEC085D3, 0,     true,   255,    0,                true,       "MASTER\0"},
 //    {0x385b44fffec0862b, 1,     true,   1,      -95+SHIFT_TIME,   false,      "SLAVE\0"},
-//    {0x385b44fffe5f5af2, 2,     false,  2,      610+SHIFT_TIME,   false,      "SLAVE\0"},
+//    {0x385b44fffe5f5af2, 2,     false,  2,      1610+SHIFT_TIME,   false,      "SLAVE\0"},
 //    {0x385b44fffe5f5b23, 3,     true,   3,      210+SHIFT_TIME,   false,      "SLAVE\0"},
 //    {0x385b44fffec08638, 4,     true,   4,      410+SHIFT_TIME,   false,      "SLAVE\0"},
-//    {0x040D84FFFE88A3DF, 5,     true,   5,      610+SHIFT_TIME,   false,      "SLAVE\0"},
-//    {0x040D84FFFE88A50A, 6,     true,   6,      810+SHIFT_TIME,   false,      "SLAVE\0"},
-//    {0x040D84FFFE88A766, 7,     true,   7,     1010+SHIFT_TIME,   false,      "SLAVE\0"},
-//    {0x040D84FFFE88AD13, 8,     true,   8,     1210+SHIFT_TIME,   false,      "SLAVE\0"},
-//    {0x040D84FFFE88AB60, 9,     true,   9,     1410+SHIFT_TIME,   false,      "SLAVE\0"},
+//    {0x040D84FFFE88A3DF, 5,     false,   5,      610+SHIFT_TIME,   false,      "SLAVE\0"},
+//    {0x040D84FFFE88A50A, 6,     false,   6,      810+SHIFT_TIME,   false,      "SLAVE\0"},
+//    {0x040D84FFFE88A766, 7,     false,   7,     1010+SHIFT_TIME,   false,      "SLAVE\0"},
+//    {0x040D84FFFE88AD13, 8,     false,   8,     1210+SHIFT_TIME,   false,      "SLAVE\0"},
+//    {0x040D84FFFE88AB60, 9,     false,   9,     1410+SHIFT_TIME,   false,      "SLAVE\0"},
 //};
 PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
 {
