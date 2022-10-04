@@ -47,7 +47,7 @@
 
 // <q SL_BOARD_DISABLE_MEMORY_SPI> Disable SPI Flash
 // <i> Default: 1
-#define SL_BOARD_DISABLE_MEMORY_SPI             0
+#define SL_BOARD_DISABLE_MEMORY_SPI             1
 
 // <<< end of configuration section >>>
 

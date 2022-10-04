@@ -82,10 +82,6 @@
 #define USART0_CLK_PORT                          gpioPortC
 #define USART0_CLK_PIN                           2
 
-// USART0 CS on PC03
-#define USART0_CS_PORT                           gpioPortC
-#define USART0_CS_PIN                            3
-
 // USART0 RX on PC01
 #define USART0_RX_PORT                           gpioPortC
 #define USART0_RX_PIN                            1
@@ -189,11 +185,11 @@
 #define PTI_SPI_DOUT_PORT                        gpioPortC
 #define PTI_SPI_DOUT_PIN                         4
 
-#define PTI_SPI_CS_PORT                          gpioPortC
-#define PTI_SPI_CS_PIN                           5
-
 #define PTI_SPI_CLK_PORT                         gpioPortC
-#define PTI_SPI_CLK_PIN                          6
+#define PTI_SPI_CLK_PIN                          5
+
+#define PTI_SPI_CS_PORT                          gpioPortC
+#define PTI_SPI_CS_PIN                           6
 
 #define XTAL1_PORT                               gpioPortD
 #define XTAL1_PIN                                0
