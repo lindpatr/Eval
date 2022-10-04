@@ -61,6 +61,10 @@
 #define TX_POWER_DEF    (1)                     // 0.1 dB
 #define TX_POWER        TX_POWER_DEF            // Default value
 
+#define RAD_BIT_SHIT    (7)
+#define READ_CMD        (0 << RAD_BIT_SHIT)
+#define WRITE_CMD       (1 << RAD_BIT_SHIT)
+
 // Kind of possible messages
 typedef enum
 {
@@ -107,7 +111,7 @@ uint8_t common_getMasterAddr(void);
  * Return the device internal address according to the unique ID.
  *
  * @param[in] device unique ID.
- * @return  device internal address or 255 (not found).
+ * @return  device internal address or 0 (not found).
  */
 uint8_t common_getAddr(uint64_t uniqueId);
 

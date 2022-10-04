@@ -73,6 +73,7 @@
 // ---------------
 #include "app_init.h"               // Initialize functions
 #include "app_process.h"            // Main app
+#include "common_config.h"          // Config functions and const
 #include "common_debug.h"           // Debug functions
 #include "common_stat.h"            // Statistics functions
 #include "common_iadc.h"            // ADC functions
@@ -398,18 +399,24 @@ void config_rail(void)
     // Configuration : RAIL Utility, Initialization (inst0) -> Radio Event Configuration -> RX Address Filtered = true/false
     // Si Filtered = true, on recevra un event dans le callback pour indiquer que l'adresse a été filtrée et le message annulé.
     // Si Filtered = false on NE recevra pas d'event dans le callback pour indiquer que l'adresse a été filtrée et le message annulé.
-    uint8_t addrMaster = common_getMasterAddr();
-    uint8_t myAddr     = gDeviceCfgAddr->internalAddr;
+    uint8_t addrMaster_read = common_getMasterAddr() | READ_CMD;
+    uint8_t addrMaster_write = common_getMasterAddr() | WRITE_CMD;
+    uint8_t myAddr_read     = gDeviceCfgAddr->internalAddr | READ_CMD;
+    uint8_t myAddr_write     = gDeviceCfgAddr->internalAddr | WRITE_CMD;
 
     // Configuration du filtrage des adresses
     // Filtrage sur 1 byte avec un offset de 0 byte depuis le débute de la trame.
     RAIL_ConfigAddressFilter(gRailHandle, &addrConfig);
     PrintStatus(status, "Warning RAIL_ConfigAddressFilter");
     // Set addr to filter (max. 4)
-    RAIL_SetAddressFilterAddress(gRailHandle, 0, 0, &addrMaster, true);
-    PrintStatus(status, "Warning RAIL_SetAddressFilterAddress Broadcast");
-    RAIL_SetAddressFilterAddress(gRailHandle, 0, 1, &myAddr, true);         // Master use my address in order to send me specifically a command
-    PrintStatus(status, "Warning RAIL_SetAddressFilterAddress Unicast");
+    RAIL_SetAddressFilterAddress(gRailHandle, 0, 0, &addrMaster_read, true);
+    PrintStatus(status, "Warning RAIL_SetAddressFilterAddress Broadcast (read)");
+    RAIL_SetAddressFilterAddress(gRailHandle, 0, 1, &addrMaster_write, true);
+    PrintStatus(status, "Warning RAIL_SetAddressFilterAddress Broadcast (write)");
+    RAIL_SetAddressFilterAddress(gRailHandle, 0, 2, &myAddr_read, true);         // Master use my address in order to send me specifically a command
+    PrintStatus(status, "Warning RAIL_SetAddressFilterAddress Unicast (read)");
+    RAIL_SetAddressFilterAddress(gRailHandle, 0, 3, &myAddr_write, true);         // Master use my address in order to send me specifically a command
+    PrintStatus(status, "Warning RAIL_SetAddressFilterAddress Unicast (write)");
     // activation
     bool ret = RAIL_EnableAddressFilter(gRailHandle, true);
     PrintStatus((ret == true), "Warning RAIL_EnableAddressFilter");        // RAIL_EnableAddressFilter return true if filter was already enabled
