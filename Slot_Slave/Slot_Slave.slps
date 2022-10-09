@@ -4,7 +4,7 @@
     <properties key="projectCommon.sdkId" value="com.silabs.sdk.stack.super:4.1.2._650515524"/>
     <properties key="universalConfig.generationDirectory" value=""/>
     <properties key="universalConfig.toolchainCompatibility" value="iar gcc"/>
-    <properties key="projectCommon.boardIds" value="brd4182a:0.0.0 brd4002a:0.0.0.A03"/>
+    <properties key="projectCommon.boardIds" value="brd4182a:0.0.0 brd4002a:0.0.0.A06"/>
     <properties key="projectCommon.kitId" value=""/>
     <properties key="projectCommon.partId" value="mcu.arm.efr32.mg22.efr32mg22c224f512im40"/>
     <properties key="projectCommon.toolchainId" value="com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt:10.3.1.20210824"/>

@@ -30,39 +30,39 @@ sdk: {id: gecko_sdk, version: 4.1.2}
 toolchain_settings:
 - {value: debug, option: optimize}
 component:
+- {id: emlib_iadc}
+- {id: app_log}
 - {id: radio_config_simple_rail_singlephy}
 - {id: rail_util_dma}
+- {id: sl_system}
 - {id: iostream_retarget_stdio}
 - instance: [btn0]
   id: simple_button
+- {id: restrictions_profile_wisun_fan_1_0}
 - instance: [example]
   id: cli
 - {id: brd4182a_b06}
 - {id: nvm3_lib}
 - {id: mpu}
+- instance: [inst0]
+  id: rail_util_init
 - {id: restrictions_profile_sun}
 - {id: sl_flex_rail_packet_asm}
 - {id: iostream_recommended_stream}
 - instance: [pwm0]
   id: pwm
+- {id: restrictions_profile_long_range}
+- {id: printf}
 - {id: restrictions_profile_connect}
+- {id: EFR32MG22C224F512IM40}
+- {id: sl_simple_rail_stub}
 - {id: device_init}
 - {id: brd4002a}
 - {id: restrictions_profile_base}
 - {id: restrictions_profile_wisun_han}
+- {id: app_assert}
 - {id: rail_util_recommended}
 - {id: nvm3_default}
-- {id: emlib_iadc}
-- {id: app_log}
-- {id: sl_system}
-- {id: restrictions_profile_wisun_fan_1_0}
-- instance: [inst0]
-  id: rail_util_init
-- {id: restrictions_profile_long_range}
-- {id: printf}
-- {id: EFR32MG22C224F512IM40}
-- {id: sl_simple_rail_stub}
-- {id: app_assert}
 - {id: restrictions_profile_wisun_ofdm}
 define:
 - condition: [hardware_board_has_eff]
