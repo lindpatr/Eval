@@ -30,10 +30,30 @@
 #include "sl_device_init_clocks.h"
 
 #include "em_cmu.h"
+#include "common_config.h"
 
 sl_status_t sl_device_init_clocks(void)
 {
-  CMU_ClockSelectSet(cmuClock_SYSCLK, cmuSelect_HFXO);
+#if (FREQ768MHZ)
+    CMU_DPLLInit_TypeDef dpllInit = CMU_DPLL_HFXO_TO_76_8MHZ;
+    dpllInit.refClk = cmuSelect_HFXO;
+
+#if defined(_SILICON_LABS_32B_SERIES_2_CONFIG_2)
+    /* Enable LFXO and DPLL0 APB clock branches (necessary for EFR32xG22) */
+    CMU_ClockEnable(cmuSelect_HFXO, true);
+    CMU_ClockEnable(cmuClock_DPLL0, true);
+#endif  // _SILICON_LABS_32B_SERIES_2_CONFIG_2
+
+    /* Set output target frequency and enable DPLL*/
+    if (CMU_DPLLLock(&dpllInit) == true)
+    {
+     /* Set SYSCLK to HFRCODPLL after DPLL is locked */
+     CMU_ClockSelectSet(cmuClock_SYSCLK, cmuSelect_HFRCODPLL);
+    }
+#else
+  //CMU_ClockSelectSet(cmuClock_SYSCLK, cmuSelect_HFXO);
+#endif  // FREQ768MHZ
+
 #if defined(_CMU_EM01GRPACLKCTRL_MASK)
   CMU_ClockSelectSet(cmuClock_EM01GRPACLK, cmuSelect_HFXO);
 #endif
