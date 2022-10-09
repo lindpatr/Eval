@@ -45,8 +45,6 @@
 #include "printf.h"                 // Tiny printf
 #include "em_chip.h"                // Chip functions
 #include "sl_udelay.h"              // Active delay
-#include "sl_simple_button_instances.h"
-// Button functions
 #include "sl_flex_packet_asm.h"     // Flex packet
 #include "sl_pwm_instances.h"       // PWM functions
 
@@ -277,17 +275,6 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
     }
 
     DEBUG_PIN_CB_RESET;
-}
-
-/******************************************************************************
- * Button callback, called if any button is pressed or released.
- *****************************************************************************/
-void sl_button_on_change(const sl_button_t *handle)
-{
-    if (sl_button_get_state(handle) == SL_SIMPLE_BUTTON_PRESSED)
-    {
-        gBtnPressed = true;
-    }
 }
 
 ///******************************************************************************
