@@ -44,7 +44,7 @@ static char *gCB_descr_tab[SIZE_UINT64_IN_BITS ] =
         "RX_FIFO_OVERFLOW    ",
         "RX_ADDRESS_FILTERED ",
         "RX_TIMEOUT          ",
-        "SCHEDULED_xX_STARTED",
+        "SCHEDULED_TX_STARTED",
         "RX_SCHEDULED_RX_END ",
         "RX_SCHEDULED_RX_MISS",
         "RX_PACKET_ABORTED   ",
@@ -173,7 +173,7 @@ __INLINE void DisplayStat(void)
 
     float relElapsedTime;
     bool isMaster = gDeviceCfgAddr->ismaster;
-    uint8_t myDevice = gDeviceCfgAddr->posTab;
+    uint8_t me = gDeviceCfgAddr->posTab;
 
 
     // Common processing
@@ -185,19 +185,25 @@ __INLINE void DisplayStat(void)
     if (isMaster)
     {
         // Master node --> take in account all enabled slaves [1..N]
-        for (int i = 1; i <= common_getNbrDeviceOfType(SLAVE_TYPE, ALL); i++)
+        for (int i = 1; i <= gNbOfSlave; i++)
         {
-            if (common_getConfigTable(i)->enable)
+            PROT_AddrMap_t* device = common_getConfigTable(i);
+
+            if (device != NULL)
             {
-                uint8_t pos = common_getConfigTable(i)->posTab;
-                if (gRX_counter[pos].u32 > 0UL)
+                if (device->enable)
                 {
-                    // Absolute
-                    // --------
-                    absRXCounter += gRX_counter[i].u32;                         // Sum of absolute RX (from Slave) counters
-                    absRXGap += gRX_tab[i][TAB_POS_RX_GAP];                 // Sum of absolute RX (from Slave) gap occurences
-                    absRXOk += gRX_tab[i][TAB_POS_RX_OK];                   // Sum of absolute TX Ok (from Slave) counters
+                    uint8_t pos = device->posTab;
+                    if (gRX_counter[pos].u32 > 0UL)
+                    {
+                        // Absolute
+                        // --------
+                        absRXCounter += gRX_counter[pos].u32;                         // Sum of absolute RX (from Slave) counters
+                        absRXGap += gRX_tab[pos][TAB_POS_RX_GAP];                 // Sum of absolute RX (from Slave) gap occurences
+                        absRXOk += gRX_tab[pos][TAB_POS_RX_OK];                   // Sum of absolute TX Ok (from Slave) counters
+                    }
                 }
+
             }
         }
     }
@@ -205,9 +211,9 @@ __INLINE void DisplayStat(void)
     {
         // Absolute
         // --------
-        absRXCounter = gRX_counter[myDevice].u32;
-        absRXGap = gRX_tab[myDevice][TAB_POS_RX_GAP];
-        absRXOk = gRX_tab[myDevice][TAB_POS_RX_OK];
+        absRXCounter = gRX_counter[me].u32;
+        absRXGap = gRX_tab[me][TAB_POS_RX_GAP];
+        absRXOk = gRX_tab[me][TAB_POS_RX_OK];
     }
 
     uint32_t absAllCounter = absTXCounter + absRXCounter;
@@ -216,15 +222,15 @@ __INLINE void DisplayStat(void)
     // Absolute stat
     // -------------
     // Cumulative time
-    relElapsedTime = (float)((double) (gTotalElapsedTime) / (float)(SEC));
+    relElapsedTime = (float)(gTotalElapsedTime / (SEC*1.0f));
     // Messages pro second
     statAbsMsgPerSec = (float)(absAllCounter) / relElapsedTime;
     // Then compare to the key transmission rate of 1 master + 100 slaves @10ms
     //statAbsMsgPerSecRef = REF_MSG_PER_SEC / statAbsMsgPerSec;
-    uint8_t n_slaves = common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED);
+    uint8_t n_slaves = gNbOfEnabledSlave;
     float calc_sync_period = ((1000000.0f * (1.0f / statAbsMsgPerSec)) * (n_slaves + 1));
-    uint32_t th_sync_period = (TIME_SLOT_MASTER_TX + TIME_SLOT_ACQ + (common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED) * TIME_SLOT_SLAVE)  - TIME_SLOT_CORR);
-    uint32_t deduc = TIME_SLOT_MASTER_TX + TIME_SLOT_ACQ + ((uint32_t)calc_sync_period - (th_sync_period + TIME_SLOT_CORR))/* = TIME_SLOT_RES*/;
+    uint32_t th_sync_period = (TIME_SLOT_MASTER_TX + TIME_SLOT_ACQ + (gNbOfEnabledSlave * TIME_SLOT_SLAVE)  - TIME_SLOT_CORR);
+    uint32_t deduc = TIME_SLOT_MASTER_TX + TIME_SLOT_ACQ + ((uint32_t)calc_sync_period - (th_sync_period + TIME_SLOT_CORR));
     statAbsMsgPerSecRef = (((float)MAX_SLAVE * (float)((calc_sync_period - deduc) / (float)n_slaves)) + deduc) / 1000.0f;
 
     uint32_t absTXOk = gTX_tab[TAB_POS_TX_OK];
@@ -235,26 +241,31 @@ __INLINE void DisplayStat(void)
     uint32_t absTXErr = gTX_tab[TAB_POS_TX_ERR];
     uint32_t absTXTimeOut = gTX_tab[TAB_POS_TX_TIMEOUT];
 
-    statAbsTXErr = 100.0f * (float) (absTXErr + absTXTimeOut) / (float) (absTXCounter);
+    statAbsTXErr = 100.0f * (float) (absTXErr + absTXTimeOut) / (float) (isMaster ? (gCB_tab[RAIL_EVENT_TX_PACKET_SENT_SHIFT]-gCountPrintStat) : gCB_tab[RAIL_EVENT_TX_PACKET_SENT_SHIFT]);
     if (statAbsTXErr > 100.0f)
         statAbsTXErr = 100.0f;
 
     // RX error rate
-    uint32_t absRXErr = gRX_tab[myDevice][TAB_POS_RX_ERR];
-    uint32_t absRXTimeOut = gRX_tab[myDevice][TAB_POS_RX_TIMEOUT];
+    uint32_t absRXErr = gRX_tab[me][TAB_POS_RX_ERR];
+    uint32_t absRXTimeOut = gRX_tab[me][TAB_POS_RX_TIMEOUT];
     float period = 1000.0f / ((float)absTXOk / (float)relElapsedTime);
 
     // Detect never responding slaves
     if (isMaster)   // From a master point of view
     {
-        for (int i = 1; i <= common_getNbrDeviceOfType(SLAVE_TYPE, ALL); i++)
+        for (int i = 1; i <= gNbOfSlave; i++)
         {
-            if (common_getConfigTable(i)->enable)
+            PROT_AddrMap_t* device = common_getConfigTable(i);
+
+            if (device != NULL)
             {
-                uint8_t pos = common_getConfigTable(i)->posTab;
-                if (gRX_counter[pos].u32 == 0UL)
+                if (device->enable)
                 {
-                    absRXTimeOut += absTXOk;
+                    uint8_t pos = device->posTab;
+                    if (gRX_counter[pos].u32 == 0UL)
+                    {
+                        absRXTimeOut += absTXOk;
+                    }
                 }
             }
         }
@@ -267,22 +278,22 @@ __INLINE void DisplayStat(void)
         }
     }
 
-    uint32_t absCRCErr = gRX_tab[myDevice][TAB_POS_RX_CRC_ERR];
-    uint32_t absSYNCErr = gRX_tab[myDevice][TAB_POS_RX_SYNC_LOST];
+    uint32_t absCRCErr = gRX_tab[me][TAB_POS_RX_CRC_ERR];
+    uint32_t absSYNCErr = gRX_tab[me][TAB_POS_RX_SYNC_LOST];
     uint32_t remainingAbsRXGap = ((absRXGap > absRXErr) ? (absRXGap - absRXErr): 0);            // Frame error implies a gap -> compute gap delta due to other reasons
 
-    statAbsRXErr = 100.0f * (float) (absRXErr + absRXTimeOut + absCRCErr + remainingAbsRXGap) / (float) (absRXCounter);
+    statAbsRXErr = 100.0f * (float) (absRXErr + absRXTimeOut + absCRCErr + remainingAbsRXGap) / (float) (isMaster ? gCB_tab[RAIL_EVENT_RX_PACKET_RECEIVED_SHIFT] : (gCB_tab[RAIL_EVENT_RX_PACKET_RECEIVED_SHIFT]-gCountPrintStat));
     if (statAbsRXErr > 100.0f)
         statAbsRXErr = 100.0f;
 
 #if (RSSI_LQI_MES)
     // RX quality
-    int8_t statAbsRssiMoy = (int8_t)gRX_tab[myDevice][TAB_POS_RX_RSSI_MOY];
-    int8_t statAbsRssiMin = (int8_t)gRX_tab[myDevice][TAB_POS_RX_RSSI_MIN];
-    int8_t statAbsRssiMax = (int8_t)gRX_tab[myDevice][TAB_POS_RX_RSSI_MAX];
-    uint8_t statAbsLqiMoy = (uint8_t)gRX_tab[myDevice][TAB_POS_RX_LQI_MOY];
-    uint8_t statAbsLqiMin = (uint8_t)gRX_tab[myDevice][TAB_POS_RX_LQI_MIN];
-    uint8_t statAbsLqiMax = (uint8_t)gRX_tab[myDevice][TAB_POS_RX_LQI_MAX];
+    int8_t statAbsRssiMoy = (int8_t)gRX_tab[me][TAB_POS_RX_RSSI_MOY];
+    int8_t statAbsRssiMin = (int8_t)gRX_tab[me][TAB_POS_RX_RSSI_MIN];
+    int8_t statAbsRssiMax = (int8_t)gRX_tab[me][TAB_POS_RX_RSSI_MAX];
+    uint8_t statAbsLqiMoy = (uint8_t)gRX_tab[me][TAB_POS_RX_LQI_MOY];
+    uint8_t statAbsLqiMin = (uint8_t)gRX_tab[me][TAB_POS_RX_LQI_MIN];
+    uint8_t statAbsLqiMax = (uint8_t)gRX_tab[me][TAB_POS_RX_LQI_MAX];
 #endif  // RSSI_LQI_MES
 
     // Printing
@@ -297,11 +308,11 @@ __INLINE void DisplayStat(void)
 
     // Absolute stat
     // -------------
-    app_log_info("\nElapsed time               : %0.2f sec\n", relElapsedTime);
+    app_log_info("\nElapsed time               : %0.0f sec\n", (gCountPrintStat*gStatDelay/(SEC*1.0f))/*relElapsedTime*/);
 
     // Counters TX and RX
-    app_log_info("#Counter %s            : %d\n", (isMaster ? "      " : "      "), absTXOk);
-    app_log_info("#Counter (%s)          : %d\n", (isMaster ? "Slaves" : "Master"), absRXOk);
+    app_log_info("#Last counter to %s    : %d\n", (isMaster ? "Slaves" : "Master"), absTXCounter);
+    app_log_info("#Last counter from %s  : %d\n", (isMaster ? "Slaves" : "Master"), absRXCounter);
 
     // Errors TX and RX
     app_log_info("TX Err (#err/#TO)          : %03.1f ppm/%0.3f%% (%d/%d)\n", statAbsTXErr * 10000.0f, statAbsTXErr, absTXErr, absTXTimeOut);
@@ -320,7 +331,7 @@ __INLINE void DisplayStat(void)
     {
         app_log_info("#Sync lost                 : %d\n", absSYNCErr);
         app_log_info("Sync period                : %0.3f ms\n", period);
-        app_log_info("AD VDDA/IO/D/TCPU / I2C TA : %0.2fV/%0.2fV/%0.2fV/%0.1f°C/%0.1f°C\n", CONVERT_TO_VOLT(gMboxADMes.u.detail.vdda), CONVERT_TO_VOLT_2(gMboxADMes.u.detail.ucell), CONVERT_TO_VOLT_2(gMboxADMes.u.detail.icell), CONVERT_TO_DEGRES_2(gMboxADMes.u.detail.internaltemp), CONVERT_TO_DEGRES(gMBoxTempCell));
+        app_log_info("AD VDDA/IO/D/TCPU / SPI TA : %0.2fV/%0.2fV/%0.2fmA/%0.1f°C/%0.1f°C\n", CONVERT_TO_VOLT(gMboxADMes.u.detail.vdda), CONVERT_TO_VOLT_2(gMboxADMes.u.detail.ucell), CONVERT_TO_VOLT_2(gMboxADMes.u.detail.icell), CONVERT_TO_DEGRES_2(gMboxADMes.u.detail.internaltemp), CONVERT_TO_DEGRES(gMBoxTempCell));
     }
 
     // Calibration
@@ -333,28 +344,32 @@ __INLINE void DisplayStat(void)
     if (isMaster)
     {
         // Master node --> take in account all slaves
-        for (int i = 1; i <= common_getNbrDeviceOfType(SLAVE_TYPE, ALL); i++)
+        for (int i = 1; i <= gNbOfSlave; i++)
         {
-            if (common_getConfigTable(i)->enable)
+            PROT_AddrMap_t* device = common_getConfigTable(i);
+
+            if (device != NULL)
             {
-                uint8_t pos = common_getConfigTable(i)->posTab;
-                uint8_t addr = common_getConfigTable(i)->internalAddr;
-    //            if (gRX_counter[pos].u32 > 0UL)
-    //            {
-                    app_log_info("%03d Err (#cnt/#TO/#gap/max): %03.1f ppm (%d/%d/%d/%d)\n",
+                if (device->enable)
+                {
+                    uint8_t pos = device->posTab;
+                    uint8_t addr = device->internalAddr;
+
+                    app_log_info("%03d Err (#OK/#TO/#gap/max) : %03.1f ppm (%d/%d/%d/%d)\n",
                             addr,
-                            (1000000.0f *(gRX_tab[pos][TAB_POS_TX_TIMEOUT]+gRX_tab[pos][TAB_POS_RX_GAP]))/(float)gRX_tab[pos][TAB_POS_RX_OK],
+                            (1000000.0f *(gRX_tab[pos][TAB_POS_TX_TIMEOUT]+gRX_tab[pos][TAB_POS_RX_GAP]))/(float)(gRX_tab[pos][TAB_POS_RX_OK]+gRX_tab[pos][TAB_POS_TX_TIMEOUT]+gRX_tab[pos][TAB_POS_RX_GAP]),
                             gRX_tab[pos][TAB_POS_RX_OK],
                             gRX_tab[pos][TAB_POS_TX_TIMEOUT],
                             gRX_tab[pos][TAB_POS_RX_GAP],
                             gRX_tab[pos][TAB_POS_RX_GAP_MAX]);
-    //            }
+                }
+
             }
         }
     }
     else    // Slave node -> take in account only the concerned slave
     {
-        app_log_info("#Counter (#gap/max)        : %d (%d=%d gap-%d FErr / max: %d)\n", absRXOk, remainingAbsRXGap, absRXGap, absRXErr, gRX_tab[myDevice][TAB_POS_RX_GAP_MAX]);
+        app_log_info("#Counter (#gap/max)        : %d (%d=%d gap-%d FErr / max: %d)\n", absRXOk, remainingAbsRXGap, absRXGap, absRXErr, gRX_tab[me][TAB_POS_RX_GAP_MAX]);
     }
 
     // Detail of callback events
@@ -371,6 +386,7 @@ __INLINE void DisplayStat(void)
  *****************************************************************************/
 void StatInit(void)
 {
+    // RSSI and LQI min / max table
     for (int i = 0; i < MAX_NODE; i++)
     {
         gRX_tab[i][TAB_POS_RX_RSSI_MIN] = INT8_MAX;
