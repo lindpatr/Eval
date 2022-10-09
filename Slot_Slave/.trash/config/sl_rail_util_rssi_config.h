@@ -1,6 +1,6 @@
 /***************************************************************************//**
  * @file
- * @brief Packet Trace Information configuration file.
+ * @brief RSSI configuration header file.
  *******************************************************************************
  * # License
  * <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
@@ -28,35 +28,17 @@
  *
  ******************************************************************************/
 
-#ifndef SL_RAIL_UTIL_PTI_CONFIG_H
-#define SL_RAIL_UTIL_PTI_CONFIG_H
-
-#include "rail_types.h"
+#ifndef SL_RAIL_UTIL_RSSI_CONFIG_H
+#define SL_RAIL_UTIL_RSSI_CONFIG_H
 
 // <<< Use Configuration Wizard in Context Menu >>>
-// <h> PTI Configuration
 
-// <o SL_RAIL_UTIL_PTI_MODE> PTI mode
-// <RAIL_PTI_MODE_UART=> UART
-// <RAIL_PTI_MODE_UART_ONEWIRE=> UART onewire
-// <RAIL_PTI_MODE_SPI=> SPI
-// <RAIL_PTI_MODE_DISABLED=> Disabled
-// <i> Default: RAIL_PTI_MODE_UART
-#define SL_RAIL_UTIL_PTI_MODE           RAIL_PTI_MODE_UART
+// <h> RSSI Offset Configuration
 
-// <o SL_RAIL_UTIL_PTI_BAUD_RATE_HZ> PTI Baud Rate (Hertz)
-// <147800-20000000:1>
-// <i> Default: 1600000
-#define SL_RAIL_UTIL_PTI_BAUD_RATE_HZ   1600000
+// <o SL_RAIL_UTIL_RSSI_OFFSET> Software RSSI offset value
+// <i> Default: 0
+#define SL_RAIL_UTIL_RSSI_OFFSET 0
 
 // </h>
 // <<< end of configuration section >>>
-
-// <<< sl:start pin_tool >>>
-// <pti signal=DOUT,(DFRAME),(DCLK)> SL_RAIL_UTIL_PTI
-// $[PTI_SL_RAIL_UTIL_PTI]
-// [PTI_SL_RAIL_UTIL_PTI]$
-
-// <<< sl:end pin_tool >>>
-
-#endif // SL_RAIL_UTIL_PTI_CONFIG_H
+#endif // SL_RAIL_UTIL_RSSI_CONFIG_H
