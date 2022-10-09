@@ -44,9 +44,11 @@
 // Additional components
 // ---------------------
 #include "printf.h"                 // Tiny printf
+#include "em_chip.h"                // Chip functions
 #include "sl_simple_button_instances.h"
                                     // Button functions
 #include "sl_flex_packet_asm.h"     // Flex packet
+#include "sl_udelay.h"              // Active delay
 
 // User components
 // ---------------
@@ -161,9 +163,7 @@ volatile bool gStatReq = false;					// Flag, indicating a request to print stati
 TypeMsgEnum gTX_msg_type = kInvalidMsg;
 /// TX and RX counters
 volatile union32_t gRX_counter[MAX_NODE] = { 0UL };
-volatile union32_t gTX_counter = { .u32 = 1UL };
-volatile uint32_t gTX_counter_old = 0UL;
-volatile uint32_t gRX_counter_old[MAX_NODE] = { 0UL };
+volatile union32_t gTX_counter = { .u32 = 0UL };
 uint32_t gRX_counter_prev[MAX_NODE] = { 0UL };
 
 /// Various flags
@@ -178,7 +178,15 @@ static bool gPauseCycleReq = false;             // Flag to indicate that a print
 static uint8_t me;                                              // Position in the config file (for address, time slot, ...)
 /// Value, indicating print stat delay on CLI
 extern volatile RAIL_Time_t gStatDelay;
-static bool tx_request = false;
+
+#if (qPrintStatTiming)
+// Debug
+static RAIL_Time_t TagTime_CB_RX, TagTime_CB_TX;
+static RAIL_Time_t TagTimeDelta_CB_RX, TagTimeDelta_CB_TX;
+static RAIL_Time_t TagTime1, TagTime1Prev, TagTime2, TagTime2Prev, TagTime3, TagTime3Prev, TagTime4, TagTime4Prev, TagTime5, TagTime5Prev;
+static RAIL_Time_t TagTimeDelta1, TagTimeDelta2, TagTimeDelta3, TagTimeDelta4, TagTimeDelta5;
+static RAIL_Time_t TagTimeDelta2_1, TagTimeDelta3_2, TagTimeDelta4_3, TagTimeDelta5_4;
+#endif  // qPrintStatTiming
 
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
@@ -205,6 +213,9 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 
         if (events & RAIL_EVENT_RX_PACKET_RECEIVED)
         {
+#if (qPrintStatTiming)
+            TagTime_CB_RX = RAIL_GetTime();
+#endif  // qPrintStatTiming
             DEBUG_PIN_RX_RESET;
             // Keep the packet in the radio buffer, download it later at the state machine
             RAIL_HoldRxPacket(rail_handle);
@@ -226,6 +237,9 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
     {
         if (events & RAIL_EVENT_TX_PACKET_SENT)
         {
+#if (qPrintStatTiming)
+            TagTime_CB_TX = RAIL_GetTime();
+#endif  // qPrintStatTiming
             // Handle next step
             DEBUG_PIN_TX_RESET;
 
@@ -304,7 +318,7 @@ static __INLINE void SetState(StateEnum state)
  *****************************************************************************/
 static __INLINE void StopRadio(void)
 {
-    RAIL_Idle(gRailHandle, RAIL_IDLE_FORCE_SHUTDOWN_CLEAR_FLAGS, true);
+//    RAIL_Idle(gRailHandle, RAIL_IDLE_FORCE_SHUTDOWN_CLEAR_FLAGS, true);
 
     gRX_ok = false;
     gTX_ok = false;
@@ -319,7 +333,7 @@ static __INLINE void StopRadio(void)
  *****************************************************************************/
 static __INLINE void RestartRadio(void)
 {
-    RAIL_Idle(gRailHandle, RAIL_IDLE, true);
+//    RAIL_Idle(gRailHandle, RAIL_IDLE, true);
 }
 
 /******************************************************************************
@@ -332,9 +346,14 @@ static __INLINE bool PrintStatistics(void)
 
     if (gPauseCycleConf)        // Permission to print stat
     {
+        DEBUG_PIN_STAT_REQ_SET;
+
         gOldElapsedTime = gElapsedTime;
         gElapsedTime = RAIL_GetTime();
-
+#if (qPrintStatTiming)
+        TagTime4 = gElapsedTime;
+        TagTimeDelta4_3 = TagTime4 - TagTime3;
+#endif  // qPrintStatTiming
         if (gElapsedTime < gOldElapsedTime)
         {
             uint64_t tmp = gElapsedTime + UINT32_MAX - gOldElapsedTime;
@@ -342,6 +361,8 @@ static __INLINE bool PrintStatistics(void)
         }
         else
             gTotalElapsedTime += (gElapsedTime - gOldElapsedTime);
+
+        DEBUG_PIN_STAT_REQ_RESET;
 
         gCountPrintStat++;
 
@@ -354,15 +375,28 @@ static __INLINE bool PrintStatistics(void)
 
         RestartRadio();
 
-        gTX_counter.u32++;
-
-        gTX_counter_old = gTX_counter.u32;
-        memcpy((uint32_t*) &gRX_counter_old[0], (uint32_t*) &gRX_counter[0].u32, MAX_NODE);
-
         gPauseCycleReq = false;
         gPauseCycleConf = false;
 
-        RAIL_DelayUs(1000);       // Wait 1 ms
+#if (qPrintStatTiming)
+        app_log_info("\nDEBUG timing statistics\n");
+        app_log_info("-----------------------\n");
+
+        app_log_info("Timer period       : %d us\n", TagTimeDelta1);
+        app_log_info("Time from CB RX    : %d us\n", TagTimeDelta_CB_RX);
+        app_log_info("Timer->req start   : %d us\n", TagTimeDelta2_1);
+        app_log_info("Req period         : %d us (delta with timer period: %d us)\n", TagTimeDelta2, TagTimeDelta2-TagTimeDelta1);
+        app_log_info("Time from CB TX    : %d us\n", TagTimeDelta_CB_TX);
+        app_log_info("Req start->TX ok   : %d us\n", TagTimeDelta3_2);
+        app_log_info("TX ok -> print     : %d us\n", TagTimeDelta4_3);
+        app_log_info("Print out time     : %d us\n", TagTimeDelta5_4);
+
+        TagTime5 = RAIL_GetTime();
+        TagTimeDelta5_4 = TagTime5 - TagTime4;
+#endif  // qPrintStatTiming
+        sl_udelay_wait(5000);       // As Master is starting first his print and print volume can vary between Master and Slave,
+                                    // wait 5 ms to allow time to Slaves to be ready after their stat print out
+
     }
 
     return !gPauseCycleReq;
@@ -421,8 +455,6 @@ static __INLINE void StartTransmit(void)
     // Initialize radio buffer
     prepare_packet_to_tx();
 
-    tx_request = false;
-
     // For oscillo debug purposes
     DEBUG_PIN_TX_SET;
 
@@ -441,7 +473,7 @@ static int64_t sum_rssi = 0;
 static uint64_t sum_lqi = 0U;
 #endif  // RSSI_LQI_MES
 
-static __INLINE void DecodeReceivedMsg(void)
+static __INLINE bool DecodeReceivedMsg(void)
 {
     // RAIL Rx packet handles
     RAIL_RxPacketHandle_t rx_packet_handle;
@@ -453,6 +485,7 @@ static __INLINE void DecodeReceivedMsg(void)
     int8_t rssi;
     uint8_t lqi;
 #endif  // RSSI_LQI_MES
+    bool ret = false;
 
     // Packet received:
     //  - Check whether RAIL_HoldRxPacket() was successful, i.e. packet handle is valid
@@ -477,34 +510,46 @@ static __INLINE void DecodeReceivedMsg(void)
             {
                 DisplayReceivedMsg(start_of_packet, packet_size);
 
-                uint8_t addr = start_of_packet[kAddr];
+                ret = true;
 
-                // Backup previous data
-                gRX_counter_prev[addr] = gRX_counter[addr].u32;
-                // Extract received data
-                //gRX_counter[addr] = (uint32_t) ((start_of_packet[kCounter0] << 0) + (start_of_packet[kCounter1] << 8) + (start_of_packet[kCounter2] << 16) + (start_of_packet[kCounter3] << 24));
-                gRX_counter[addr].u8[0] = start_of_packet[kCounter0];
-                gRX_counter[addr].u8[1] = start_of_packet[kCounter1];
-                gRX_counter[addr].u8[2] = start_of_packet[kCounter2];
-                gRX_counter[addr].u8[3] = start_of_packet[kCounter3];
+                uint8_t pos = gAddrToPos[start_of_packet[kAddr]];
+                //uint8_t pos = start_of_packet[kAddr];
+                TypeMsgEnum msg_type = start_of_packet[kCmd];
 
-                uint32_t delta = gRX_counter[addr].u32 - gRX_counter_prev[addr];
-                if (delta != 1)
+                if (msg_type == kDataMsg)
                 {
-                    gRX_tab[addr][TAB_POS_RX_GAP]++;
-                    gRX_tab[addr][TAB_POS_RX_GAP_MAX] = (delta > gRX_tab[addr][TAB_POS_RX_GAP_MAX] ? delta : gRX_tab[addr][TAB_POS_RX_GAP_MAX]);
-                }
-                else
-                    gRX_tab[addr][TAB_POS_RX_OK]++;
+                    // Backup previous data
+                    gRX_counter_prev[pos] = gRX_counter[pos].u32;
+                    // Extract received data
+                    //gRX_counter[addr] = (uint32_t) ((start_of_packet[kCounter0] << 0) + (start_of_packet[kCounter1] << 8) + (start_of_packet[kCounter2] << 16) + (start_of_packet[kCounter3] << 24));
+                    gRX_counter[pos].u8[0] = start_of_packet[kCounter0];
+                    gRX_counter[pos].u8[1] = start_of_packet[kCounter1];
+                    gRX_counter[pos].u8[2] = start_of_packet[kCounter2];
+                    gRX_counter[pos].u8[3] = start_of_packet[kCounter3];
+
+                    uint32_t delta = gRX_counter[pos].u32 - gRX_counter_prev[pos];
+                    if (delta != 1)
+                    {
+                        gRX_tab[pos][TAB_POS_RX_GAP]++;
+                        gRX_tab[pos][TAB_POS_RX_GAP_MAX] = (delta > gRX_tab[pos][TAB_POS_RX_GAP_MAX] ? delta : gRX_tab[pos][TAB_POS_RX_GAP_MAX]);
+                    }
+                    else
+                    {
+                        gRX_tab[pos][TAB_POS_RX_OK]++;
+                    }
 
 #if (RSSI_LQI_MES)
-                if (tx_request)
-                {
                     status = RAIL_GetRxPacketDetailsAlt(gRailHandle, rx_packet_handle, &packet_info_detail);
                     PrintStatus(status, "Warning RAIL_GetRxPacketDetails");
 
                     // Count received packet
                     count_packet++;
+                    if (count_packet == UINT32_MAX)
+                    {
+                        count_packet = 1U;
+                        sum_rssi = 0;
+                        sum_lqi = 0U;
+                    }
                     // Get quality information: rssi and lqi
                     rssi = packet_info_detail.rssi;
                     sum_rssi += rssi;
@@ -516,10 +561,9 @@ static __INLINE void DecodeReceivedMsg(void)
                     gRX_tab[me][TAB_POS_RX_LQI_MOY] = (uint8_t)(sum_lqi/count_packet);
                     gRX_tab[me][TAB_POS_RX_LQI_MIN] = (lqi < (uint8_t)gRX_tab[me][TAB_POS_RX_LQI_MIN] ? lqi : gRX_tab[me][TAB_POS_RX_LQI_MIN]);
                     gRX_tab[me][TAB_POS_RX_LQI_MAX] = (lqi > (uint8_t)gRX_tab[me][TAB_POS_RX_LQI_MAX] ? lqi : gRX_tab[me][TAB_POS_RX_LQI_MAX]);
-
-                    tx_request = false;
-                }
 #endif  // RSSI_LQI_MES
+                }
+                // else if () --> currently, Slave don't handle other frame than data
             }
             else if (packet_info.packetStatus == RAIL_RX_PACKET_READY_CRC_ERROR)
             {
@@ -532,12 +576,12 @@ static __INLINE void DecodeReceivedMsg(void)
             PrintStatus(status, "Warning ReleaseRxPacket");
 #endif  // RSSI_LQI_MES
 
-//            // Indicate RX in progress on LED0
-//            sl_led_toggle(&sl_led_led0);
         }
 
        rx_packet_handle = RAIL_GetRxPacketInfo(gRailHandle, RAIL_RX_PACKET_HANDLE_OLDEST_COMPLETE, &packet_info);
     }
+
+    return ret;
 }
 
 // -----------------------------------------------------------------------------
@@ -605,21 +649,13 @@ void app_process_action(void)
     /// -------------------------------
     else if (gStatTimerDone)
     {
+#if (qPrintStatTiming)
+        TagTime1Prev = TagTime1;
+        TagTime1 = RAIL_GetTime();
+        TagTimeDelta1 = TagTime1-TagTime1Prev;
+#endif  // qPrintStatTiming
         gStatTimerDone = false;
 
-// Reactivate this code is no èrint out stat is needed and comment SetState(kStatistics);
-//        gOldElapsedTime = gElapsedTime;
-//        gElapsedTime = RAIL_GetTime();
-//
-//        if (gElapsedTime < gOldElapsedTime)
-//        {
-//            uint64_t tmp = gElapsedTime + UINT32_MAX - gOldElapsedTime;
-//            gTotalElapsedTime += (uint32_t)tmp;
-//        }
-//        else
-//            gTotalElapsedTime += (gElapsedTime - gOldElapsedTime);
-//
-//        StartTimerStat();
         SetState(kStatistics);
     }
     /// Button pressed: start process then print stat
@@ -636,7 +672,19 @@ void app_process_action(void)
     {
         gResetProcess = false;
 
-        NVIC_SystemReset();
+        // Normal mode (data)
+        gTX_msg_type = kResetMsg;
+        // Send reset
+        StartTransmit();
+
+        sl_udelay_wait(500);
+
+        // Send reset (2nd time to be "sure" all slaves resets ?!?
+        StartTransmit();
+
+        sl_udelay_wait(500);
+
+        CHIP_Reset();
     }
     /// Stat print out request via CLI
     /// ------------------------------
@@ -682,15 +730,18 @@ void app_process_action(void)
         // Start process
         PrintInfo("\nInfo Running ...\n");
 
-//        // Turn on LED TX
-//        sl_led_turn_on(&sl_led_led1);
-
         // Normal mode (data)
         gTX_msg_type = kDataMsg;
 
         // To track first sync transmitted to slaves
         gTX_first = false;
 
+        // Increment counter (no overflow test!)
+        gTX_counter.u32++;
+#if (qPrintStatTiming)
+        TagTime1Prev = RAIL_GetTime();
+        TagTime2Prev = TagTime1Prev;
+#endif  // qPrintStatTiming
         // Send sync
         StartTransmit();
 
@@ -715,7 +766,14 @@ void app_process_action(void)
         if (gTX_msg_type == kDataMsg)       // Don't take in account the error generated by other command than normal mode (data)
         {
             // Extract received data from buffer
-            DecodeReceivedMsg();
+            if (DecodeReceivedMsg())
+            {
+                // Nothing additional specific to do than already treated in DecodeReceivedMsg
+            }
+            else
+            {
+                // Data received in the buffer was not treated (CRC error or partial frame)
+            }
         }
 
         // Auto transition to RX after successfull receive
@@ -759,28 +817,22 @@ void app_process_action(void)
             /// Normal mode (data)
         case kDataMsg:
             gTX_tab[TAB_POS_TX_OK] = gCB_tab[RAIL_EVENT_TX_PACKET_SENT_SHIFT];
-            // Increment counter (no overflow test!)
-            gTX_counter.u32++;
 
             if (!gTX_first)
             {
-                gTX_first = true;
-
-                gTX_counter_old = gTX_counter.u32;
-                memcpy((uint32_t*) &gRX_counter_old[0], (uint32_t*) &gRX_counter[0].u32, MAX_NODE);
-
                 StartTimerStat();
+
+                DEBUG_PIN_STAT_REQ_SET;
+
+                gTX_first = true;
 
                 gElapsedTime = RAIL_GetTime();
                 gOldElapsedTime = gElapsedTime;
+
+                DEBUG_PIN_STAT_REQ_RESET;
             }
 
-            if (!tx_request)
-                tx_request = true;
-
             DisplaySentMsg();
-//            // Indicate TX in progress on LED1
-//            sl_led_toggle(&sl_led_led1);
 
             // Auto transition to RX after successfull transmit
             // For oscillo debug purposes
@@ -791,6 +843,11 @@ void app_process_action(void)
 
             /// Stat print out command
         case kStatMsg:
+#if (qPrintStatTiming)
+            TagTime3 = RAIL_GetTime();
+            TagTimeDelta3_2 = TagTime3 - TagTime2;
+            TagTimeDelta_CB_TX = TagTime3 - TagTime_CB_TX;
+#endif  // qPrintStatTiming
             gPauseCycleConf = true;         // Cycle ended, permit a print stat
 
             SetState(kStatistics);          // Print out statistics
@@ -855,11 +912,21 @@ void app_process_action(void)
     case kSyncReq:
         if (!gPauseCycleReq)                // If no pending request to print stat -> restart cycle with the slaves
         {
+            // Increment counter (no overflow test!)
+            gTX_counter.u32++;
+
             StartTransmit();                // Send sync cmd
             SetState(kIdle);                // and wait TX ok confirmation and then replies from slaves
         }
         else                                // There is a pending request to print stat
         {
+#if (qPrintStatTiming)
+            TagTime2Prev = TagTime2;
+            TagTime2 = RAIL_GetTime();
+            TagTimeDelta2 = TagTime2-TagTime2Prev;
+            TagTimeDelta2_1 = TagTime2 - TagTime1;
+            TagTimeDelta_CB_RX = TagTime2 - TagTime_CB_RX;
+#endif  // qPrintStatTiming
             gTX_msg_type = kStatMsg;        // Send the stat cmd to the slaves in order they can print stat too
             StartTransmit();                // and wait until TX ok confirmation
             SetState(kIdle);
