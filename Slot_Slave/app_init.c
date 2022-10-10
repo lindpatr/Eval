@@ -628,9 +628,9 @@ void app_init(void)
     // Init statistics
     StatInit();
 
-    // Set up timers
-    bool ret = RAIL_ConfigMultiTimer(true);
-    PrintStatus((ret == false), "Warning RAIL_ConfigMultiTimer failed");
+//    // Set up timers
+//    bool ret = RAIL_ConfigMultiTimer(true);
+//    PrintStatus((ret == false), "Warning RAIL_ConfigMultiTimer failed");
 }
 
 // -----------------------------------------------------------------------------
