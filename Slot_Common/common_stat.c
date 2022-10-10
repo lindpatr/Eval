@@ -308,7 +308,7 @@ __INLINE void DisplayStat(void)
 
     // Absolute stat
     // -------------
-    app_log_info("\nElapsed time               : %0.0f sec\n", (gCountPrintStat*gStatDelay/(SEC*1.0f))/*relElapsedTime*/);
+    app_log_info("\nElapsed time               : %0.0f sec\n", relElapsedTime);
 
     // Counters TX and RX
     app_log_info("#Last counter to %s    : %d\n", (isMaster ? "Slaves" : "Master"), absTXCounter);
