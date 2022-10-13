@@ -81,6 +81,16 @@
 			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_mbox.h</locationURI>
 		</link>
 		<link>
+			<name>Slot_Common/common_spi.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_spi.c</locationURI>
+		</link>
+		<link>
+			<name>Slot_Common/common_spi.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_spi.h</locationURI>
+		</link>
+		<link>
 			<name>Slot_Common/common_stat.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_stat.c</locationURI>
@@ -299,11 +309,6 @@
 			<name>gecko_sdk_4.1.2/platform/emlib/src/em_iadc.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_iadc.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.2/platform/emlib/src/em_ldma.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_ldma.c</locationURI>
 		</link>
 		<link>
 			<name>gecko_sdk_4.1.2/platform/emlib/src/em_msc.c</name>
