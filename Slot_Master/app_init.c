@@ -109,6 +109,10 @@ volatile RAIL_TxPower_t gTxPower = TX_POWER_DEF;// Value, indicating tx power on
 
 /// A static var that contains config data for the device
 PROT_AddrMap_t* gDeviceCfgAddr;
+uint8_t gNbOfSlave;
+uint8_t gNbOfEnabledSlave;
+
+uint8_t gAddrToPos[UINT8_MAX] = {0};
 
 
 // -----------------------------------------------------------------------------
@@ -130,6 +134,9 @@ void get_config(void)
     /* Get configuration data for my device */
     gDeviceCfgAddr = common_getConfig(SYSTEM_GetUnique());
 
+    gNbOfSlave = common_getNbrDeviceOfType(SLAVE_TYPE, ALL);
+    gNbOfEnabledSlave = common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED);
+
     // Consistencies config checks
     // Check handler
     app_assert(gDeviceCfgAddr != NULL, "Invalid device configuration data (0x%llX)\n", SYSTEM_GetUnique());
@@ -140,7 +147,16 @@ void get_config(void)
     // Only one Master (enabled) is permitted
     app_assert((common_getNbrDeviceOfType(MASTER_TYPE, ENABLED) == 1), "More than one Master (%d) enabled in network (isMaster is true in addr_table)\n", common_getNbrDeviceOfType(MASTER_TYPE, ENABLED));
     // At least one Slave must be enabled
-    app_assert((common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED) > 0), "No Slave (%d) enabled in network (isMaster is false in addr_table)\n", common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED));
+    app_assert((gNbOfEnabledSlave > 0), "No Slave (%d) enabled in network (isMaster is false in addr_table)\n", gNbOfEnabledSlave);
+
+    for (uint8_t i = 0; i < ADDR_TRANSLATION_TABLE_SIZE; i++)
+    {
+        PROT_AddrMap_t* device = common_getConfigTable(i);
+        if (device != NULL)
+        {
+            gAddrToPos[device->internalAddr] = device->posTab;
+        }
+    }
 }
 
 /*******************************************************************************
@@ -276,7 +292,7 @@ void config_protocol(void)
     gTimeSlot  = gDeviceCfgAddr->slotTime;                                                     // Consistency between all devices participating to the network is the responsability of the dev
 
     // Sync period (when the master shall send a sync frame)
-    gSyncPeriod = (RAIL_Time_t) (TIME_SLOT_MASTER_TX + TIME_SLOT_ACQ + (common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED) * TIME_SLOT_SLAVE)  - TIME_SLOT_CORR);
+    gSyncPeriod = (RAIL_Time_t) (TIME_SLOT_MASTER_TX + TIME_SLOT_ACQ + (gNbOfEnabledSlave * TIME_SLOT_SLAVE)  - TIME_SLOT_CORR);
 
     // Sync timeout (when a slave is considering no more receiving sync from a master)
     gSyncTimeOut = (RAIL_Time_t) ((float)gSyncPeriod * (1.0f+SYNC_TIMEOUT_VAR) * (float)SYNC_TIMEOUT_NB);       // Consistency with gSyncPeriod (gSyncTimeOut > gSyncPeriod) is the responsability of the dev
@@ -299,10 +315,6 @@ void config_gpio(void)
 {
     // Debug pins init + set to 0
     InitGPIODebug();
-
-//    // Turn OFF LEDs
-//    sl_led_turn_off(&sl_led_led0);
-//    sl_led_turn_off(&sl_led_led1);
 }
 
 /*******************************************************************************

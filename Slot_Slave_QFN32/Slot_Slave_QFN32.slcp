@@ -32,10 +32,10 @@ toolchain_settings:
 component:
 - {id: emlib_iadc}
 - {id: app_log}
-- {id: rail_util_dma}
 - {id: radio_config_simple_rail_singlephy}
-- {id: iostream_retarget_stdio}
+- {id: rail_util_dma}
 - {id: sl_system}
+- {id: iostream_retarget_stdio}
 - {id: restrictions_profile_wisun_fan_1_0}
 - instance: [example]
   id: cli

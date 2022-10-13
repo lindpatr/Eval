@@ -185,7 +185,7 @@ void cli_info(sl_cli_command_arg_t *arguments)
     app_log_info("  Transition : %s\n", (TRANSITION_TIMING_BEST_EFFORT ? "Best effort" : "Standard"));
     if (gDeviceCfgAddr->ismaster)
     {
-        app_log_info("  Nbr slaves : %d\n", common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED));
+        app_log_info("  Nbr slaves : %d\n", gNbOfEnabledSlave);
         app_log_info("  Sync period: %d us\n", gSyncPeriod);
         app_log_info("  ACQ time   : %d us\n", TIME_SLOT_ACQ);
         app_log_info("  TX master  : %d us\n", TIME_SLOT_MASTER_TX);
@@ -264,14 +264,6 @@ void cli_set_slot_time(sl_cli_command_arg_t *arguments)
 
             gRailScheduleCfgTX.when = gTimeSlot;
 
-            if (gTimeSlot > 0UL)
-                gRailTransitionRX.success = RAIL_RF_STATE_RX;   // RX Ok  -> RX because RAIL_StartScheduledTx is used!
-            else    // TX immediate
-                gRailTransitionRX.success = RAIL_RF_STATE_TX;   // RX Ok  -> TX because RAIL_StartScheduledTx is not used!
-
-            RAIL_Status_t status = RAIL_SetRxTransitions(gRailHandle, &gRailTransitionRX);
-            PrintStatus(status, "Warning RAIL_SetRxTransitions");
-
             app_log_info("Info Set TIME_SLOT to %d us (%s)\n", gTimeSlot, str);
             app_log_warning("Warning The user is responsible to adjust SYNC_PERIOD (current = %d us) on Master and SYNC_TIMEOUT (current = %d us) on all slaves\n", gSyncPeriod, gSyncTimeOut);
         }
@@ -310,7 +302,7 @@ void cli_set_sync_period(sl_cli_command_arg_t *arguments)
             else    // Default value
             {
                 // Sync period (when the master shall send a sync frame)
-                gSyncPeriod = (RAIL_Time_t) (TIME_SLOT_MASTER_TX + TIME_SLOT_ACQ + (common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED) * TIME_SLOT_SLAVE)  - TIME_SLOT_CORR);
+                gSyncPeriod = (RAIL_Time_t) (TIME_SLOT_MASTER_TX + TIME_SLOT_ACQ + (gNbOfEnabledSlave * TIME_SLOT_SLAVE)  - TIME_SLOT_CORR);
 
                 // Sync timeout (when a slave is considering no more receiving sync from a master)
                 gSyncTimeOut = (RAIL_Time_t) ((float)gSyncPeriod * (1.0f+SYNC_TIMEOUT_VAR) * (float)SYNC_TIMEOUT_NB);       // Consistency with gSyncPeriod (gSyncTimeOut > gSyncPeriod) is the responsability of the dev
@@ -318,7 +310,7 @@ void cli_set_sync_period(sl_cli_command_arg_t *arguments)
                 str = strDefault;
             }
 
-            app_log_info("Info Set SYNC_PERIOD to %d us (N_SLAVE = %d, TIME_SLOT_MAX = %d us) (%s)\n", gSyncPeriod, common_getNbrDeviceOfType(SLAVE_TYPE, ENABLED), common_getMaxSlotTime(), str);
+            app_log_info("Info Set SYNC_PERIOD to %d us (N_SLAVE = %d, TIME_SLOT_MAX = %d us) (%s)\n", gSyncPeriod, gNbOfEnabledSlave, common_getMaxSlotTime(), str);
             app_log_warning("Warning The user is responsible to eventually adjust TIME_SLOT (max = %d us) and SYNC_TIMEOUT (current = %d us) on all slaves\n", common_getMaxSlotTime(), gSyncTimeOut);
         }
         else

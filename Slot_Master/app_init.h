@@ -48,10 +48,14 @@
 // Assign the debug pins
 #define DEBUG_PIN_TX_SET                DEBUG_PIN_SET(DEBUG_PIN_H09)
 #define DEBUG_PIN_TX_RESET              DEBUG_PIN_RESET(DEBUG_PIN_H09)
-#define DEBUG_PIN_RX_SET                DEBUG_PIN_SET(DEBUG_PIN_H11)
-#define DEBUG_PIN_RX_RESET              DEBUG_PIN_RESET(DEBUG_PIN_H11)
-#define DEBUG_PIN_CB_SET                DEBUG_PIN_SET(DEBUG_PIN_H13)
-#define DEBUG_PIN_CB_RESET              DEBUG_PIN_RESET(DEBUG_PIN_H13)
+#define DEBUG_PIN_RX_SET                /*DEBUG_PIN_SET(DEBUG_PIN_H11)*/
+#define DEBUG_PIN_RX_RESET              /*DEBUG_PIN_RESET(DEBUG_PIN_H11)*/
+#define DEBUG_PIN_CB_SET                /*DEBUG_PIN_SET(DEBUG_PIN_H13)*/DEBUG_PIN_SET(DEBUG_PIN_H11)
+#define DEBUG_PIN_CB_RESET              /*DEBUG_PIN_RESET(DEBUG_PIN_H13)*/DEBUG_PIN_RESET(DEBUG_PIN_H11)
+
+// Test STAT
+#define DEBUG_PIN_STAT_REQ_SET          DEBUG_PIN_SET(DEBUG_PIN_H13)
+#define DEBUG_PIN_STAT_REQ_RESET        DEBUG_PIN_RESET(DEBUG_PIN_H13)
 
 
 #define qPrintTX        0     // Print out sent data on serial COM
@@ -61,6 +65,7 @@
 #define qPrintErrorsL2  0     // Print out RAIL errors on serial COM (kTimeOutTx, kTimeOutRx, kErrorTx, kErrorRx)
 #define qPrintInfo      1     // Print out info serial COM
 #define qPrintStat      1     // Print out statistics serial COM
+#define qPrintStatTiming 0    // Print out statistics timing serial COM
 
 #define TRANSITION_TIMING_BEST_EFFORT  1
                               // 1 = let the uC try to optimize the transition timings
@@ -86,6 +91,10 @@ extern volatile RAIL_Time_t gSyncPeriod;
 extern volatile RAIL_Time_t gSyncTimeOut;
 // Value, indicating time of a slot in the protocol on CLI
 extern volatile uint32_t gTimeSlot;
+
+extern uint8_t gAddrToPos[UINT8_MAX];
+extern uint8_t gNbOfSlave;
+extern uint8_t gNbOfEnabledSlave;
 
 // -----------------------------------------------------------------------------
 //                          Public Function Declarations

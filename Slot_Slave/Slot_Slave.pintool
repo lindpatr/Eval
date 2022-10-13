@@ -57,6 +57,8 @@
     <property object="PORTIO" propertyId="portio.i2c0.location.scl" value="18"/>
     <property object="PORTIO" propertyId="portio.i2c0.location.sda" value="19"/>
     <property object="PORTIO" propertyId="portio.prs.location.asynch8" value="38"/>
+    <property object="PORTIO" propertyId="portio.pti.enable.dframe" value="Enabled"/>
+    <property object="PORTIO" propertyId="portio.pti.enable.dout" value="Enabled"/>
     <property object="PORTIO" propertyId="portio.pti.location.dframe" value="37"/>
     <property object="PORTIO" propertyId="portio.pti.location.dout" value="36"/>
     <property object="PORTIO" propertyId="portio.timer0.enable.cc0" value="Enabled"/>

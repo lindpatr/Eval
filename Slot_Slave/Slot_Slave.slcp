@@ -49,9 +49,9 @@ component:
 - {id: restrictions_profile_sun}
 - {id: sl_flex_rail_packet_asm}
 - {id: iostream_recommended_stream}
-- {id: restrictions_profile_long_range}
 - instance: [pwm0]
   id: pwm
+- {id: restrictions_profile_long_range}
 - {id: printf}
 - {id: restrictions_profile_connect}
 - {id: EFR32MG22C224F512IM40}

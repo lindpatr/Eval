@@ -51,26 +51,33 @@
 #define DEBUG_PIN_TX_RESET              DEBUG_PIN_RESET(DEBUG_PIN_H09)
 #define DEBUG_PIN_RX_SET                /*DEBUG_PIN_SET(DEBUG_PIN_H11)*/
 #define DEBUG_PIN_RX_RESET              /*DEBUG_PIN_RESET(DEBUG_PIN_H11)*/
-#define DEBUG_PIN_CB_SET                /*DEBUG_PIN_SET(DEBUG_PIN_H13)*/
-#define DEBUG_PIN_CB_RESET              /*DEBUG_PIN_RESET(DEBUG_PIN_H13)*/
+#define DEBUG_PIN_CB_SET                /*DEBUG_PIN_SET(DEBUG_PIN_H13)*/DEBUG_PIN_SET(DEBUG_PIN_H11)
+#define DEBUG_PIN_CB_RESET              /*DEBUG_PIN_RESET(DEBUG_PIN_H13)*/DEBUG_PIN_RESET(DEBUG_PIN_H11)
 
 // IADC conversion time
+#define DEBUG_PIN_IADC_SET              /*DEBUG_PIN_SET(DEBUG_PIN_H13)*/
+#define DEBUG_PIN_IADC_RESET            /*DEBUG_PIN_RESET(DEBUG_PIN_H13)*/
+
+// SPI xfer with TMP
+#define DEBUG_PIN_SPI_TMP_SET           /*DEBUG_PIN_SET(DEBUG_PIN_H13)*/
+#define DEBUG_PIN_SPI_TMP_RESET         /*DEBUG_PIN_RESET(DEBUG_PIN_H13)*/
+
+// DoAllAcq time
 #define DEBUG_PIN_ACQ_SET               /*DEBUG_PIN_SET(DEBUG_PIN_H13)*/
 #define DEBUG_PIN_ACQ_RESET             /*DEBUG_PIN_RESET(DEBUG_PIN_H13)*/
 
-// IADC conversion time
-#define DEBUG_PIN_IADC_SET
-#define DEBUG_PIN_IADC_RESET
+// ScheduleTX + timeout time
+#define DEBUG_PIN_SCHEDULE_SET          /*DEBUG_PIN_SET(DEBUG_PIN_H13)*/
+#define DEBUG_PIN_SCHEDULE_RESET        /*DEBUG_PIN_RESET(DEBUG_PIN_H13)*/
 
-// I2C Send configuration register
-#define DEBUG_PIN_I2C_CFG_SET           /*DEBUG_PIN_SET(DEBUG_PIN_H09)*/
-#define DEBUG_PIN_I2C_CFG_RESET         /*DEBUG_PIN_RESET(DEBUG_PIN_H09)*/
-// I2C Send R/W request/get temperature
-#define DEBUG_PIN_I2C_RW_TEMP_SET       /*DEBUG_PIN_SET(DEBUG_PIN_H11)*/
-#define DEBUG_PIN_I2C_RW_TEMP_RESET     /*DEBUG_PIN_RESET(DEBUG_PIN_H11)*/
-// I2C Get temperature
-#define DEBUG_PIN_I2C_RO_TEMP_SET       /*DEBUG_PIN_SET(DEBUG_PIN_H13)*/
-#define DEBUG_PIN_I2C_RO_TEMP_RESET     /*DEBUG_PIN_RESET(DEBUG_PIN_H13)*/
+// SPI xfer with DAC
+#define DEBUG_PIN_SPI_DAC_SET           /*DEBUG_PIN_SET(DEBUG_PIN_H13)*/
+#define DEBUG_PIN_SPI_DAC_RESET         /*DEBUG_PIN_RESET(DEBUG_PIN_H13)*/
+
+// Test STAT
+#define DEBUG_PIN_STAT_REQ_SET          DEBUG_PIN_SET(DEBUG_PIN_H13)
+#define DEBUG_PIN_STAT_REQ_RESET        DEBUG_PIN_RESET(DEBUG_PIN_H13)
+
 
 #define qPrintTX        0     // Print out sent data on serial COM
 #define qPrintRX        0     // Print out received data on serial COM
@@ -79,6 +86,7 @@
 #define qPrintErrorsL2  0     // Print out RAIL errors on serial COM (kTimeOutTx, kTimeOutRx, kErrorTx, kErrorRx)
 #define qPrintInfo      1     // Print out info serial COM
 #define qPrintStat      1     // Print out statistics serial COM
+#define qPrintStatTiming 0    // Print out statistics timing serial COM
 
 #define TRANSITION_TIMING_BEST_EFFORT  1
                               // 1 = let the uC try to optimize the transition timings
@@ -106,6 +114,9 @@ extern volatile RAIL_Time_t gSyncPeriod;
 extern volatile RAIL_Time_t gSyncTimeOut;
 // Value, indicating time of a slot in the protocol on CLI
 extern volatile uint32_t gTimeSlot;
+
+extern uint8_t gNbOfSlave;
+extern uint8_t gNbOfEnabledSlave;
 
 // -----------------------------------------------------------------------------
 //                          Public Function Declarations

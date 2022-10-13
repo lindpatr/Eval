@@ -17,40 +17,50 @@
 
 // Table (non optimized (aligned)) for M-S1-S3-S4 (1+3) with delay 100 us for S1
 // N = 3
+#if (FREQ768MHZ)
+// Sync = 865
+// Auto transition S1: Y (but not active as S1 slot > 0
+// Rate = 18.95 ms (NEW)
+#define SHIFT_TIME  (175)
+#define FIRST_TIME_SLOT (5)
+#define DELTA_TIME_SLOT (TIME_SLOT_SLAVE+5)
+#else
 // Sync = 1040
 // Auto transition S1: Y (but not active as S1 slot > 0
 // Rate = 19.57 ms (NEW)
-#define SHIFT_TIME  (100)
-#define FIRST_TIME_SLOT (10)
+#define SHIFT_TIME  (110)
+#define FIRST_TIME_SLOT (-105)
 #define DELTA_TIME_SLOT (TIME_SLOT_SLAVE+10)
+#endif  // FREQ768MHZ
+
 
 //PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
 //{
 //    /* ID                Pos    Enable  Addr    Slot time         Is master   Name          */
-//    {0x385B44FFFEC085D3, 0,     true,   0x7F,    0,                true,       "MASTER\0"},
-//    {0x385b44fffec0862b, 1,     true,   1,      -95+SHIFT_TIME,   false,      "SLAVE\0"},
-//    {0x385b44fffe5f5af2, 2,     false,  2,      1610+SHIFT_TIME,   false,      "SLAVE\0"},
-//    {0x385b44fffe5f5b23, 3,     true,   3,      210+SHIFT_TIME,   false,      "SLAVE\0"},
-//    {0x385b44fffec08638, 4,     true,   4,      410+SHIFT_TIME,   false,      "SLAVE\0"},
-//    {0x040D84FFFE88A3DF, 5,     false,   5,      610+SHIFT_TIME,   false,      "SLAVE\0"},
-//    {0x040D84FFFE88A50A, 6,     false,   6,      810+SHIFT_TIME,   false,      "SLAVE\0"},
-//    {0x040D84FFFE88A766, 7,     false,   7,     1010+SHIFT_TIME,   false,      "SLAVE\0"},
-//    {0x040D84FFFE88AD13, 8,     false,   8,     1210+SHIFT_TIME,   false,      "SLAVE\0"},
-//    {0x040D84FFFE88AB60, 9,     false,   9,     1410+SHIFT_TIME,   false,      "SLAVE\0"},
+//    {0x385B44FFFEC085D3, 0,     true,   0x7F,   0,                                              true,       "MASTER\0"},
+//    {0x385b44fffec0862b, 1,     true,   1,      (0*DELTA_TIME_SLOT)+SHIFT_TIME+FIRST_TIME_SLOT, false,      "SLAVE\0"},
+//    {0x385b44fffe5f5af2, 2,     true,   2,      (1*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+//    {0x385b44fffe5f5b23, 3,     true,   3,      (2*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+//    {0x385b44fffec08638, 4,     true,   4,      (3*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+//    {0x040D84FFFE88A3DF, 5,     true,   5,      (4*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+//    {0x040D84FFFE88A50A, 6,     true,   6,      (5*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+//    {0x040D84FFFE88A766, 7,     true,   7,      (6*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+//    {0x040D84FFFE88AD13, 8,     true,   8,      (7*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+//    {0x040D84FFFE88AB60, 9,     true,   9,      (8*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
 //};
 PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
 {
     /* ID                Pos    Enable  Addr    Slot time         Is master   Name          */
-    {0x385B44FFFEC085D3, 0,     true,   0x7F,    0,                                              true,       "MASTER\0"},
-    {0x385b44fffec0862b, 1,     true,   1,      (0*DELTA_TIME_SLOT)+SHIFT_TIME-95,              false,      "SLAVE\0"},
-    {0x385b44fffe5f5af2, 2,     true,   2,      (1*DELTA_TIME_SLOT)+SHIFT_TIME+FIRST_TIME_SLOT, false,      "SLAVE\0"},
-    {0x385b44fffe5f5b23, 3,     true,   3,      (2*DELTA_TIME_SLOT)+SHIFT_TIME+FIRST_TIME_SLOT, false,      "SLAVE\0"},
-    {0x385b44fffec08638, 4,     true,   4,      (3*DELTA_TIME_SLOT)+SHIFT_TIME+FIRST_TIME_SLOT, false,      "SLAVE\0"},
-    {0x040D84FFFE88A3DF, 5,     true,   5,      (4*DELTA_TIME_SLOT)+SHIFT_TIME+FIRST_TIME_SLOT, false,      "SLAVE\0"},
-    {0x040D84FFFE88A50A, 6,     true,   6,      (5*DELTA_TIME_SLOT)+SHIFT_TIME+FIRST_TIME_SLOT, false,      "SLAVE\0"},
-    {0x040D84FFFE88A766, 7,     true,   7,      (6*DELTA_TIME_SLOT)+SHIFT_TIME+FIRST_TIME_SLOT, false,      "SLAVE\0"},
-    {0x040D84FFFE88AD13, 8,     true,   8,      (7*DELTA_TIME_SLOT)+SHIFT_TIME+FIRST_TIME_SLOT, false,      "SLAVE\0"},
-    {0x040D84FFFE88AB60, 9,     true,   9,      (8*DELTA_TIME_SLOT)+SHIFT_TIME+FIRST_TIME_SLOT, false,      "SLAVE\0"},
+    {0x385B44FFFEC085D3, 0,     true,   0x7F,   0,                                              true,       "MASTER\0"},
+    {0x385b44fffec0862b, 1,     true,   1,      (0*DELTA_TIME_SLOT)+SHIFT_TIME+FIRST_TIME_SLOT, false,      "SLAVE\0"},
+    {0x385b44fffe5f5af2, 2,     false,  2,      (3*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+    {0x385b44fffe5f5b23, 3,     true,   3,      (1*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+    {0x385b44fffec08638, 4,     true,   4,      (2*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+    {0x040D84FFFE88A3DF, 5,     false,  5,      (4*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+    {0x040D84FFFE88A50A, 6,     false,  6,      (5*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+    {0x040D84FFFE88A766, 7,     false,  7,      (6*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+    {0x040D84FFFE88AD13, 8,     false,  8,      (7*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+    {0x040D84FFFE88AB60, 9,     false,  9,      (8*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
 };
 
 /**
@@ -61,7 +71,14 @@ PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
 */
 PROT_AddrMap_t* common_getConfigTable(uint8_t index)
 {
-   return (&addr_table[index] != NULL ? &addr_table[index] : NULL);
+    if ((index < ADDR_TRANSLATION_TABLE_SIZE) && (addr_table[index].internalAddr > 0))
+    {
+        return &addr_table[index];
+    }
+    else
+    {
+        return NULL;
+    }
 }
 
 /**
