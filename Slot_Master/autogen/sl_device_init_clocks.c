@@ -51,7 +51,7 @@ sl_status_t sl_device_init_clocks(void)
      CMU_ClockSelectSet(cmuClock_SYSCLK, cmuSelect_HFRCODPLL);
     }
 #else
-  //CMU_ClockSelectSet(cmuClock_SYSCLK, cmuSelect_HFXO);
+  CMU_ClockSelectSet(cmuClock_SYSCLK, cmuSelect_HFXO);
 #endif  // FREQ768MHZ
 
 #if defined(_CMU_EM01GRPACLKCTRL_MASK)
