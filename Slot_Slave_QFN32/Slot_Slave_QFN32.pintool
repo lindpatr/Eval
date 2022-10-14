@@ -22,7 +22,7 @@
     <property object="PC00" propertyId="pin.name" value="SPI_MOSI"/>
     <property object="PC01" propertyId="pin.name" value="SPI_MISO"/>
     <property object="PC02" propertyId="pin.name" value="SPI_CLK"/>
-    <property object="PC03" propertyId="pin.name" value="SPI_CS_DAC"/>
+    <property object="PC03" propertyId="pin.name" value="PWM2"/>
     <property object="PC04" propertyId="pin.name" value="ADC_1"/>
     <property object="PC05" propertyId="pin.name" value="ADC_2"/>
     <property object="PD00" propertyId="pin.name" value="LF_XTAL1"/>
@@ -34,6 +34,8 @@
     <property object="PORTIO" propertyId="portio.gpio.enable.swv" value="Enabled"/>
     <property object="PORTIO" propertyId="portio.i2c0.location.scl" value="18"/>
     <property object="PORTIO" propertyId="portio.timer0.enable.cc0" value="Enabled"/>
+    <property object="PORTIO" propertyId="portio.timer0.enable.cc1" value="Enabled"/>
+    <property object="PORTIO" propertyId="portio.timer0.location.cc1" value="35"/>
     <property object="PORTIO" propertyId="portio.usart0.enable.clk" value="Enabled"/>
     <property object="PORTIO" propertyId="portio.usart0.enable.rx" value="Enabled"/>
     <property object="PORTIO" propertyId="portio.usart0.enable.tx" value="Enabled"/>
@@ -41,7 +43,7 @@
     <property object="PORTIO" propertyId="portio.usart0.location.cs" value="35"/>
     <property object="PORTIO" propertyId="portio.usart0.location.rx" value="33"/>
     <property object="PORTIO" propertyId="portio.usart0.location.tx" value="32"/>
-    <property object="TIMER0" propertyId="ABModule.selectedRequirement" value="timer%T%SL_PWM_PWM0%T%sl_pwm_init_pwm0_config.h"/>
+    <property object="TIMER0" propertyId="ABModule.selectedRequirement" value="timer%T%SL_PWM_PWM1%T%sl_pwm_init_pwm1_config.h"/>
     <property object="TIMER0" propertyId="ABPeripheral.included" value="true"/>
     <property object="TIMER0" propertyId="channel.0.name" value="OUTPUT"/>
     <property object="TIMER0" propertyId="channel.1.name" value=""/>
