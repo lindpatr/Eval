@@ -461,16 +461,6 @@
 			<locationURI>STUDIO_SDK_LOC/platform/driver/debug/src/sl_debug_swo.c</locationURI>
 		</link>
 		<link>
-			<name>gecko_sdk_4.1.2/platform/driver/pwm/inc/sl_pwm.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/driver/pwm/inc/sl_pwm.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.2/platform/driver/pwm/src/sl_pwm.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/driver/pwm/src/sl_pwm.c</locationURI>
-		</link>
-		<link>
 			<name>gecko_sdk_4.1.2/platform/emdrv/common/inc/ecode.h</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emdrv/common/inc/ecode.h</locationURI>
