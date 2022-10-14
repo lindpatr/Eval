@@ -491,13 +491,13 @@ void config_pwm(void)
     };
 
     sl_pwm_config_t pwm_config = {
-      .frequency = 90000,             // Limited < 100kHz
+      .frequency = 150000,
       .polarity  = PWM_ACTIVE_HIGH,
     };
 
     // Overwrite instance from configurator
     sl_pwm_pwm0 = sl_pwm_0;
-    sl_pwm_pwm1= sl_pwm_1;
+    sl_pwm_pwm1 = sl_pwm_1;
 
     // Initialize PWM
     sl_pwm_init(&sl_pwm_pwm0, &pwm_config);

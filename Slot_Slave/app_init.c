@@ -491,7 +491,7 @@ void config_pwm(void)
     };
 
     sl_pwm_config_t pwm_config = {
-      .frequency = 90000,             // Limited < 100kHz
+      .frequency = 150000,
       .polarity  = PWM_ACTIVE_HIGH,
     };
 
