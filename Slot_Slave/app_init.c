@@ -482,6 +482,13 @@ void config_pwm(void)
       .pin      = 0,                  // PA00
       .location = 0,
     };
+    sl_pwm_instance_t sl_pwm_1 = {
+      .timer    = TIMER0,
+      .channel  = 1,                  // TIMER0.CC1
+      .port     = gpioPortC,
+      .pin      = 3,                  // PC03
+      .location = 0,
+    };
 
     sl_pwm_config_t pwm_config = {
       .frequency = 90000,             // Limited < 100kHz
@@ -490,15 +497,19 @@ void config_pwm(void)
 
     // Overwrite instance from configurator
     sl_pwm_pwm0 = sl_pwm_0;
+    sl_pwm_pwm1= sl_pwm_1;
 
     // Initialize PWM
     sl_pwm_init(&sl_pwm_pwm0, &pwm_config);
+    sl_pwm_init(&sl_pwm_pwm1, &pwm_config);
 
     // Set duty cycle to 0%
     sl_pwm_set_duty_cycle(&sl_pwm_pwm0, 0);
+    sl_pwm_set_duty_cycle(&sl_pwm_pwm1, 0);
 
     // Enable PWM output
     sl_pwm_start(&sl_pwm_pwm0);
+    sl_pwm_start(&sl_pwm_pwm1);
 }
 
 /*******************************************************************************

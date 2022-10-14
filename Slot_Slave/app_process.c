@@ -913,6 +913,7 @@ void app_process_action(void)
 
             // TODO BEGIN TEST PURPOSES
             sl_pwm_set_duty_cycle(&sl_pwm_pwm0, pwm_count);
+            sl_pwm_set_duty_cycle(&sl_pwm_pwm1, pwm_count);
 
             if (++pwm_count > 1000)
                 pwm_count = 0;
