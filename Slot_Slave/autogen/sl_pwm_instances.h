@@ -26,6 +26,7 @@ extern "C" {
 
 
 extern sl_pwm_instance_t sl_pwm_pwm0;
+extern sl_pwm_instance_t sl_pwm_pwm1;
 
 void sl_pwm_init_instances(void);
 

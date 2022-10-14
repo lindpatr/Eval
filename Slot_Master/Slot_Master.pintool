@@ -55,16 +55,18 @@
     <property object="PORTIO" propertyId="portio.pti.location.dframe" value="37"/>
     <property object="PORTIO" propertyId="portio.pti.location.dout" value="36"/>
     <property object="PORTIO" propertyId="portio.usart0.enable.clk" value="Enabled"/>
+    <property object="PORTIO" propertyId="portio.usart0.enable.cs" value="Enabled"/>
     <property object="PORTIO" propertyId="portio.usart0.enable.rx" value="Enabled"/>
     <property object="PORTIO" propertyId="portio.usart0.enable.tx" value="Enabled"/>
     <property object="PORTIO" propertyId="portio.usart0.location.clk" value="34"/>
-    <property object="PORTIO" propertyId="portio.usart0.location.cs" value="7"/>
+    <property object="PORTIO" propertyId="portio.usart0.location.cs" value="35"/>
     <property object="PORTIO" propertyId="portio.usart0.location.rx" value="33"/>
     <property object="PORTIO" propertyId="portio.usart0.location.tx" value="32"/>
     <property object="PTI" propertyId="ABModule.selectedRequirement" value="pti%T%SL_RAIL_UTIL_PTI%T%sl_rail_util_pti_config.h"/>
     <property object="PTI" propertyId="ABPeripheral.included" value="true"/>
-    <property object="USART0" propertyId="ABModule.selectedRequirement" value="usart%T%SL_MEMLCD_SPI%T%sl_memlcd_usart_config.h"/>
+    <property object="USART0" propertyId="ABModule.selectedRequirement" value="usart%T%SL_SPIDRV_SPI%T%sl_spidrv_spi_config.h"/>
     <property object="USART0" propertyId="ABPeripheral.included" value="true"/>
+    <property object="USART1" propertyId="ABPeripheral.included" value="true"/>
   </mode>
   <modeTransition>
     <property object="RESET &#x2192; DefaultMode" propertyId="modeTransition.source" value="RESET"/>

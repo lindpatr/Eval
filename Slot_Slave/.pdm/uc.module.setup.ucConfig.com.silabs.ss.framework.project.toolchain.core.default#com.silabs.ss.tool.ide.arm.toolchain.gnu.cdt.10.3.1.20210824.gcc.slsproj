@@ -23,6 +23,7 @@
     <file name="sl_cli_config_example.h" generated="true" linked="false"/>
     <file name="sl_device_init_lfxo_config.h" generated="true" linked="false"/>
     <file name="sl_pwm_init_pwm0_config.h" generated="true" linked="false"/>
+    <file name="sl_pwm_init_pwm1_config.h" generated="true" linked="false"/>
     <file name="dmadrv_config.h" generated="true" linked="false"/>
     <file name="sl_rail_util_pti_config.h" generated="true" linked="false"/>
     <file name="nvm3_default_config.h" generated="true" linked="false"/>

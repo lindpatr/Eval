@@ -32,6 +32,7 @@
 #include "em_cmu.h"
 #include "common_config.h"
 
+
 sl_status_t sl_device_init_clocks(void)
 {
 #if (FREQ768MHZ)

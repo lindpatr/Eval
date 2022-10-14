@@ -67,6 +67,10 @@
 #define TIMER0_CC0_PORT                          gpioPortA
 #define TIMER0_CC0_PIN                           0
 
+// TIMER0 CC1 on PC03
+#define TIMER0_CC1_PORT                          gpioPortC
+#define TIMER0_CC1_PIN                           3
+
 // [TIMER0]$
 
 // $[TIMER1]
@@ -126,14 +130,6 @@
 // [EUART0]$
 
 // $[PTI]
-// PTI DFRAME on PC05
-#define PTI_DFRAME_PORT                          gpioPortC
-#define PTI_DFRAME_PIN                           5
-
-// PTI DOUT on PC04
-#define PTI_DOUT_PORT                            gpioPortC
-#define PTI_DOUT_PIN                             4
-
 // [PTI]$
 
 // $[MODEM]
@@ -182,8 +178,8 @@
 #define SPI_CLK_PORT                             gpioPortC
 #define SPI_CLK_PIN                              2
 
-#define SPI_CS_DAC_PORT                          gpioPortC
-#define SPI_CS_DAC_PIN                           3
+#define PWM2_PORT                                gpioPortC
+#define PWM2_PIN                                 3
 
 #define ADC_1_PORT                               gpioPortC
 #define ADC_1_PIN                                4

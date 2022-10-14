@@ -35,3 +35,5 @@ sl_simple_button_config.h=362231615
 sl_simple_led_led0_config.h=-1081642295
 sl_simple_led_led1_config.h=105007875
 sl_sleeptimer_config.h=-1879962229
+sl_spidrv_spi_config.h=-2049312859
+spidrv_config.h=112055036
