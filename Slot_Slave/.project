@@ -51,6 +51,16 @@
 			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_config.h</locationURI>
 		</link>
 		<link>
+			<name>Slot_Common/common_custom_sl_pwm.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_custom_sl_pwm.c</locationURI>
+		</link>
+		<link>
+			<name>Slot_Common/common_custom_sl_pwm.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_custom_sl_pwm.h</locationURI>
+		</link>
+		<link>
 			<name>Slot_Common/common_debug.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_debug.c</locationURI>
@@ -459,6 +469,16 @@
 			<name>gecko_sdk_4.1.2/platform/driver/debug/src/sl_debug_swo.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/driver/debug/src/sl_debug_swo.c</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.2/platform/driver/pwm/inc/sl_pwm.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/driver/pwm/inc/sl_pwm.h</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.2/platform/driver/pwm/src/sl_pwm.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/driver/pwm/src/sl_pwm.c</locationURI>
 		</link>
 		<link>
 			<name>gecko_sdk_4.1.2/platform/emdrv/common/inc/ecode.h</name>
