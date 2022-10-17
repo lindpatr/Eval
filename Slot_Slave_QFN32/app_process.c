@@ -46,7 +46,10 @@
 #include "em_chip.h"                // Chip functions
 #include "sl_udelay.h"              // Active delay
 #include "sl_flex_packet_asm.h"     // Flex packet
+
+// Customized driver
 #include "sl_pwm_instances.h"       // PWM functions
+#include "common_custom_sl_pwm.h"   // Additional method for sl_pwm driver
 
 // Specific to LCD display
 //#include "dmd.h"                  // LCD driver
@@ -877,7 +880,7 @@ void app_process_action(void)
             PrintError(gErrorCode, "Error RX");
         }
 
-        // Auto transition to RX after unsuccessfull receive
+        // Auto transition to RX after unsuccessful receive
         // For oscillo debug purposes
         DEBUG_PIN_RX_SET;
 
@@ -899,10 +902,10 @@ void app_process_action(void)
             DisplaySentMsg();
 
             // TODO BEGIN TEST PURPOSES
-            sl_pwm_set_duty_cycle(&sl_pwm_pwm0, pwm_count);
-            sl_pwm_set_duty_cycle(&sl_pwm_pwm1, pwm_count);
+            sl_pwm_set_duty_cycle_step(&sl_pwm_pwm0, pwm_count);
+            sl_pwm_set_duty_cycle_step(&sl_pwm_pwm1, pwm_count);
 
-            if (++pwm_count > COUNT_PWM_MAX)
+            if (++pwm_count > sl_pwm_get_max_duty_cycle_step(&sl_pwm_pwm0))
                 pwm_count = 0;
             // TODO END TEST PURPOSES
         }

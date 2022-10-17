@@ -55,6 +55,9 @@
                                     // Radio instance config
 #include "sl_rail_util_protocol_types.h"
                                     // Radio protocol
+// Customized driver
+#include "sl_pwm_instances.h"
+#include "common_custom_sl_pwm.h"   // Additional method for sl_pwm driver
 
 #if (SL_BOARD_ENABLE_DISPLAY)
 // LCD display
@@ -491,7 +494,7 @@ void config_pwm(void)
     };
 
     sl_pwm_config_t pwm_config = {
-      .frequency = 150000,
+      .frequency = 153600,
       .polarity  = PWM_ACTIVE_HIGH,
     };
 
@@ -503,9 +506,9 @@ void config_pwm(void)
     sl_pwm_init(&sl_pwm_pwm0, &pwm_config);
     sl_pwm_init(&sl_pwm_pwm1, &pwm_config);
 
-    // Set duty cycle to 0%
-    sl_pwm_set_duty_cycle(&sl_pwm_pwm0, 0);
-    sl_pwm_set_duty_cycle(&sl_pwm_pwm1, 0);
+    // Set duty cycle to 0
+    sl_pwm_set_duty_cycle_step(&sl_pwm_pwm0, 0);
+    sl_pwm_set_duty_cycle_step(&sl_pwm_pwm1, 0);
 
     // Enable PWM output
     sl_pwm_start(&sl_pwm_pwm0);
