@@ -10,16 +10,13 @@
 #include "limits.h"
 
 // Size of the data buffers
-#define BUFLEN  20      // tests simulateur SPI Alex
+#define BUFLEN  20
 
 // Outgoing data
 uint8_t txbuf[BUFLEN];
 
 // Incoming data
 uint8_t rxbuf[BUFLEN];
-
-// TODO Gestion des erreurs
-// TODO Suppression des boucles d'attente
 
 /**
  * @brief

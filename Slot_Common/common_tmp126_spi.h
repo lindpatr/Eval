@@ -69,10 +69,28 @@ typedef union
  */
 bool spi_tmp126_init(float tempLimLow, float tempLimHigh);
 
+/**
+ * @brief
+ * Return TMP126 product ID.
+ *
+ * @return product ID if successful, 0 if timeout
+ */
 uint16_t spi_tmp126_getID(void);
 
+/**
+ * @brief
+ * Return temperature measure.
+ *
+ * @return temperature [AD value] if successful, UINT_MAX if timeout
+ */
 uint16_t spi_tmp126_getTemp(void);
 
+/**
+ * @brief
+ * Convert temperature measure [AD value] to [°C].
+ *
+ * @return temperature [°C]
+ */
 float spi_temp126_TempToDeg(int16_t tempAd);
 
 #endif /* COMMON_TMP126_SPI_H_ */
