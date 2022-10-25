@@ -7,9 +7,10 @@
 
 #include "common_tmp126_spi.h"
 #include "common_spi.h"
+#include "limits.h"
 
 // Size of the data buffers
-#define BUFLEN  20      // tests simulateur SPI Alex
+#define BUFLEN  20
 
 // Outgoing data
 uint8_t txbuf[BUFLEN];
@@ -17,11 +18,16 @@ uint8_t txbuf[BUFLEN];
 // Incoming data
 uint8_t rxbuf[BUFLEN];
 
-// TODO Vérifier le fonctionnement des limites (allumage de la LED end cas de dépassement)
-// TODO Gestion des erreurs
-// TODO Suppression des boucles d'attente
-
-void spi_tmp126_init(void)
+/**
+ * @brief
+ * Init SPI TMP126.
+ *
+ * @param[in] tempLimLow    Temp limit low [°C]
+ * @param[in] tempLimHigh   Temp limit high [°C]
+ *
+ * @return true if successful, false if timeout
+ */
+bool spi_tmp126_init(float tempLimLow, float tempLimHigh)
 {
     // Init SPI
     common_initSPI(1000000, usartClockMode0);
@@ -30,71 +36,72 @@ void spi_tmp126_init(void)
     CmdWordUnion cmd =
     {
         .CmdTmp126.r_w = 0,
-        .CmdTmp126.addrInc = 1,
+        .CmdTmp126.addrInc = 1,         // Addr auto increment
         .CmdTmp126.len = 0,
         .CmdTmp126.crc = 0,
         .CmdTmp126.reserved = 0,
-        .CmdTmp126.regAddr = 0x03,
+        .CmdTmp126.regAddr = 0x03,      // Initial register
     };
 
-    // 0x03 -- Configuration
-    //txbuf[2] = 0x00;    // reserved      Reset - AVG - Res - Int_Cmp - 1Shot - Mode - Conv Period
-    //txbuf[3] = 0x09;    // xxxxxxx       0       0     0     0         0       1      001
+    txbuf[0] = cmd.bytes[1];         // X - CRC - L4 L3 L2 L1 - A - R/W - ADDR
+    txbuf[1] = cmd.bytes[0];         // x -  0  - 0  0  0  0  - 1 -   0 - 0x03
 
     CmdWordUnion conf =
     {
-        .ConfTmp126.conv_period = 1,
-        .ConfTmp126.mode = 1,
+        .ConfTmp126.conv_period = 1,    // 001b = 31.25 ms / 32 Hz
+        .ConfTmp126.mode = 0,
         .ConfTmp126.one_shot = 0,
-        .ConfTmp126.int_comp = 0,
+        .ConfTmp126.int_comp = 1,       // 1b = Comparator mode
         .ConfTmp126.reserved2 = 0,
         .ConfTmp126.avg = 0,
         .ConfTmp126.reset = 0,
         .ConfTmp126.reserved = 0,
     };
 
+    // reg = 0x03 -- Configuration
+    txbuf[2] = conf.bytes[1];        //      reserved     Reset - AVG - Res - Int_Cmp - 1Shot - Mode - Conv Period
+    txbuf[3] = conf.bytes[0];        // 0x21 xxxxxxx      0       0     0     1         0       1      001
+
     CmdWordUnion alert =
     {
         .Alert_En.dataready_alert = 0,
-        .Alert_En.TLow_alert = 1,
-        .Alert_En.THigh_alert = 1,
+        .Alert_En.TLow_alert = 1,       // When in comparator mode, enables the THigh_Status to assert the ALERT
+        .Alert_En.THigh_alert = 1,      // When in comparator mode, enables the TLow_Status to assert the ALERT
         .Alert_En.slew_alert = 0,
         .Alert_En.crc_alert = 0,
         .Alert_En.reserved2 = 0,
     };
 
-
-    txbuf[0] = cmd.bytes[1];         // X - CRC - L4 L3 L2 L1 - A - R/W - ADDR
-    txbuf[1] = cmd.bytes[0];         // x -  0  - 0  0  0  0  - 1 -   0 - 0x03
-
-    // reg = 0x03 -- Configuration
-    txbuf[2] = conf.bytes[1];        //      reserved     Reset - AVG - Res - Int_Cmp - 1Shot - Mode - Conv Period
-    txbuf[3] = conf.bytes[0];        // 0x09 xxxxxxx      0       0     0     0         0       1      001
-
     // reg = 0x04 -- Alert_Enable
     txbuf[4] = alert.bytes[1];       //      reserved     CRC - Slew - THigh - TLow - DataRdy
     txbuf[5] = alert.bytes[0];       // 0x06 xxxxxxxxxxx  0     0      1       1      0
 
-    // LOW = 0x05 LSB = 0.03125°C
-    uint16_t tempL = ((uint16_t)(25.00 / 0.03125)) << 2;
+    // LIM LOW = 0x05 LSB = 0.03125°C
+    uint16_t tempL = ((int16_t)(tempLimLow / 0.03125)) << 2;
     txbuf[6] = (uint8_t)(tempL >> 8);;    //
     txbuf[7] = (uint8_t)(tempL & 0x00FF);
 
-    // HIGH = 0x06 LSB = 0.03125°C
-    uint16_t tempH = ((uint16_t)(35.00 / 0.03125)) << 2;
+    // LIM HIGH = 0x06 LSB = 0.03125°C
+    uint16_t tempH = ((int16_t)(tempLimHigh / 0.03125)) << 2;
     txbuf[8] = (uint8_t)(tempH >> 8);    // 30 deg / 0.03125
     txbuf[9] = (uint8_t)(tempH & 0x00FF);
 
-    common_startSPItransfert(device0, 10, (uint8_t*)txbuf, (uint8_t*)rxbuf);
+    // Hyst High 0.5 °C * 0x0Axx
+    // Hyst High 0.5 °C * 0xxx0A
+    txbuf[10] = 0x0A;
+    txbuf[11] = 0x0A;
 
-    bool success = common_waitSPITransfertDone(device0);
+    common_startSPItransfert(device0, 12, (uint8_t*)txbuf, (uint8_t*)rxbuf);
 
-    if (success)
-    {
-        for (uint32_t i = 0; i < 1000; i++);
-    }
+    return common_waitSPITransfertDone(device0);
 }
 
+/**
+ * @brief
+ * Return TMP126 product ID.
+ *
+ * @return product ID if successful, 0 if timeout
+ */
 uint16_t spi_tmp126_getID(void)
 {
     // Command word
@@ -126,12 +133,18 @@ uint16_t spi_tmp126_getID(void)
     return 0;
 }
 
+/**
+ * @brief
+ * Return temperature measure.
+ *
+ * @return temperature [AD value] if successful, UINT_MAX if timeout
+ */
 uint16_t spi_tmp126_getTemp(void)
 {
     // Command word
     CmdWordUnion cmd =
     {
-        .CmdTmp126.r_w = 1,
+        .CmdTmp126.r_w = 1,         // read
         .CmdTmp126.addrInc = 0,
         .CmdTmp126.len = 0,
         .CmdTmp126.crc = 0,
@@ -154,36 +167,18 @@ uint16_t spi_tmp126_getTemp(void)
         return ((rxbuf[2] << 8) + rxbuf[3]);
     }
 
-    return 0;
+    return UINT_MAX;
 }
 
-float spi_temp126_TempToDeg(uint16_t tempAd)
+/**
+ * @brief
+ * Convert temperature measure [AD value] to [°C].
+ *
+ * @return temperature [°C]
+ */
+float spi_temp126_TempToDeg(int16_t tempAd)
 {
-    uint16_t temper = (rxbuf[2] << 8) + rxbuf[3];
-
-    //uint16_t cmp2 = (temper ^ 0xEFFF) + 1;
-
-    return (temper >> 2) * 0.03125;
+    return (tempAd >> 2) * 0.03125;
 }
 
-// Code de test
-//spi_tmp126_init();
-//uint16_t ID = spi_tmp126_getID();
-//
-//
-//char string[80];
-//if (ID == 0x2126)
-//{
-//    while(1)
-//    {
-//        uint16_t temp = spi_tmp126_getTemp();
-//        float temperature = spi_temp126_TempToDeg(temp);
-//
-//        if (temperature > 0.0)
-//        {
-//            sprintf(string, "Temp %f \n", temperature);
-//            for (uint32_t i = 0; i < 10000000; i++);
-//        }
-//    }
-//}
 

@@ -58,12 +58,39 @@ typedef union
     uint8_t             bytes[2];
 }CmdWordUnion;
 
-void spi_tmp126_init(void);
+/**
+ * @brief
+ * Init SPI TMP126.
+ *
+ * @param[in] tempLimLow    Temp limit low [°C]
+ * @param[in] tempLimHigh   Temp limit high [°C]
+ *
+ * @return true if successful, false if timeout
+ */
+bool spi_tmp126_init(float tempLimLow, float tempLimHigh);
 
+/**
+ * @brief
+ * Return TMP126 product ID.
+ *
+ * @return product ID if successful, 0 if timeout
+ */
 uint16_t spi_tmp126_getID(void);
 
+/**
+ * @brief
+ * Return temperature measure.
+ *
+ * @return temperature [AD value] if successful, UINT_MAX if timeout
+ */
 uint16_t spi_tmp126_getTemp(void);
 
-float spi_temp126_TempToDeg(uint16_t tempAd);
+/**
+ * @brief
+ * Convert temperature measure [AD value] to [°C].
+ *
+ * @return temperature [°C]
+ */
+float spi_temp126_TempToDeg(int16_t tempAd);
 
 #endif /* COMMON_TMP126_SPI_H_ */

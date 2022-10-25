@@ -63,6 +63,159 @@ static SpiCsStruct_t ChipSelectTab[SPI_CS_NUMBER] =
 static uint32_t gBaudRate = 0;
 static uint32_t gTimeOut = 0;
 
+/***************************************************************************//**
+ * @brief
+ *   Start a DMA transfer. BELENOS -> IRQ disabled use polling to check DMA status
+ *
+ * @param[in] ch
+ *   A DMA channel.
+ *
+ * @param[in] transfer
+ *   The initialization structure used to configure the transfer.
+ *
+ * @param[in] descriptor
+ *   The transfer descriptor, which can be an array of descriptors linked together.
+ *   Each descriptor's fields stored in RAM will be loaded into the certain
+ *   hardware registers at the proper time to perform the DMA transfer.
+ ******************************************************************************/
+void LDMA_StartTransferNoIrq(int ch,
+                        const LDMA_TransferCfg_t *transfer,
+                        const LDMA_Descriptor_t  *descriptor)
+{
+#if !(defined (_LDMA_SYNCHWEN_SYNCCLREN_SHIFT) && defined (_LDMA_SYNCHWEN_SYNCSETEN_SHIFT))
+  uint32_t tmp;
+#endif
+  CORE_DECLARE_IRQ_STATE;
+  uint32_t chMask = 1UL << (uint8_t)ch;
+
+  EFM_ASSERT(ch < (int)DMA_CHAN_COUNT);
+  EFM_ASSERT(transfer != NULL);
+
+#if defined (_LDMAXBAR_CH_REQSEL_MASK)
+  EFM_ASSERT(!(transfer->ldmaReqSel & ~_LDMAXBAR_CH_REQSEL_MASK));
+#elif defined (_LDMA_CH_REQSEL_MASK)
+  EFM_ASSERT(!(transfer->ldmaReqSel & ~_LDMA_CH_REQSEL_MASK));
+#endif
+
+#if defined (_LDMA_SYNCHWEN_SYNCCLREN_SHIFT) && defined (_LDMA_SYNCHWEN_SYNCSETEN_SHIFT)
+  EFM_ASSERT(!(((uint32_t)transfer->ldmaCtrlSyncPrsClrOff << _LDMA_SYNCHWEN_SYNCCLREN_SHIFT)
+               & ~_LDMA_SYNCHWEN_SYNCCLREN_MASK));
+  EFM_ASSERT(!(((uint32_t)transfer->ldmaCtrlSyncPrsClrOn << _LDMA_SYNCHWEN_SYNCCLREN_SHIFT)
+               & ~_LDMA_SYNCHWEN_SYNCCLREN_MASK));
+  EFM_ASSERT(!(((uint32_t)transfer->ldmaCtrlSyncPrsSetOff << _LDMA_SYNCHWEN_SYNCSETEN_SHIFT)
+               & ~_LDMA_SYNCHWEN_SYNCSETEN_MASK));
+  EFM_ASSERT(!(((uint32_t)transfer->ldmaCtrlSyncPrsSetOn << _LDMA_SYNCHWEN_SYNCSETEN_SHIFT)
+               & ~_LDMA_SYNCHWEN_SYNCSETEN_MASK));
+#elif defined (_LDMA_CTRL_SYNCPRSCLREN_SHIFT) && defined (_LDMA_CTRL_SYNCPRSSETEN_SHIFT)
+  EFM_ASSERT(!(((uint32_t)transfer->ldmaCtrlSyncPrsClrOff << _LDMA_CTRL_SYNCPRSCLREN_SHIFT)
+               & ~_LDMA_CTRL_SYNCPRSCLREN_MASK));
+  EFM_ASSERT(!(((uint32_t)transfer->ldmaCtrlSyncPrsClrOn << _LDMA_CTRL_SYNCPRSCLREN_SHIFT)
+               & ~_LDMA_CTRL_SYNCPRSCLREN_MASK));
+  EFM_ASSERT(!(((uint32_t)transfer->ldmaCtrlSyncPrsSetOff << _LDMA_CTRL_SYNCPRSSETEN_SHIFT)
+               & ~_LDMA_CTRL_SYNCPRSSETEN_MASK));
+  EFM_ASSERT(!(((uint32_t)transfer->ldmaCtrlSyncPrsSetOn << _LDMA_CTRL_SYNCPRSSETEN_SHIFT)
+               & ~_LDMA_CTRL_SYNCPRSSETEN_MASK));
+#endif
+
+  EFM_ASSERT(!(((uint32_t)transfer->ldmaCfgArbSlots << _LDMA_CH_CFG_ARBSLOTS_SHIFT)
+               & ~_LDMA_CH_CFG_ARBSLOTS_MASK));
+  EFM_ASSERT(!(((uint32_t)transfer->ldmaCfgSrcIncSign << _LDMA_CH_CFG_SRCINCSIGN_SHIFT)
+               & ~_LDMA_CH_CFG_SRCINCSIGN_MASK));
+  EFM_ASSERT(!(((uint32_t)transfer->ldmaCfgDstIncSign << _LDMA_CH_CFG_DSTINCSIGN_SHIFT)
+               & ~_LDMA_CH_CFG_DSTINCSIGN_MASK));
+  EFM_ASSERT(!(((uint32_t)transfer->ldmaLoopCnt << _LDMA_CH_LOOP_LOOPCNT_SHIFT)
+               & ~_LDMA_CH_LOOP_LOOPCNT_MASK));
+
+  /* Clear the pending channel interrupt. */
+#if defined (LDMA_HAS_SET_CLEAR)
+  LDMA->IF_CLR = chMask;
+#else
+  LDMA->IFC = chMask;
+#endif
+
+#if defined(LDMAXBAR)
+  LDMAXBAR->CH[ch].REQSEL = transfer->ldmaReqSel;
+#else
+  LDMA->CH[ch].REQSEL = transfer->ldmaReqSel;
+#endif
+  LDMA->CH[ch].LOOP = transfer->ldmaLoopCnt << _LDMA_CH_LOOP_LOOPCNT_SHIFT;
+  LDMA->CH[ch].CFG = (transfer->ldmaCfgArbSlots << _LDMA_CH_CFG_ARBSLOTS_SHIFT)
+                     | (transfer->ldmaCfgSrcIncSign << _LDMA_CH_CFG_SRCINCSIGN_SHIFT)
+                     | (transfer->ldmaCfgDstIncSign << _LDMA_CH_CFG_DSTINCSIGN_SHIFT)
+#if defined(_LDMA_CH_CFG_SRCBUSPORT_MASK)
+                     | (transfer->ldmaCfgStructBusPort << _LDMA_CH_CFG_STRUCTBUSPORT_SHIFT)
+                     | (transfer->ldmaCfgSrcBusPort << _LDMA_CH_CFG_SRCBUSPORT_SHIFT)
+                     | (transfer->ldmaCfgDstBusPort << _LDMA_CH_CFG_DSTBUSPORT_SHIFT)
+#endif
+  ;
+
+  /* Set the descriptor address. */
+  LDMA->CH[ch].LINK = (uint32_t)descriptor & _LDMA_CH_LINK_LINKADDR_MASK;
+
+  /* A critical region. */
+  CORE_ENTER_ATOMIC();
+
+  /* Enable the channel interrupt. */
+  /* (BELENOS LINPAT -> Disable IRQ to be able to manage SPI by polling */
+  //LDMA->IEN |= chMask;
+
+  if (transfer->ldmaReqDis) {
+    LDMA->REQDIS |= chMask;
+  }
+
+  if (transfer->ldmaDbgHalt) {
+    LDMA->DBGHALT |= chMask;
+  }
+
+#if defined (_LDMA_SYNCHWEN_SYNCCLREN_SHIFT) && defined (_LDMA_SYNCHWEN_SYNCSETEN_SHIFT)
+
+  LDMA->SYNCHWEN_CLR =
+    (((uint32_t)transfer->ldmaCtrlSyncPrsClrOff << _LDMA_SYNCHWEN_SYNCCLREN_SHIFT)
+     | ((uint32_t)transfer->ldmaCtrlSyncPrsSetOff << _LDMA_SYNCHWEN_SYNCSETEN_SHIFT))
+    & _LDMA_SYNCHWEN_MASK;
+
+  LDMA->SYNCHWEN_SET =
+    (((uint32_t)transfer->ldmaCtrlSyncPrsClrOn << _LDMA_SYNCHWEN_SYNCCLREN_SHIFT)
+     | ((uint32_t)transfer->ldmaCtrlSyncPrsSetOn << _LDMA_SYNCHWEN_SYNCSETEN_SHIFT))
+    & _LDMA_SYNCHWEN_MASK;
+
+#elif defined (_LDMA_CTRL_SYNCPRSCLREN_SHIFT) && defined (_LDMA_CTRL_SYNCPRSSETEN_SHIFT)
+
+  tmp = LDMA->CTRL;
+
+  if (transfer->ldmaCtrlSyncPrsClrOff) {
+    tmp &= ~_LDMA_CTRL_SYNCPRSCLREN_MASK
+           | (~transfer->ldmaCtrlSyncPrsClrOff << _LDMA_CTRL_SYNCPRSCLREN_SHIFT);
+  }
+
+  if (transfer->ldmaCtrlSyncPrsClrOn) {
+    tmp |= transfer->ldmaCtrlSyncPrsClrOn << _LDMA_CTRL_SYNCPRSCLREN_SHIFT;
+  }
+
+  if (transfer->ldmaCtrlSyncPrsSetOff) {
+    tmp &= ~_LDMA_CTRL_SYNCPRSSETEN_MASK
+           | (~transfer->ldmaCtrlSyncPrsSetOff << _LDMA_CTRL_SYNCPRSSETEN_SHIFT);
+  }
+
+  if (transfer->ldmaCtrlSyncPrsSetOn) {
+    tmp |= transfer->ldmaCtrlSyncPrsSetOn << _LDMA_CTRL_SYNCPRSSETEN_SHIFT;
+  }
+
+  LDMA->CTRL = tmp;
+
+#else
+
+  #error  "SYNC Set and SYNC Clear not defined"
+
+#endif
+
+  BUS_RegMaskedClear(&LDMA->CHDONE, chMask);  /* Clear the done flag.     */
+  LDMA->LINKLOAD = chMask;      /* Start a transfer by loading the descriptor.  */
+
+  /* A critical region end. */
+  CORE_EXIT_ATOMIC();
+}
+
 /**
  * Init SPI i/o pin.
  */
@@ -189,10 +342,10 @@ void common_startSPItransfert(DeviceIdentEnum_t device, uint8_t buffSize, uint8_
     GPIO_PinOutClear(ChipSelectTab[device].portNumber, ChipSelectTab[device].pinNumber);
 
     // RX channel
-    LDMA_StartTransfer(RX_LDMA_CHANNEL, &ldmaRXConfig, &ldmaRXDescriptor);
+    LDMA_StartTransferNoIrq(RX_LDMA_CHANNEL, &ldmaRXConfig, &ldmaRXDescriptor);
 
     // TX channel
-    LDMA_StartTransfer(TX_LDMA_CHANNEL, &ldmaTXConfig, &ldmaTXDescriptor);
+    LDMA_StartTransferNoIrq(TX_LDMA_CHANNEL, &ldmaTXConfig, &ldmaTXDescriptor);
 }
 
 /**
@@ -226,3 +379,7 @@ bool common_waitSPITransfertDone(DeviceIdentEnum_t device)
 
     return true;
 }
+
+
+
+
