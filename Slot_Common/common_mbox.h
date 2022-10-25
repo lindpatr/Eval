@@ -41,4 +41,16 @@ typedef struct commonAnalogdata
 extern commonAnalogdata_t gMboxADMes;
 extern int32_t gMBoxTempCell;
 
+typedef struct commonstat
+{
+    uint32_t CountPrintStat;    // Stat print #count
+//    uint32_t elapsed_time;    // Elapsed time
+    uint32_t AbsTXCounter;      // Last counter to
+    uint32_t AbsRXCounter;      // Sum of absolute RX (from Slave) counters
+    uint32_t AbsRXGap;          // Sum of absolute RX (from Slave) gap occurences
+    uint32_t AbsRXOk;           // Sum of absolute TX Ok (from Slave) counters
+}commonstat_t;
+
+extern commonstat_t gCommonStat;
+
 #endif /* COMMON_MBOX_H_ */

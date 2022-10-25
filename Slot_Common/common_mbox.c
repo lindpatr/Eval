@@ -12,3 +12,6 @@
 
 commonAnalogdata_t gMboxADMes;     // contains analog measures
 int32_t gMBoxTempCell;
+
+// Statistics
+commonstat_t gCommonStat;
