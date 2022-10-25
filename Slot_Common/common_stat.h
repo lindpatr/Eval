@@ -114,8 +114,8 @@ void DisplaySentMsg(void);
 void DecodeEvents(RAIL_Events_t *events);
 
 /******************************************************************************
- * DisplayStat : compute, print and display statistics
+ * CalcStat : compute, print and display statistics
  *****************************************************************************/
-void DisplayStat(void);
+void CalcStat(void);
 
 #endif /* APP_STAT_H_ */

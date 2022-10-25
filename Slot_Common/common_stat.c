@@ -118,7 +118,7 @@ __INLINE void DisplaySentMsg(void)
 }
 
 /******************************************************************************
- * DisplayStat : print event counters
+ * DisplayEvents : print event counters
  *****************************************************************************/
 static __INLINE void DisplayEvents(void)
 {
@@ -157,144 +157,13 @@ __INLINE void DecodeEvents(RAIL_Events_t *events)
 }
 
 /******************************************************************************
- * DisplayStat : compute, print and display statistics
+ * DisplayStat : Print and display statistics
  *****************************************************************************/
-#define REF_MSG_PER_SEC (10.0f * 10100.0f)      //  key transmission rate of 1 master + 100 slaves @10ms
-
-__INLINE void DisplayStat(void)
+#if (qPrintStat)
+static __INLINE void DisplayStat(void)
 {
-    // Absolute
-    // --------
-    uint32_t absRXCounter = 0U;
-    uint32_t absRXGap = 0U;
-    uint32_t absRXOk = 0U;
-
-    float statAbsMsgPerSec, statAbsMsgPerSecRef, statAbsTXErr, statAbsRXErr;
-
-    float relElapsedTime;
     bool isMaster = gDeviceCfgAddr->ismaster;
     uint8_t me = gDeviceCfgAddr->posTab;
-
-
-    // Common processing
-    // -----------------
-
-    // Compute sum of absolute RX (from Slave) counters and sum of relative (since last stat) RX (from Slave) counters
-    uint32_t absTXCounter = gTX_counter.u32;
-
-    if (isMaster)
-    {
-        // Master node --> take in account all enabled slaves [1..N]
-        for (int i = 1; i <= gNbOfSlave; i++)
-        {
-            PROT_AddrMap_t* device = common_getConfigTable(i);
-
-            if (device != NULL)
-            {
-                if (device->enable)
-                {
-                    uint8_t pos = device->posTab;
-                    if (gRX_counter[pos].u32 > 0UL)
-                    {
-                        // Absolute
-                        // --------
-                        absRXCounter += gRX_counter[pos].u32;                         // Sum of absolute RX (from Slave) counters
-                        absRXGap += gRX_tab[pos][TAB_POS_RX_GAP];                 // Sum of absolute RX (from Slave) gap occurences
-                        absRXOk += gRX_tab[pos][TAB_POS_RX_OK];                   // Sum of absolute TX Ok (from Slave) counters
-                    }
-                }
-
-            }
-        }
-    }
-    else    // Slave node -> take in account only the concerned slave
-    {
-        // Absolute
-        // --------
-        absRXCounter = gRX_counter[me].u32;
-        absRXGap = gRX_tab[me][TAB_POS_RX_GAP];
-        absRXOk = gRX_tab[me][TAB_POS_RX_OK];
-    }
-
-    uint32_t absAllCounter = absTXCounter + absRXCounter;
-
-
-    // Absolute stat
-    // -------------
-    // Cumulative time
-    relElapsedTime = (float)(gTotalElapsedTime / (SEC*1.0f));
-    // Messages pro second
-    statAbsMsgPerSec = (float)(absAllCounter) / relElapsedTime;
-    // Then compare to the key transmission rate of 1 master + 100 slaves @10ms
-    //statAbsMsgPerSecRef = REF_MSG_PER_SEC / statAbsMsgPerSec;
-    uint8_t n_slaves = gNbOfEnabledSlave;
-    float calc_sync_period = ((1000000.0f * (1.0f / statAbsMsgPerSec)) * (n_slaves + 1));
-    uint32_t th_sync_period = (TIME_SLOT_MASTER_TX + TIME_SLOT_ACQ + (gNbOfEnabledSlave * TIME_SLOT_SLAVE)  - TIME_SLOT_CORR);
-    uint32_t deduc = TIME_SLOT_MASTER_TX + TIME_SLOT_ACQ + ((uint32_t)calc_sync_period - (th_sync_period + TIME_SLOT_CORR));
-    statAbsMsgPerSecRef = (((float)MAX_SLAVE * (float)((calc_sync_period - deduc) / (float)n_slaves)) + deduc) / 1000.0f;
-
-    uint32_t absTXOk = gTX_tab[TAB_POS_TX_OK];
-    uint32_t absCalOk = gCAL_tab[TAB_POS_CAL_REQ];
-    uint32_t absCalErr = gCAL_tab[TAB_POS_CAL_ERR];
-
-    // TX error rate
-    uint32_t absTXErr = gTX_tab[TAB_POS_TX_ERR];
-    uint32_t absTXTimeOut = gTX_tab[TAB_POS_TX_TIMEOUT];
-
-    statAbsTXErr = 100.0f * (float) (absTXErr + absTXTimeOut) / (float) (isMaster ? (gCB_tab[RAIL_EVENT_TX_PACKET_SENT_SHIFT]-gCountPrintStat) : gCB_tab[RAIL_EVENT_TX_PACKET_SENT_SHIFT]);
-    if (statAbsTXErr > 100.0f)
-        statAbsTXErr = 100.0f;
-
-    // RX error rate
-    uint32_t absRXErr = gRX_tab[me][TAB_POS_RX_ERR];
-    uint32_t absRXTimeOut = gRX_tab[me][TAB_POS_RX_TIMEOUT];
-    float period = 1000.0f / ((float)absTXOk / (float)relElapsedTime);
-
-    // Detect never responding slaves
-    if (isMaster)   // From a master point of view
-    {
-        for (int i = 1; i <= gNbOfSlave; i++)
-        {
-            PROT_AddrMap_t* device = common_getConfigTable(i);
-
-            if (device != NULL)
-            {
-                if (device->enable)
-                {
-                    uint8_t pos = device->posTab;
-                    if (gRX_counter[pos].u32 == 0UL)
-                    {
-                        absRXTimeOut += absTXOk;
-                    }
-                }
-            }
-        }
-    }
-    else    // From a slave point of view
-    {
-        if (absTXOk == 0)
-        {
-            absTXTimeOut = absRXOk;
-        }
-    }
-
-    uint32_t absCRCErr = gRX_tab[me][TAB_POS_RX_CRC_ERR];
-    uint32_t absSYNCErr = gRX_tab[me][TAB_POS_RX_SYNC_LOST];
-    uint32_t remainingAbsRXGap = ((absRXGap > absRXErr) ? (absRXGap - absRXErr): 0);            // Frame error implies a gap -> compute gap delta due to other reasons
-
-    statAbsRXErr = 100.0f * (float) (absRXErr + absRXTimeOut + absCRCErr + remainingAbsRXGap) / (float) (isMaster ? gCB_tab[RAIL_EVENT_RX_PACKET_RECEIVED_SHIFT] : (gCB_tab[RAIL_EVENT_RX_PACKET_RECEIVED_SHIFT]-gCountPrintStat));
-    if (statAbsRXErr > 100.0f)
-        statAbsRXErr = 100.0f;
-
-#if (RSSI_LQI_MES)
-    // RX quality
-    int8_t statAbsRssiMoy = (int8_t)gRX_tab[me][TAB_POS_RX_RSSI_MOY];
-    int8_t statAbsRssiMin = (int8_t)gRX_tab[me][TAB_POS_RX_RSSI_MIN];
-    int8_t statAbsRssiMax = (int8_t)gRX_tab[me][TAB_POS_RX_RSSI_MAX];
-    uint8_t statAbsLqiMoy = (uint8_t)gRX_tab[me][TAB_POS_RX_LQI_MOY];
-    uint8_t statAbsLqiMin = (uint8_t)gRX_tab[me][TAB_POS_RX_LQI_MIN];
-    uint8_t statAbsLqiMax = (uint8_t)gRX_tab[me][TAB_POS_RX_LQI_MAX];
-#endif  // RSSI_LQI_MES
 
     // Printing
     // --------
@@ -303,39 +172,39 @@ __INLINE void DisplayStat(void)
     app_log_info("\n");
     app_log_info("%s #%03d statistics\n", (isMaster ? "MASTER" : "SLAVE"), gDeviceCfgAddr->internalAddr);
     app_log_info("----------------------\n");
-    app_log_info("Stat print #count          : %d\n", gCountPrintStat);
+    app_log_info("Stat print #count          : %d\n", gCommonStat.CountPrintStat);
 
 
     // Absolute stat
     // -------------
-    app_log_info("\nElapsed time               : %0.0f sec\n", relElapsedTime);
+    app_log_info("\nElapsed time               : %0.0f sec\n", gCommonStat.RelElapsedTime);
 
     // Counters TX and RX
-    app_log_info("#Last counter to %s    : %d\n", (isMaster ? "Slaves" : "Master"), absTXCounter);
-    app_log_info("#Last counter from %s  : %d\n", (isMaster ? "Slaves" : "Master"), absRXCounter);
+    app_log_info("#Last counter to %s    : %d\n", (isMaster ? "Slaves" : "Master"), gCommonStat.TXCounter);
+    app_log_info("#Last counter from %s  : %d\n", (isMaster ? "Slaves" : "Master"), gCommonStat.RXCounter);
 
     // Errors TX and RX
-    app_log_info("TX Err (#err/#TO)          : %03.1f ppm/%0.3f%% (%d/%d)\n", statAbsTXErr * 10000.0f, statAbsTXErr, absTXErr, absTXTimeOut);
-    app_log_info("RX Err (#err/#TO/#CRC/#gap): %03.1f ppm/%0.3f%% (%d/%d/%d/%d)\n", statAbsRXErr * 10000.0f, statAbsRXErr, absRXErr, absRXTimeOut, absCRCErr, remainingAbsRXGap);
+    app_log_info("TX Err (#err/#TO)          : %03.1f ppm/%0.3f%% (%d/%d)\n", gCommonStat.TXErrInPpm, gCommonStat.TXErrInPercent, gCommonStat.TXErr, gCommonStat.TXTimeOut);
+    app_log_info("RX Err (#err/#TO/#CRC/#gap): %03.1f ppm/%0.3f%% (%d/%d/%d/%d)\n", gCommonStat.RXErrInPpm, gCommonStat.RXErrInPercent, gCommonStat.RXErr, gCommonStat.RXTimeOut, gCommonStat.CRCErr, gCommonStat.RXGap);
 #if (RSSI_LQI_MES)
     // RX quality
-    app_log_info("RX rssi/lqi (min/max)      : %d dbm (%d/%d) / %d (%d/%d)\n", statAbsRssiMoy, statAbsRssiMin, statAbsRssiMax, statAbsLqiMoy, statAbsLqiMin, statAbsLqiMax);
+    app_log_info("RX rssi/lqi (min/max)      : %d dbm (%d/%d) / %d (%d/%d)\n", gCommonStat.RssiMoy, gCommonStat.RssiMin, gCommonStat.RssiMax, gCommonStat.LqiMoy, gCommonStat.LqiMin, gCommonStat.LqiMax);
 #endif  // RSSI_LQI_MES
 
     // Transmission rate
     if (isMaster)
     {
-        app_log_info("Est. loop/100 (sync/rate)  : %0.2f ms (%0.3f ms/%0.2f msg/s)\n", statAbsMsgPerSecRef, period, statAbsMsgPerSec);
+        app_log_info("Est. loop/100 (sync/rate)  : %0.2f ms (%0.3f ms/%0.2f msg/s)\n", gCommonStat.MsgPerSecRef, gCommonStat.Period, gCommonStat.MsgPerSec);
     }
     else
     {
-        app_log_info("#Sync lost                 : %d\n", absSYNCErr);
-        app_log_info("Sync period                : %0.3f ms\n", period);
+        app_log_info("#Sync lost                 : %d\n", gCommonStat.SYNCErr);
+        app_log_info("Sync period                : %0.3f ms\n", gCommonStat.Period);
         app_log_info("AD VDDA/IO/D/TCPU / SPI TA : %0.2fV/%0.2fV/%0.2fmA/%0.1f°C/%0.1f°C\n", CONVERT_TO_VOLT(gMboxADMes.u.detail.vdda), CONVERT_TO_VOLT_2(gMboxADMes.u.detail.ucell), CONVERT_TO_VOLT_2(gMboxADMes.u.detail.icell), CONVERT_TO_DEGRES_2(gMboxADMes.u.detail.internaltemp), CONVERT_TO_DEGRES(gMBoxTempCell));
     }
 
     // Calibration
-    app_log_info("Cal #request (#err)        : %d (%d)\n", absCalOk, absCalErr);
+    app_log_info("Cal #request (#err)        : %d (%d)\n", gCommonStat.CalOk, gCommonStat.CalErr);
 
     // Slave detail
     app_log_info("\n");
@@ -357,11 +226,63 @@ __INLINE void DisplayStat(void)
 
                     app_log_info("%03d Err (#OK/#TO/#gap/max) : %03.1f ppm (%d/%d/%d/%d)\n",
                             addr,
-                            (1000000.0f *(gRX_tab[pos][TAB_POS_TX_TIMEOUT]+gRX_tab[pos][TAB_POS_RX_GAP]))/(float)(gRX_tab[pos][TAB_POS_RX_OK]+gRX_tab[pos][TAB_POS_TX_TIMEOUT]+gRX_tab[pos][TAB_POS_RX_GAP]),
-                            gRX_tab[pos][TAB_POS_RX_OK],
-                            gRX_tab[pos][TAB_POS_TX_TIMEOUT],
-                            gRX_tab[pos][TAB_POS_RX_GAP],
-                            gRX_tab[pos][TAB_POS_RX_GAP_MAX]);
+                            gCommonStat.SlaveDetail[pos].RXErrInPpm,
+                            gCommonStat.SlaveDetail[pos].RXOk,
+                            gCommonStat.SlaveDetail[pos].RXTimeOut,
+                            gCommonStat.SlaveDetail[pos].RXGap,
+                            gCommonStat.SlaveDetail[pos].GapMax);
+                }
+            }
+        }
+    }
+    else    // Slave node -> take in account only the concerned slave
+    {
+        app_log_info("#Counter (#gap/max)        : %d (%d/%d)\n", gCommonStat.RXOk, gCommonStat.RXGap, gRX_tab[me][TAB_POS_RX_GAP_MAX]);
+    }
+}
+#endif  // qPrintStat
+
+/******************************************************************************
+ * CalcStat : compute, print and display statistics
+ *****************************************************************************/
+__INLINE void CalcStat(void)
+{
+    uint32_t absRXGap = 0U;
+
+    bool isMaster = gDeviceCfgAddr->ismaster;
+    uint8_t me = gDeviceCfgAddr->posTab;
+
+    // Common processing
+    // -----------------
+    gCommonStat.CountPrintStat = gCountPrintStat;
+    gCommonStat.RelElapsedTime = gCountPrintStat;
+
+    gCommonStat.RXCounter = 0U;
+    gCommonStat.RXOk = 0U;
+
+    // Compute sum of absolute RX (from Slave) counters and sum of relative (since last stat) RX (from Slave) counters
+    gCommonStat.TXCounter = gTX_counter.u32;
+
+    if (isMaster)
+    {
+        // Master node --> take in account all enabled slaves [1..N]
+        for (int i = 1; i <= gNbOfSlave; i++)
+        {
+            PROT_AddrMap_t* device = common_getConfigTable(i);
+
+            if (device != NULL)
+            {
+                if (device->enable)
+                {
+                    uint8_t pos = device->posTab;
+                    if (gRX_counter[pos].u32 > 0UL)
+                    {
+                        // Absolute
+                        // --------
+                        gCommonStat.RXCounter += gRX_counter[pos].u32;                         // Sum of absolute RX (from Slave) counters
+                        absRXGap += gRX_tab[pos][TAB_POS_RX_GAP];                 // Sum of absolute RX (from Slave) gap occurences
+                        gCommonStat.RXOk += gRX_tab[pos][TAB_POS_RX_OK];                   // Sum of absolute TX Ok (from Slave) counters
+                    }
                 }
 
             }
@@ -369,16 +290,129 @@ __INLINE void DisplayStat(void)
     }
     else    // Slave node -> take in account only the concerned slave
     {
-        app_log_info("#Counter (#gap/max)        : %d (%d=%d gap-%d FErr / max: %d)\n", absRXOk, remainingAbsRXGap, absRXGap, absRXErr, gRX_tab[me][TAB_POS_RX_GAP_MAX]);
+        // Absolute
+        // --------
+        gCommonStat.RXCounter = gRX_counter[me].u32;
+        absRXGap = gRX_tab[me][TAB_POS_RX_GAP];
+        gCommonStat.RXOk = gRX_tab[me][TAB_POS_RX_OK];
     }
 
-    // Detail of callback events
-    DisplayEvents();
+    uint32_t absAllCounter = gCommonStat.TXCounter + gCommonStat.RXCounter;
+
+
+    // Absolute stat
+    // -------------
+    // Cumulative time
+    gCommonStat.RelElapsedTime = (float)(gTotalElapsedTime / (SEC*1.0f));
+    // Messages pro second
+    gCommonStat.MsgPerSec = (float)(absAllCounter) / gCommonStat.RelElapsedTime;
+    // Then compare to the key transmission rate of 1 master + 100 slaves @10ms
+    uint8_t n_slaves = gNbOfEnabledSlave;
+    float calc_sync_period = ((1000000.0f * (1.0f / gCommonStat.MsgPerSec)) * (n_slaves + 1));
+    uint32_t th_sync_period = (TIME_SLOT_MASTER_TX + TIME_SLOT_ACQ + (gNbOfEnabledSlave * TIME_SLOT_SLAVE)  - TIME_SLOT_CORR);
+    uint32_t deduc = TIME_SLOT_MASTER_TX + TIME_SLOT_ACQ + ((uint32_t)calc_sync_period - (th_sync_period + TIME_SLOT_CORR));
+    gCommonStat.MsgPerSecRef = (((float)MAX_SLAVE * (float)((calc_sync_period - deduc) / (float)n_slaves)) + deduc) / 1000.0f;
+
+    gCommonStat.TXOk = gTX_tab[TAB_POS_TX_OK];
+    gCommonStat.CalOk = gCAL_tab[TAB_POS_CAL_REQ];
+    gCommonStat.CalErr = gCAL_tab[TAB_POS_CAL_ERR];
+
+    // TX error rate
+    gCommonStat.TXErr = gTX_tab[TAB_POS_TX_ERR];
+    gCommonStat.TXTimeOut = gTX_tab[TAB_POS_TX_TIMEOUT];
+
+    gCommonStat.TXErrInPercent = 100.0f * (float) (gCommonStat.TXErr + gCommonStat.TXTimeOut) / (float) (isMaster ? (gCB_tab[RAIL_EVENT_TX_PACKET_SENT_SHIFT]-gCountPrintStat) : gCB_tab[RAIL_EVENT_TX_PACKET_SENT_SHIFT]);
+    if (gCommonStat.TXErrInPercent > 100.0f)
+        gCommonStat.TXErrInPercent = 100.0f;
+
+    gCommonStat.TXErrInPpm = gCommonStat.TXErrInPercent * 10000.0f;
+
+    // RX error rate
+    gCommonStat.RXErr = gRX_tab[me][TAB_POS_RX_ERR];
+    gCommonStat.RXTimeOut = gRX_tab[me][TAB_POS_RX_TIMEOUT];
+    gCommonStat.Period = 1000.0f / ((float)gCommonStat.TXOk / (float)gCommonStat.RelElapsedTime);
+
+    // Detect never responding slaves
+    if (isMaster)   // From a master point of view
+    {
+        for (int i = 1; i <= gNbOfSlave; i++)
+        {
+            PROT_AddrMap_t* device = common_getConfigTable(i);
+
+            if (device != NULL)
+            {
+                if (device->enable)
+                {
+                    uint8_t pos = device->posTab;
+                    if (gRX_counter[pos].u32 == 0UL)
+                    {
+                        gCommonStat.RXTimeOut += gCommonStat.TXOk;
+                    }
+                }
+            }
+        }
+    }
+    else    // From a slave point of view
+    {
+        if (gCommonStat.TXOk == 0)
+        {
+            gCommonStat.TXTimeOut = gCommonStat.RXOk;
+        }
+    }
+
+    gCommonStat.CRCErr = gRX_tab[me][TAB_POS_RX_CRC_ERR];
+    gCommonStat.SYNCErr = gRX_tab[me][TAB_POS_RX_SYNC_LOST];
+    gCommonStat.RXGap = ((absRXGap > gCommonStat.RXErr) ? (absRXGap - gCommonStat.RXErr): 0);            // Frame error implies a gap -> compute gap delta due to other reasons
+
+    gCommonStat.RXErrInPercent = 100.0f * (float) (gCommonStat.RXErr + gCommonStat.RXTimeOut + gCommonStat.CRCErr + absRXGap) / (float) (isMaster ? gCB_tab[RAIL_EVENT_RX_PACKET_RECEIVED_SHIFT] : (gCB_tab[RAIL_EVENT_RX_PACKET_RECEIVED_SHIFT]-gCountPrintStat));
+    if (gCommonStat.RXErrInPercent > 100.0f)
+        gCommonStat.RXErrInPercent = 100.0f;
+
+    gCommonStat.RXErrInPpm = gCommonStat.RXErrInPercent * 10000.0f;
+
+#if (RSSI_LQI_MES)
+    // RX quality
+    gCommonStat.RssiMoy = (int8_t)gRX_tab[me][TAB_POS_RX_RSSI_MOY];
+    gCommonStat.RssiMin = (int8_t)gRX_tab[me][TAB_POS_RX_RSSI_MIN];
+    gCommonStat.RssiMax = (int8_t)gRX_tab[me][TAB_POS_RX_RSSI_MAX];
+    gCommonStat.LqiMoy = (uint8_t)gRX_tab[me][TAB_POS_RX_LQI_MOY];
+    gCommonStat.LqiMin = (uint8_t)gRX_tab[me][TAB_POS_RX_LQI_MIN];
+    gCommonStat.LqiMax = (uint8_t)gRX_tab[me][TAB_POS_RX_LQI_MAX];
+#endif  // RSSI_LQI_MES
+
+    if (isMaster)
+    {
+        // Master node --> take in account all slaves
+        for (int i = 1; i <= gNbOfSlave; i++)
+        {
+            PROT_AddrMap_t* device = common_getConfigTable(i);
+
+            if (device != NULL)
+            {
+                if (device->enable)
+                {
+                    uint8_t pos = device->posTab;
+
+                    gCommonStat.SlaveDetail[pos].RXOk = gRX_tab[pos][TAB_POS_RX_OK];
+                    gCommonStat.SlaveDetail[pos].RXTimeOut = gRX_tab[pos][TAB_POS_TX_TIMEOUT];
+                    gCommonStat.SlaveDetail[pos].RXGap = gRX_tab[pos][TAB_POS_RX_GAP];
+                    gCommonStat.SlaveDetail[pos].GapMax = gRX_tab[pos][TAB_POS_RX_GAP_MAX];
+                    gCommonStat.SlaveDetail[pos].RXErrInPpm = (1000000.0f *(gRX_tab[pos][TAB_POS_TX_TIMEOUT]+gRX_tab[pos][TAB_POS_RX_GAP]))/(float)(gRX_tab[pos][TAB_POS_RX_OK]+gRX_tab[pos][TAB_POS_TX_TIMEOUT]+gRX_tab[pos][TAB_POS_RX_GAP]);
+                }
+            }
+        }
+    }
 
     // Update previous references
     memcpy(gTX_tab_old, gTX_tab, sizeof(gTX_tab));
     memcpy(gRX_tab_old, gRX_tab, sizeof(gRX_tab));
     memcpy(gCAL_tab_old, gCAL_tab, sizeof(gCAL_tab));
+
+    // Print out or send stat to LabVIEW (according DisplayStat implementation)
+    DisplayStat();
+
+    // Detail of callback events (only print out)
+    DisplayEvents();
 }
 
 /******************************************************************************

@@ -371,7 +371,7 @@ static __INLINE bool PrintStatistics(void)
 
         StopRadio();
 
-        DisplayStat();
+        CalcStat();
 
         RestartRadio();
 
