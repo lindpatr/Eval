@@ -5,10 +5,9 @@
  *      Author: BEL-LinPat
  */
 
-
 #include "common_stat.h"
 #include "common_mbox.h"
-
+#include "common_algo_stuffing.h"
 
 uint32_t gTX_tab[TAB_POS_LAST] = { 0 };                // 0 = #TX_OK    1 = #TX_Err   2 = #TX_TimeOut   3 = ND              4 = ND                  5 = ND
 uint32_t gRX_tab[MAX_NODE][TAB_POS_LAST] = { 0 };      // 0 = #RX_OK    1 = #RX_Err   2 = #RX_TimeOut   3 = #Gap RX count   4 = Max gap RX count    5 = #CRC_Err
@@ -156,6 +155,10 @@ __INLINE void DecodeEvents(RAIL_Events_t *events)
 #endif  // qPrintEvents
 }
 
+
+/******************************************************************************
+ * DisplayStat : ASCII TERMINAL OUTPUT
+ *****************************************************************************/
 /******************************************************************************
  * DisplayStat : Print and display statistics
  *****************************************************************************/
@@ -241,6 +244,124 @@ static __INLINE void DisplayStat(void)
     }
 }
 #endif  // qPrintStat
+
+/******************************************************************************
+ * DisplayStat : LABVIEW BINARY FRAMED OUTPUT (Antenna test)
+ *****************************************************************************/
+#if (qPrintStatLabView)
+#define MAX_LABVIEW_DATA 28
+
+typedef enum
+{
+    kUint32 = 1,
+    kFLoat = 2,
+    kInt8 = 3,
+    kUint8 = 4
+};
+
+typedef struct
+{
+    uint16_t    ID;         // Value identifier for labview
+    uint16_t    valType;    // Data type (uint32_t, float...)
+    uint32_t    value;      // Value cast in uint32_t
+}SerialFrame;
+
+// Encoded buffer to send
+uint8_t buffer[(MAX_LABVIEW_DATA * sizeof(SerialFrame) * 2) + 5];
+
+// Frame structure
+static SerialFrame  statFrame[50];
+// stat data pointer
+static uint32_t* statDataPtr[50];
+
+// Initialize Frame tab and data ptr tab
+#define setvalue(index, sframe, id, valtype, initdata, dataPtrTab, dataptr)    ({sframe[index].ID = id; sframe[index].valType =valtype; sframe[index].value = 0; dataPtrTab[index] = (uint32_t*)dataptr;})
+
+/******************************************************************************
+ * InitLabViewStat : initialize tabs for LabView statistics
+ *****************************************************************************/
+static __INLINE void InitLabViewStat()
+{
+    setvalue(0, statFrame, 1, kUint32, 0, statDataPtr, &gCommonStat.CountPrintStat);  //uint32_t gCommonStat.CountPrintStat;    // Stat print #count
+    setvalue(1, statFrame, 2, 2,  0, statDataPtr, &gCommonStat.RelElapsedTime);  //float gCommonStat.RelElapsedTime;      // Elapsed time
+
+    // TX
+    setvalue(2, statFrame, 3, kUint32,  0, statDataPtr, &gCommonStat.TXCounter);       //uint32_t gCommonStat.TXCounter;         // Last counter Master to Slave
+    setvalue(3, statFrame, 4, kUint32,  0, statDataPtr, &gCommonStat.TXOk);            //uint32_t gCommonStat.TXOk;              // Count of Ok
+    setvalue(4, statFrame, 5, kUint32,  0, statDataPtr, &gCommonStat.TXErr);           //uint32_t gCommonStat.TXErr;             // Count of TX errors
+    setvalue(5, statFrame, 6, kUint32,  0, statDataPtr, &gCommonStat.TXTimeOut);       //uint32_t gCommonStat.TXTimeOut;         // Count of TX timeout
+
+    setvalue(6, statFrame, 7, kFLoat,  0, statDataPtr, &gCommonStat.TXErrInPpm);      //float gCommonStat.TXErrInPpm;           // TX error rate [ppm]
+    setvalue(7, statFrame, 8, kFLoat,  0, statDataPtr, &gCommonStat.TXErrInPercent);  //float gCommonStat.TXErrInPercent;       // TX error rate [%]
+
+    // RX
+    setvalue(8, statFrame, 9, kUint32,  0, statDataPtr, &gCommonStat.RXCounter);   //uint32_t gCommonStat.RXCounter;         // Sum of RX (from Slave) counters
+    setvalue(9, statFrame, 10, kUint32,  0, statDataPtr, &gCommonStat.RXOk);        //uint32_t gCommonStat.RXOk;              // Count of RX Ok
+    setvalue(10, statFrame, 11, kUint32,  0, statDataPtr, &gCommonStat.RXErr);       //uint32_t gCommonStat.RXErr;             // Count of RX errors
+    setvalue(11, statFrame, 12, kUint32,  0, statDataPtr, &gCommonStat.RXTimeOut);   //uint32_t gCommonStat.RXTimeOut;         // Count of RX timeout
+    setvalue(12, statFrame, 13, kUint32,  0, statDataPtr, &gCommonStat.CRCErr);      //uint32_t gCommonStat.CRCErr;            // Count of CRC errors
+    setvalue(13, statFrame, 14, kUint32,  0, statDataPtr, &gCommonStat.SYNCErr);     //uint32_t gCommonStat.SYNCErr;           // Count of SYNC lost (Slave only)
+    setvalue(14, statFrame, 15, kUint32,  0, statDataPtr, &gCommonStat.RXGap);       //uint32_t gCommonStat.RXGap;             // Sum of RX gap occurences
+
+    setvalue(15, statFrame, 16, kFLoat,  0, statDataPtr, &gCommonStat.RXErrInPpm);      //float gCommonStat.RXErrInPpm;           // RX error rate [ppm]
+    setvalue(16, statFrame, 17, kFLoat,  0, statDataPtr, &gCommonStat.RXErrInPercent);  //float gCommonStat.RXErrInPercent;       // RX error rate [%]
+
+    setvalue(17, statFrame, 18, kInt8,  0, statDataPtr, &gCommonStat.RssiMoy);     //int8_t gCommonStat.RssiMoy;             // Average RSSI
+    setvalue(18, statFrame, 19, kInt8,  0, statDataPtr, &gCommonStat.RssiMin);     //int8_t gCommonStat.RssiMin;             // Min RSSI
+    setvalue(19, statFrame, 20, kInt8,  0, statDataPtr, &gCommonStat.RssiMax);     //int8_t gCommonStat.RssiMax;             // Max RSSI
+    setvalue(20, statFrame, 21, kUint8,  0, statDataPtr, &gCommonStat.LqiMoy);      //uint8_t gCommonStat.LqiMoy;             // Average LQI
+    setvalue(21, statFrame, 22, kUint8,  0, statDataPtr, &gCommonStat.LqiMin);      //uint8_t gCommonStat.LqiMin;             // Min LQI
+    setvalue(22, statFrame, 23, kUint8,  0, statDataPtr, &gCommonStat.LqiMax);      //uint8_t gCommonStat.LqiMax;             // Max LQI
+
+    // Rate
+    setvalue(23, statFrame, 24, kFLoat,  0, statDataPtr, &gCommonStat.MsgPerSec);       //float gCommonStat.MsgPerSec;            // Num of messages / sec (Master only)
+    setvalue(24, statFrame, 25, kFLoat,  0, statDataPtr, &gCommonStat.Period);          //float gCommonStat.Period;               // Period beetween 2 sync request TX
+    setvalue(25, statFrame, 26, kFLoat,  0, statDataPtr, &gCommonStat.MsgPerSecRef);    //float gCommonStat.MsgPerSecRef;         // Estimation of the loop period for 100 slaves (Master only)
+
+    // Radio Calibration
+    setvalue(26, statFrame, 27, kUint32,  0, statDataPtr, &gCommonStat.CalOk);           //uint32_t gCommonStat.CalOk;             // Num of calibraition requests
+    setvalue(27, statFrame, 28, kUint32,  0, statDataPtr, &gCommonStat.CalErr);          //uint32_t gCommonStat.CalErr;            // Num of calibration errors
+
+    // NOT USED
+    //    // See commonStatSlaveDetail_t (Master only)
+    //    for (int i = 0; i < MAX_NODE; i++)
+    //    {
+    //        // RX
+    //        statFrame[x] = {1, 1, gCommonStat.RXCounter};   //uint32_t RXCounter;         // Sum of RX (from Slave) counters
+    //        statFrame[x] = {1, 1, gCommonStat.RXOk};        //uint32_t RXOk;              // Count of RX Ok
+    //        statFrame[x] = {1, 1, gCommonStat.RXTimeOut};   //uint32_t RXTimeOut;         // Count of RX timeout
+    //        statFrame[x] = {1, 1, gCommonStat.RXGap};       //uint32_t RXGap;             // Count of RX gap occurences
+    //        statFrame[x] = {1, 1, gCommonStat.GapMax};      //uint32_t GapMax;            // Max gap discovered
+    //        statFrame[x] = {1, 2, gCommonStat.RXErrInPpm};  //float RXErrInPpm;           // RX error rate [ppm]
+    //    }
+}
+
+/******************************************************************************
+ * DisplayStat : Format, encode and send statistics to LabView
+ *****************************************************************************/
+static __INLINE void DisplayStat(void)
+{
+    // Fill buffer
+    for (int idx = 0; idx < MAX_LABVIEW_DATA; idx++)
+    {
+        statFrame[idx].value = *statDataPtr[idx];
+    }
+
+    uint32_t len = base252_encode((uint8_t*)statFrame, sizeof(SerialFrame) * MAX_LABVIEW_DATA, buffer);
+
+    if (len != 0)
+    {
+        sl_status_t status = sl_iostream_write(sl_iostream_vcom_handle, buffer, len);
+
+        if (status == SL_STATUS_IDLE)
+        {
+            status = 23;
+        }
+    }
+
+}
+
+#endif // qPrintStatLabView
 
 /******************************************************************************
  * CalcStat : compute, print and display statistics
@@ -429,4 +550,21 @@ void StatInit(void)
         gRX_tab[i][TAB_POS_RX_LQI_MIN] = UINT8_MAX;
         gRX_tab[i][TAB_POS_RX_LQI_MAX] = 0;
     }
+
+#if (qPrintStatLabView)
+    // ==================================
+    // ATTENTION : Il faut désactiver l'option "Convert \n to \r\n" dans le driver VCOM pour que cette transmission (binaire) fonctionne
+    // ==================================
+    sl_iostream_uart_set_auto_cr_lf(sl_iostream_uart_vcom_handle, false);
+    InitLabViewStat();
+#endif // qPrintStatLabView
+
+#if (qPrintStat)
+    // ==================================
+    // ATTENTION : Il faut activer l'option "Convert \n to \r\n" dans le driver VCOM pour que le print (mode text)
+    //             fonctionne sur tous les terminaux
+    // ==================================
+    sl_iostream_uart_set_auto_cr_lf(sl_iostream_uart_vcom_handle, true);
+#endif // qPrintStat
+
 }
