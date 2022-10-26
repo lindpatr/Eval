@@ -36,6 +36,16 @@
 			<locationURI>virtual:/virtual</locationURI>
 		</link>
 		<link>
+			<name>Slot_Common/common_algo_stuffing.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_algo_stuffing.c</locationURI>
+		</link>
+		<link>
+			<name>Slot_Common/common_algo_stuffing.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_algo_stuffing.h</locationURI>
+		</link>
+		<link>
 			<name>Slot_Common/common_cli.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_cli.c</locationURI>

@@ -341,7 +341,7 @@ static __INLINE void RestartRadio(void)
  *****************************************************************************/
 static __INLINE bool PrintStatistics(void)
 {
-#if (qPrintStat)
+#if (qComputeStat)
     gPauseCycleReq = true;      // Request to print stat
 
     if (gPauseCycleConf)        // Permission to print stat
@@ -401,7 +401,7 @@ static __INLINE bool PrintStatistics(void)
 
     return !gPauseCycleReq;
 
-#endif  // qPrintStat
+#endif  // qComputeStat
 }
 
 /******************************************************************************
