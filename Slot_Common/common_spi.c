@@ -20,12 +20,9 @@
 #define US0MISO_PIN   1
 #define US0CLK_PORT   gpioPortC
 #define US0CLK_PIN    2
-// DAC
-#define US0CS_PORT    gpioPortC
-#define US0CS_PIN     3
 // TEMP
-#define US1CS_PORT    gpioPortA
-#define US1CS_PIN     7
+#define US0CS_PORT    gpioPortA
+#define US0CS_PIN     7
 
 // LDMA channel for receive and transmit servicing
 #define RX_LDMA_CHANNEL 6
@@ -57,7 +54,6 @@ typedef struct
 static SpiCsStruct_t ChipSelectTab[SPI_CS_NUMBER] =
 {
     {US0CS_PORT, US0CS_PIN},
-    {US1CS_PORT, US1CS_PIN}
 };
 
 static uint32_t gBaudRate = 0;
@@ -237,7 +233,7 @@ void common_SPIinitGPIO(void)
     GPIO_PinModeSet(ChipSelectTab[device0].portNumber, ChipSelectTab[device0].pinNumber, gpioModePushPull, 1);
 
     // Configure CS pin as an output and drive inactive high
-    GPIO_PinModeSet(ChipSelectTab[device1].portNumber, ChipSelectTab[device1].pinNumber, gpioModePushPull, 1);
+    // NOT USED GPIO_PinModeSet(ChipSelectTab[device1].portNumber, ChipSelectTab[device1].pinNumber, gpioModePushPull, 1);
 }
 
 /**
