@@ -18,14 +18,24 @@ typedef enum
     device1 = 1
 } DeviceIdentEnum_t;
 
+// Chip select definition structure // Max 2 CS
+#define SPI_CS_NUMBER   (2)
+
+typedef struct
+{
+    int32_t portNumber;
+    int32_t pinNumber;
+} SpiCsStruct_t;
+
 /**
  * @brief
  * Init SPI.
  *
  * @param[in] baudrate Spi baudrate [bit/s]
  * @param[in] clockPhase Clock phase
+ * @param[in] cs Chipselect tab definition
  */
-void common_initSPI(uint32_t baudrate, USART_ClockMode_TypeDef clockPhase);
+void common_initSPI(uint32_t baudrate, USART_ClockMode_TypeDef clockPhase, SpiCsStruct_t cs[]);
 
 /**
  * @brief

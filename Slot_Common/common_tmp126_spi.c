@@ -18,6 +18,7 @@ uint8_t txbuf[BUFLEN];
 // Incoming data
 uint8_t rxbuf[BUFLEN];
 
+
 /**
  * @brief
  * Init SPI TMP126.
@@ -29,9 +30,6 @@ uint8_t rxbuf[BUFLEN];
  */
 bool spi_tmp126_init(DeviceIdentEnum_t device, float tempLimLow, float tempLimHigh)
 {
-    // Init SPI
-    common_initSPI(1000000, usartClockMode0);
-
     // Command word
     CmdWordUnion cmd =
     {

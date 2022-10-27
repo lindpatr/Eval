@@ -13,6 +13,8 @@
 #include "em_cmu.h"
 #include "rail.h"
 
+#include "app_assert.h"             // Assert functions
+
 // Ports and pins for SPI interface
 #define US0MOSI_PORT  gpioPortC
 #define US0MOSI_PIN   0
@@ -20,15 +22,6 @@
 #define US0MISO_PIN   1
 #define US0CLK_PORT   gpioPortC
 #define US0CLK_PIN    2
-
-// TEMP #1
-#define US0CS_PORT    gpioPortA
-#define US0CS_PIN     7
-
-// TEMP #2
-// TODO CS1 TMP126  #2 to be defined (waiting for new hardware definition)
-#define US1CS_PORT    gpioPortA
-#define US1CS_PIN     7
 
 // LDMA channel for receive and transmit servicing
 #define RX_LDMA_CHANNEL 6
@@ -47,20 +40,11 @@ LDMA_TransferCfg_t ldmaRXConfig;
 // SPI TX/RX timeout
 #define SPI_TIMEOUT_SECURITY (20)
 
-// Chip select definition structure
-#define SPI_CS_NUMBER   (2)
-
-typedef struct
-{
-    uint32_t portNumber;
-    uint32_t pinNumber;
-} SpiCsStruct_t;
-
 // Chip select initialization
 static SpiCsStruct_t ChipSelectTab[SPI_CS_NUMBER] =
 {
-    {US0CS_PORT, US0CS_PIN},
-    {US1CS_PORT, US1CS_PIN},
+    {-1, -1},
+    {-1, -1}
 };
 
 static uint32_t gBaudRate = 0;
@@ -236,11 +220,17 @@ void common_SPIinitGPIO(void)
     // Configure CLK pin as an output low (CPOL = 0)
     GPIO_PinModeSet(US0CLK_PORT, US0CLK_PIN, gpioModePushPull, 0);
 
-    // Configure CS pin as an output and drive inactive high
-    GPIO_PinModeSet(ChipSelectTab[device0].portNumber, ChipSelectTab[device0].pinNumber, gpioModePushPull, 1);
+    if (ChipSelectTab[device0].portNumber >= 0 && ChipSelectTab[device0].pinNumber >= 0)
+    {
+        // Configure CS pin as an output and drive inactive high
+        GPIO_PinModeSet(ChipSelectTab[device0].portNumber, ChipSelectTab[device0].pinNumber, gpioModePushPull, 1);
+    }
 
-    // Configure CS pin as an output and drive inactive high
-    GPIO_PinModeSet(ChipSelectTab[device1].portNumber, ChipSelectTab[device1].pinNumber, gpioModePushPull, 1);
+    if (ChipSelectTab[device1].portNumber >= 0 && ChipSelectTab[device1].pinNumber >= 0)
+    {
+        // Configure CS pin as an output and drive inactive high
+        GPIO_PinModeSet(ChipSelectTab[device1].portNumber, ChipSelectTab[device1].pinNumber, gpioModePushPull, 1);
+    }
 }
 
 /**
@@ -314,9 +304,17 @@ void common_SPIinitLDMA(void)
  *
  * @param[in] baudrate Spi baudrate [bit/s]
  * @param[in] clockPhase Clock phase
+ * @param[in] cs Chipselect tab definition
  */
-void common_initSPI(uint32_t baudrate, USART_ClockMode_TypeDef clockPhase)
+void common_initSPI(uint32_t baudrate, USART_ClockMode_TypeDef clockPhase, SpiCsStruct_t cs[])
 {
+    app_assert(cs != NULL, "invalid CS configuration");
+
+    if (cs != NULL)
+    {
+        memcpy(ChipSelectTab, cs, sizeof(SpiCsStruct_t) * SPI_CS_NUMBER);
+    }
+
     common_SPIinitGPIO();
     common_SPIinitUSART0(baudrate, clockPhase);
     common_SPIinitLDMA();
