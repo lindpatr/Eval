@@ -27,7 +27,7 @@ uint8_t rxbuf[BUFLEN];
  *
  * @return true if successful, false if timeout
  */
-bool spi_tmp126_init(float tempLimLow, float tempLimHigh)
+bool spi_tmp126_init(DeviceIdentEnum_t device, float tempLimLow, float tempLimHigh)
 {
     // Init SPI
     common_initSPI(1000000, usartClockMode0);
@@ -91,9 +91,8 @@ bool spi_tmp126_init(float tempLimLow, float tempLimHigh)
     txbuf[10] = 0x0A;
     txbuf[11] = 0x0A;
 
-    common_startSPItransfert(device0, 12, (uint8_t*)txbuf, (uint8_t*)rxbuf);
-
-    return common_waitSPITransfertDone(device0);
+    common_startSPItransfert(device, 12, (uint8_t*)txbuf, (uint8_t*)rxbuf);
+    return common_waitSPITransfertDone(device);
 }
 
 /**
@@ -102,7 +101,7 @@ bool spi_tmp126_init(float tempLimLow, float tempLimHigh)
  *
  * @return product ID if successful, 0 if timeout
  */
-uint16_t spi_tmp126_getID(void)
+uint16_t spi_tmp126_getID(DeviceIdentEnum_t device)
 {
     // Command word
     CmdWordUnion cmd =
@@ -121,9 +120,9 @@ uint16_t spi_tmp126_getID(void)
     txbuf[2] = 0xFF;    // FF
     txbuf[3] = 0xFF;    // FF
 
-    common_startSPItransfert(device0, 4, (uint8_t*)txbuf, (uint8_t*)rxbuf);
+    common_startSPItransfert(device, 4, (uint8_t*)txbuf, (uint8_t*)rxbuf);
 
-    bool success = common_waitSPITransfertDone(device0);
+    bool success = common_waitSPITransfertDone(device);
 
     if (success)
     {
@@ -139,7 +138,7 @@ uint16_t spi_tmp126_getID(void)
  *
  * @return temperature [AD value] if successful, UINT_MAX if timeout
  */
-uint16_t spi_tmp126_getTemp(void)
+uint16_t spi_tmp126_getTemp(DeviceIdentEnum_t device)
 {
     // Command word
     CmdWordUnion cmd =
@@ -158,16 +157,50 @@ uint16_t spi_tmp126_getTemp(void)
     txbuf[2] = 0xFF;    // FF
     txbuf[3] = 0xFF;    // FF
 
-    common_startSPItransfert(device0, 4, (uint8_t*)txbuf, (uint8_t*)rxbuf);
+    common_startSPItransfert(device, 4, (uint8_t*)txbuf, (uint8_t*)rxbuf);
 
-    bool success = common_waitSPITransfertDone(device0);
+    bool success = common_waitSPITransfertDone(device);
 
     if (success)
     {
         return ((rxbuf[2] << 8) + rxbuf[3]);
     }
 
-    return UINT_MAX;
+    return USHRT_MAX;
+}
+
+void spi_tmp126_requestTemp(DeviceIdentEnum_t device)
+{
+    // Command word
+    CmdWordUnion cmd =
+    {
+        .CmdTmp126.r_w = 1,         // read
+        .CmdTmp126.addrInc = 0,
+        .CmdTmp126.len = 0,
+        .CmdTmp126.crc = 0,
+        .CmdTmp126.reserved = 0,
+        .CmdTmp126.regAddr = 0x00,  // Temperature Register
+    };
+
+    txbuf[0] = cmd.bytes[1];    // X - CRC - L4 L3 L2 L1 - A - R/W - ADDR
+    txbuf[1] = cmd.bytes[0];    // x -  0  - 0  0  0  0  - 0 - 1   - 0x00   // Temp
+
+    txbuf[2] = 0xFF;    // FF
+    txbuf[3] = 0xFF;    // FF
+
+    common_startSPItransfert(device, 4, (uint8_t*)txbuf, (uint8_t*)rxbuf);
+}
+
+uint16_t spi_tmp126_waitTemp(DeviceIdentEnum_t device)
+{
+    bool success = common_waitSPITransfertDone(device);
+
+    if (success)
+    {
+        return ((rxbuf[2] << 8) + rxbuf[3]);
+    }
+
+    return USHRT_MAX;
 }
 
 /**

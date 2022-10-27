@@ -11,6 +11,8 @@
 #include <stdint.h>
 #include "sl_pwm.h"
 
+#include "common_spi.h"
+
 typedef struct
 {
     uint16_t regAddr:8;
@@ -62,12 +64,13 @@ typedef union
  * @brief
  * Init SPI TMP126.
  *
+ * @param[in] device    device number
  * @param[in] tempLimLow    Temp limit low [°C]
  * @param[in] tempLimHigh   Temp limit high [°C]
  *
  * @return true if successful, false if timeout
  */
-bool spi_tmp126_init(float tempLimLow, float tempLimHigh);
+bool spi_tmp126_init(DeviceIdentEnum_t device, float tempLimLow, float tempLimHigh);
 
 /**
  * @brief
@@ -75,7 +78,7 @@ bool spi_tmp126_init(float tempLimLow, float tempLimHigh);
  *
  * @return product ID if successful, 0 if timeout
  */
-uint16_t spi_tmp126_getID(void);
+uint16_t spi_tmp126_getID(DeviceIdentEnum_t device);
 
 /**
  * @brief
@@ -83,7 +86,7 @@ uint16_t spi_tmp126_getID(void);
  *
  * @return temperature [AD value] if successful, UINT_MAX if timeout
  */
-uint16_t spi_tmp126_getTemp(void);
+uint16_t spi_tmp126_getTemp(DeviceIdentEnum_t device);
 
 /**
  * @brief
@@ -92,5 +95,9 @@ uint16_t spi_tmp126_getTemp(void);
  * @return temperature [°C]
  */
 float spi_temp126_TempToDeg(int16_t tempAd);
+
+void spi_tmp126_requestTemp(DeviceIdentEnum_t device);
+
+uint16_t spi_tmp126_waitTemp(DeviceIdentEnum_t device);
 
 #endif /* COMMON_TMP126_SPI_H_ */

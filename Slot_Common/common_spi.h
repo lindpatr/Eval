@@ -14,7 +14,8 @@
 
 typedef enum
 {
-    device0 = 0
+    device0 = 0,
+    device1 = 1
 } DeviceIdentEnum_t;
 
 /**
