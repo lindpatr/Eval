@@ -646,8 +646,7 @@ static __INLINE void DoAllAcq(void)
 
     // Read temp via SPI
     SPI_temp_read();
-
-    // SPI DAC shall not treated here but after decode of master frame!!!
+    //gMBoxTempCell = spi_tmp126_getTemp();
 
     // Get results of ADC
     Analog_read();

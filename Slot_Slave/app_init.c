@@ -81,7 +81,7 @@
 #include "common_debug.h"           // Debug functions
 #include "common_stat.h"            // Statistics functions
 #include "common_iadc.h"            // ADC functions
-
+#include "common_tmp126_spi.h"
 
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
@@ -601,7 +601,7 @@ static void validation_check(void)
 // -----------------------------------------------------------------------------
 //                          Public Function Definitions
 // -----------------------------------------------------------------------------
-
+static float temperature;
 /******************************************************************************
  * The function is used for some basic initialization related to the app.
  *****************************************************************************/
@@ -636,9 +636,8 @@ void app_init(void)
     // Init PWM
     config_pwm();
 
-    // Init TMP116
-//    common_tempi2cConfig(kTempChannel, kTempAddr, kTempAlarmOn, kTempAlarmOff);
-//    common_tempi2cSetup();
+    // Init TMP126
+    spi_tmp126_init(-20.0, 60.0);
 
     // Init statistics
     StatInit();
