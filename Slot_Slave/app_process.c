@@ -64,7 +64,7 @@
 #include "common_mbox.h"            // Global var container
 #include "common_stat.h"            // Statistics functions
 #include "common_iadc.h"            // ADC functions
-#include "common_tempi2c.h"         // Temp via I2C
+#include "common_tmp126_spi.h"      // Temp via SPI
 
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
@@ -645,8 +645,8 @@ static __INLINE void DoAllAcq(void)
     common_startIADC();
 
     // Read temp via SPI
-    SPI_temp_read();
-    //gMBoxTempCell = spi_tmp126_getTemp();
+    // SPI_temp_read();
+    gMBoxTempCell = spi_tmp126_getTemp(device0);
 
     // Get results of ADC
     Analog_read();
@@ -914,11 +914,11 @@ void app_process_action(void)
             DisplaySentMsg();
 
             // TODO BEGIN TEST PURPOSES
-            sl_pwm_set_duty_cycle_step(&sl_pwm_pwm0, pwm_count);
-            sl_pwm_set_duty_cycle_step(&sl_pwm_pwm1, pwm_count);
-
-            if (++pwm_count > sl_pwm_get_max_duty_cycle_step(&sl_pwm_pwm0))
-                pwm_count = 0;
+//            sl_pwm_set_duty_cycle_step(&sl_pwm_pwm0, pwm_count);
+//            sl_pwm_set_duty_cycle_step(&sl_pwm_pwm1, pwm_count);
+//
+//            if (++pwm_count > sl_pwm_get_max_duty_cycle_step(&sl_pwm_pwm0))
+//                pwm_count = 0;
             // TODO END TEST PURPOSES
         }
 

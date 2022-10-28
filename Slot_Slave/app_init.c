@@ -601,7 +601,6 @@ static void validation_check(void)
 // -----------------------------------------------------------------------------
 //                          Public Function Definitions
 // -----------------------------------------------------------------------------
-static float temperature;
 /******************************************************************************
  * The function is used for some basic initialization related to the app.
  *****************************************************************************/
@@ -634,10 +633,20 @@ void app_init(void)
     common_initIADC();
 
     // Init PWM
-    config_pwm();
+    // config_pwm();    --> disabled to be able to debug SPI
+
+    // Chip select initialization
+    static SpiCsStruct_t ChipSelectTab[SPI_CS_NUMBER] =
+    {
+        {gpioPortC, 3},
+        {gpioPortC, 3}
+    };
+
+    // Init spi driver
+    common_initSPI(1000000, usartClockMode0, ChipSelectTab);
 
     // Init TMP126
-    spi_tmp126_init(-20.0, 60.0);
+    spi_tmp126_init(device0, -20.0, 60.0);
 
     // Init statistics
     StatInit();
