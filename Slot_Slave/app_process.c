@@ -285,13 +285,13 @@ void sl_rail_util_on_event(RAIL_Handle_t rail_handle, RAIL_Events_t events)
 /******************************************************************************
  * Button callback, called if any button is pressed or released.
  *****************************************************************************/
-void sl_button_on_change(const sl_button_t *handle)
-{
-    if (sl_button_get_state(handle) == SL_SIMPLE_BUTTON_PRESSED)
-    {
-        gBtnPressed = true;
-    }
-}
+//void sl_button_on_change(const sl_button_t *handle)
+//{
+//    if (sl_button_get_state(handle) == SL_SIMPLE_BUTTON_PRESSED)
+//    {
+//        gBtnPressed = true;
+//    }
+//}
 
 ///******************************************************************************
 // * Timer callback, called if any timer time out.
@@ -646,7 +646,7 @@ static __INLINE void DoAllAcq(void)
 
     // Read temp via SPI
     // SPI_temp_read();
-    gMBoxTempCell = spi_tmp126_getTemp(device0);
+    gMBoxTempCell = spi_tmp126_getTemp(device0,0);
 
     // Get results of ADC
     Analog_read();

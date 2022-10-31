@@ -35,7 +35,7 @@ typedef struct
  * @param[in] clockPhase Clock phase
  * @param[in] cs Chipselect tab definition
  */
-void common_initSPI(uint32_t baudrate, USART_ClockMode_TypeDef clockPhase, SpiCsStruct_t cs[]);
+void common_initSPI(bool master, uint32_t baudrate, USART_ClockMode_TypeDef clockPhase, SpiCsStruct_t cs[]);
 
 /**
  * @brief
@@ -48,6 +48,8 @@ void common_initSPI(uint32_t baudrate, USART_ClockMode_TypeDef clockPhase, SpiCs
  */
 void common_startSPItransfert(DeviceIdentEnum_t device, uint8_t buffSize, uint8_t* txBuffer, uint8_t* rxBuffer);
 
+void common_startSPItransfertSlave(DeviceIdentEnum_t device, uint8_t buffSize, uint8_t* txBuffer, uint8_t* rxBuffer);
+
 /**
  * @brief
  * Wait for the end of the SPI transfer
@@ -56,5 +58,13 @@ void common_startSPItransfert(DeviceIdentEnum_t device, uint8_t buffSize, uint8_
  * @return result TRUE sucessfull, FALSE timout.
 */
 bool common_waitSPITransfertDone(DeviceIdentEnum_t device);
+
+bool common_waitSPITransfertDoneSlave(DeviceIdentEnum_t device);
+
+void LDMA_Start();
+
+void LDMA_Stop();
+
+
 
 #endif /* COMMON_SPI_H_ */

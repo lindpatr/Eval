@@ -86,7 +86,7 @@ uint16_t spi_tmp126_getID(DeviceIdentEnum_t device);
  *
  * @return temperature [AD value] if successful, UINT_MAX if timeout
  */
-uint16_t spi_tmp126_getTemp(DeviceIdentEnum_t device);
+uint16_t spi_tmp126_getTemp(DeviceIdentEnum_t device, uint8_t val);
 
 /**
  * @brief
@@ -99,5 +99,11 @@ float spi_temp126_TempToDeg(int16_t tempAd);
 void spi_tmp126_requestTemp(DeviceIdentEnum_t device);
 
 uint16_t spi_tmp126_waitTemp(DeviceIdentEnum_t device);
+
+uint16_t spi_tmp126_waitreceive_special(DeviceIdentEnum_t device, uint32_t *result);
+
+void spi_tmp126_read(DeviceIdentEnum_t device);
+
+uint16_t spi_tmp126_waitreceive(DeviceIdentEnum_t device);
 
 #endif /* COMMON_TMP126_SPI_H_ */

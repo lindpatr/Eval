@@ -50,6 +50,19 @@ static SpiCsStruct_t ChipSelectTab[SPI_CS_NUMBER] =
 static uint32_t gBaudRate = 0;
 static uint32_t gTimeOut = 0;
 
+void LDMA_Start()
+{
+    LDMA_EnableChannelRequest(RX_LDMA_CHANNEL, true);
+    LDMA_EnableChannelRequest(TX_LDMA_CHANNEL, true);
+}
+
+void LDMA_Stop()
+{
+    LDMA_EnableChannelRequest(RX_LDMA_CHANNEL, false);
+    LDMA_EnableChannelRequest(TX_LDMA_CHANNEL, false);
+
+}
+
 /***************************************************************************//**
  * @brief
  *   Start a DMA transfer. BELENOS -> IRQ disabled use polling to check DMA status
@@ -206,30 +219,56 @@ void LDMA_StartTransferNoIrq(int ch,
 /**
  * Init SPI i/o pin.
  */
-void common_SPIinitGPIO(void)
+void common_SPIinitGPIO(bool master)
 {
     // Enable clock
     CMU_ClockEnable(cmuClock_GPIO, true);
 
-    // Configure TX pin as an output
-    GPIO_PinModeSet(US0MOSI_PORT, US0MOSI_PIN, gpioModePushPull, 0);
-
-    // Configure RX pin as an input
-    GPIO_PinModeSet(US0MISO_PORT, US0MISO_PIN, gpioModeInput, 0);
-
-    // Configure CLK pin as an output low (CPOL = 0)
-    GPIO_PinModeSet(US0CLK_PORT, US0CLK_PIN, gpioModePushPull, 0);
-
-    if (ChipSelectTab[device0].portNumber >= 0 && ChipSelectTab[device0].pinNumber >= 0)
+    if (master)
     {
-        // Configure CS pin as an output and drive inactive high
-        GPIO_PinModeSet(ChipSelectTab[device0].portNumber, ChipSelectTab[device0].pinNumber, gpioModePushPull, 1);
+        // Configure TX pin as an output
+        GPIO_PinModeSet(US0MOSI_PORT, US0MOSI_PIN, gpioModePushPull, 0);
+
+        // Configure RX pin as an input
+        GPIO_PinModeSet(US0MISO_PORT, US0MISO_PIN, gpioModeInput, 0);
+
+        // Configure CLK pin as an output low (CPOL = 0)
+        GPIO_PinModeSet(US0CLK_PORT, US0CLK_PIN, gpioModePushPull, 0);
+
+        if (ChipSelectTab[device0].portNumber >= 0 && ChipSelectTab[device0].pinNumber >= 0)
+        {
+            // Configure CS pin as an output and drive inactive high
+            GPIO_PinModeSet(ChipSelectTab[device0].portNumber, ChipSelectTab[device0].pinNumber, gpioModePushPull, 1);
+        }
+
+        if (ChipSelectTab[device1].portNumber >= 0 && ChipSelectTab[device1].pinNumber >= 0)
+        {
+            // Configure CS pin as an output and drive inactive high
+            GPIO_PinModeSet(ChipSelectTab[device1].portNumber, ChipSelectTab[device1].pinNumber, gpioModePushPull, 1);
+        }
     }
-
-    if (ChipSelectTab[device1].portNumber >= 0 && ChipSelectTab[device1].pinNumber >= 0)
+    else
     {
-        // Configure CS pin as an output and drive inactive high
-        GPIO_PinModeSet(ChipSelectTab[device1].portNumber, ChipSelectTab[device1].pinNumber, gpioModePushPull, 1);
+        // Configure TX pin as an output
+        GPIO_PinModeSet(US0MOSI_PORT, US0MOSI_PIN, gpioModeInput, 0);
+
+        // Configure RX pin as an input
+        GPIO_PinModeSet(US0MISO_PORT, US0MISO_PIN, gpioModePushPull, 0);
+
+        // Configure CLK pin as an output low (CPOL = 0)
+        GPIO_PinModeSet(US0CLK_PORT, US0CLK_PIN, gpioModeInput, 0);
+
+        if (ChipSelectTab[device0].portNumber >= 0 && ChipSelectTab[device0].pinNumber >= 0)
+        {
+            // Configure CS pin as an output and drive inactive high
+            GPIO_PinModeSet(ChipSelectTab[device0].portNumber, ChipSelectTab[device0].pinNumber, gpioModeInput, 1);
+        }
+
+        if (ChipSelectTab[device1].portNumber >= 0 && ChipSelectTab[device1].pinNumber >= 0)
+        {
+            // Configure CS pin as an output and drive inactive high
+            GPIO_PinModeSet(ChipSelectTab[device1].portNumber, ChipSelectTab[device1].pinNumber, gpioModeInput, 1);
+        }
     }
 }
 
@@ -272,6 +311,58 @@ void common_SPIinitUSART0(uint32_t baudrate, USART_ClockMode_TypeDef clockPhase)
     USART_InitSync(USART0, &init);
 }
 
+void common_SPIinit_M_S(bool master, uint32_t baudrate, USART_ClockMode_TypeDef clockPhase)
+{
+    // Enable clock
+    CMU_ClockEnable(cmuClock_USART0, true);
+
+    // Default asynchronous initializer (main mode, 1 Mbps, 8-bit data)
+    USART_InitSync_TypeDef init = USART_INITSYNC_DEFAULT;
+
+    init.msbf = true;            // MSB first transmission for SPI compatibility
+    init.autoCsEnable = false;   // Allow the USART to assert CS
+    init.baudrate = baudrate;    // bits/s
+    init.master = master;
+    init.autoCsEnable = !master;
+    gBaudRate = baudrate;
+
+    init.clockMode = clockPhase;/*usartClockMode2;*/    // tests simulateur SPI Alex
+
+    /*
+     * Route USART0 RX, TX, and CLK to the specified pins.  Note that CS is
+     * not controlled by USART0 so there is no write to the corresponding
+     * USARTROUTE register to do this.
+     */
+    GPIO->USARTROUTE[0].TXROUTE = (US0MOSI_PORT << _GPIO_USART_TXROUTE_PORT_SHIFT)
+        | (US0MOSI_PIN << _GPIO_USART_TXROUTE_PIN_SHIFT);
+    GPIO->USARTROUTE[0].RXROUTE = (US0MISO_PORT << _GPIO_USART_RXROUTE_PORT_SHIFT)
+        | (US0MISO_PIN << _GPIO_USART_RXROUTE_PIN_SHIFT);
+    GPIO->USARTROUTE[0].CLKROUTE = (US0CLK_PORT << _GPIO_USART_CLKROUTE_PORT_SHIFT)
+        | (US0CLK_PIN << _GPIO_USART_CLKROUTE_PIN_SHIFT);
+
+    if (init.master == false)
+    {
+        GPIO->USARTROUTE[0].CSROUTE = (ChipSelectTab[device0].portNumber << _GPIO_USART_CSROUTE_PORT_SHIFT)
+            | (ChipSelectTab[device0].pinNumber << _GPIO_USART_CSROUTE_PIN_SHIFT);
+
+        // Enable USART interface pins
+        GPIO->USARTROUTE[0].ROUTEEN = GPIO_USART_ROUTEEN_RXPEN |    // MISO
+                                      GPIO_USART_ROUTEEN_TXPEN |    // MOSI
+                                      GPIO_USART_ROUTEEN_CLKPEN |
+                                      GPIO_USART_ROUTEEN_CSPEN;
+    }
+    else
+    {
+        // Enable USART interface pins
+        GPIO->USARTROUTE[0].ROUTEEN = GPIO_USART_ROUTEEN_RXPEN |    // MISO
+                                      GPIO_USART_ROUTEEN_TXPEN |    // MOSI
+                                      GPIO_USART_ROUTEEN_CLKPEN;
+    }
+
+    // Configure and enable USART0
+    USART_InitSync(USART0, &init);
+}
+
 /**
  * Init SPI dma part.
  */
@@ -306,7 +397,7 @@ void common_SPIinitLDMA(void)
  * @param[in] clockPhase Clock phase
  * @param[in] cs Chipselect tab definition
  */
-void common_initSPI(uint32_t baudrate, USART_ClockMode_TypeDef clockPhase, SpiCsStruct_t cs[])
+void common_initSPI(bool master, uint32_t baudrate, USART_ClockMode_TypeDef clockPhase, SpiCsStruct_t cs[])
 {
     app_assert(cs != NULL, "invalid CS configuration");
 
@@ -315,8 +406,8 @@ void common_initSPI(uint32_t baudrate, USART_ClockMode_TypeDef clockPhase, SpiCs
         memcpy(ChipSelectTab, cs, sizeof(SpiCsStruct_t) * SPI_CS_NUMBER);
     }
 
-    common_SPIinitGPIO();
-    common_SPIinitUSART0(baudrate, clockPhase);
+    common_SPIinitGPIO(master);
+    common_SPIinit_M_S(master, baudrate, clockPhase);
     common_SPIinitLDMA();
 }
 
@@ -347,6 +438,29 @@ void common_startSPItransfert(DeviceIdentEnum_t device, uint8_t buffSize, uint8_
 
     // TX channel
     LDMA_StartTransferNoIrq(TX_LDMA_CHANNEL, &ldmaTXConfig, &ldmaTXDescriptor);
+}
+
+void common_startSPItransfertSlave(DeviceIdentEnum_t device, uint8_t buffSize, uint8_t* txBuffer, uint8_t* rxBuffer)
+{
+    // Source is txBuffer, destination is USART0_TXDATA, and length is buffSize
+    ldmaTXDescriptor = (LDMA_Descriptor_t)LDMA_DESCRIPTOR_SINGLE_M2P_BYTE(txBuffer, &(USART0->TXDATA), buffSize);
+    // Source is USART0_RXDATA, destination is rxBuffer, and length is buffSize
+    ldmaRXDescriptor = (LDMA_Descriptor_t)LDMA_DESCRIPTOR_SINGLE_P2M_BYTE(&(USART0->RXDATA), rxBuffer, buffSize);
+
+    // attempt to calculate the timeout
+    gTimeOut = (((1.0 / (float)gBaudRate) * 8.0 * buffSize) * 1000000.0) + SPI_TIMEOUT_SECURITY;
+
+    // CS asserted
+    // GPIO_PinOutClear(ChipSelectTab[device].portNumber, ChipSelectTab[device].pinNumber);
+
+    // RX channel
+    LDMA_StartTransferNoIrq(RX_LDMA_CHANNEL, &ldmaRXConfig, &ldmaRXDescriptor);
+
+    // TX channel
+    LDMA_StartTransferNoIrq(TX_LDMA_CHANNEL, &ldmaTXConfig, &ldmaTXDescriptor);
+
+    LDMA_Stop(RX_LDMA_CHANNEL);
+    LDMA_Stop(TX_LDMA_CHANNEL);
 }
 
 /**
@@ -381,6 +495,31 @@ bool common_waitSPITransfertDone(DeviceIdentEnum_t device)
     return true;
 }
 
+
+bool common_waitSPITransfertDoneSlave(DeviceIdentEnum_t device)
+{
+    uint32_t flags = LDMA_IntGet();
+    RAIL_Time_t startTime = RAIL_GetTime();
+    RAIL_Time_t gap;
+
+    while((flags & DMA_IF_MASK) != DMA_IF_MASK)
+    {
+        gap = RAIL_GetTime() - startTime;
+        if (gap > gTimeOut)
+        {
+            //GPIO_PinOutSet(ChipSelectTab[device].portNumber, ChipSelectTab[device].pinNumber);
+            return false;
+        }
+        flags = LDMA_IntGet();
+    }
+
+    LDMA_IntClear(1 << TX_LDMA_CHANNEL);
+    LDMA_IntClear(1 << RX_LDMA_CHANNEL);
+
+    //GPIO_PinOutSet(ChipSelectTab[device].portNumber, ChipSelectTab[device].pinNumber);
+
+    return true;
+}
 
 
 

@@ -41,7 +41,6 @@
 #include "rail.h"                   // Radio functions
 #include "rail_config.h"            // Radio config
 
-
 // Additional components
 // ---------------------
 #include "em_system.h"              // System functions
@@ -82,6 +81,16 @@
 #include "common_stat.h"            // Statistics functions
 #include "common_iadc.h"            // ADC functions
 #include "common_tmp126_spi.h"
+
+
+#include "sl_simple_button.h"
+
+//#include "em_chip.h"
+//#include "em_gpio.h"
+//#include "em_emu.h"
+//#include "em_cmu.h"
+//#include "bsp.h"
+#include "gpiointerrupt.h"
 
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
@@ -601,6 +610,32 @@ static void validation_check(void)
 // -----------------------------------------------------------------------------
 //                          Public Function Definitions
 // -----------------------------------------------------------------------------
+
+static volatile bool gSpiBtnPressed = false;
+
+// CS port
+#define BSP_GPIO_PB0_PORT       gpioPortC
+#define BSP_GPIO_PB0_PIN        3
+
+static void test_spi_cs_detect(uint8_t interrupt_no)
+{
+  (void)interrupt_no;
+
+  DEBUG_PIN_SPI_SET;
+  gSpiBtnPressed = true;
+  DEBUG_PIN_SPI_RESET;
+//  sl_button_t *button = (sl_button_t *)ctx;
+//  sl_simple_button_context_t *simple_button = button->context;
+//
+//  if (simple_button->state != SL_SIMPLE_BUTTON_DISABLED) {
+//    simple_button->state = ((bool)GPIO_PinInGet(simple_button->port, simple_button->pin) == SL_SIMPLE_BUTTON_POLARITY);
+//    sl_button_on_change(button);
+//  }
+}
+
+static volatile uint32_t gTimeout = 1000000;
+static volatile uint8_t gCnt = 0;
+
 /******************************************************************************
  * The function is used for some basic initialization related to the app.
  *****************************************************************************/
@@ -643,10 +678,85 @@ void app_init(void)
     };
 
     // Init spi driver
-    common_initSPI(1000000, usartClockMode0, ChipSelectTab);
+    // MASTER MODE *****
+//    app_log_info("Master slave mode\n\r");
+//    common_initSPI(true, 1000000, usartClockMode0, ChipSelectTab);
+//
+//    RAIL_Time_t startTime = RAIL_GetTime();
+//    RAIL_Time_t gap;
+//
+//    while (1)
+//    {
+//       gap = RAIL_GetTime() - startTime;
+//
+//       if (gap > gTimeout)
+//       {
+//           spi_tmp126_getTemp(device0, gCnt);
+//           app_log_info("%d\n", gCnt);
+//           gCnt++;
+//           gSpiBtnPressed = false;
+//           startTime = RAIL_GetTime();
+//       }
+//    }
+
+
+// SLAVE MODE ****
+
+    app_log_info("Start slave mode\n\r");
+
+    GPIOINT_CallbackRegister(BSP_GPIO_PB0_PIN, (GPIOINT_IrqCallbackPtr_t)test_spi_cs_detect);
+
+    common_initSPI(false, 1000000, usartClockMode0, ChipSelectTab);
+
+    // Catch CS falling edge
+    GPIO_ExtIntConfig(BSP_GPIO_PB0_PORT,
+                      BSP_GPIO_PB0_PIN,
+                      BSP_GPIO_PB0_PIN,
+                      false,
+                      true,
+                      true);
+
+    spi_tmp126_read(device0);
+
+    bool success = false;
+    uint32_t val = 0;
+
+    while (1)
+    {
+        if (gSpiBtnPressed)
+        {
+            DEBUG_PIN_SPI_SET;
+            LDMA_Start();
+
+            //int16_t val = 0;
+            while (success == false)
+            {
+                //val = spi_tmp126_waitreceive( device0);
+                success = spi_tmp126_waitreceive_special(device0, &val);
+                //success = common_waitSPITransfertDoneSlave(device0);
+
+                if (success)
+                {
+                    app_log_info("0x%x\n", val);
+                    spi_tmp126_read(device0);
+                    DEBUG_PIN_SPI_RESET;
+                }
+                else
+                {
+                    app_log_info("Error\n");
+                }
+            }
+
+            success = false;
+            val = 0;
+            gSpiBtnPressed= false;
+            DEBUG_PIN_SPI_RESET;
+        }
+    }
+
 
     // Init TMP126
-    spi_tmp126_init(device0, -20.0, 60.0);
+//    spi_tmp126_init(device0, -20.0, 60.0);
 
     // Init statistics
     StatInit();
