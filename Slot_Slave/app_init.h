@@ -86,7 +86,9 @@
 #define qPrintErrorsL2  0     // Print out RAIL errors on serial COM (kTimeOutTx, kTimeOutRx, kErrorTx, kErrorRx)
 #define qPrintInfo      1     // Print out info serial COM
 #define qPrintStat      1     // Print out statistics serial COM
-#define qPrintStatTiming 0    // Print out statistics timing serial COM
+#define qPrintStatLabView   0 // MUST be 0 for slave
+#define qPrintStatTiming    0 // Print out statistics timing serial COM
+
 
 #define TRANSITION_TIMING_BEST_EFFORT  1
                               // 1 = let the uC try to optimize the transition timings

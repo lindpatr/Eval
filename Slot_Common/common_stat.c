@@ -532,8 +532,10 @@ __INLINE void CalcStat(void)
     // Print out or send stat to LabVIEW (according DisplayStat implementation)
     DisplayStat();
 
+#if (qPrintStat)
     // Detail of callback events (only print out)
     DisplayEvents();
+#endif
 }
 
 /******************************************************************************
