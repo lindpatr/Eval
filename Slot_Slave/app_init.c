@@ -611,7 +611,8 @@ static void validation_check(void)
 //                          Public Function Definitions
 // -----------------------------------------------------------------------------
 
-static volatile bool gSpiBtnPressed = false;
+static volatile bool gSpiCsAsserted = false;
+static volatile bool gSpiError = false;
 
 // CS port
 #define BSP_GPIO_PB0_PORT       gpioPortC
@@ -622,15 +623,15 @@ static void test_spi_cs_detect(uint8_t interrupt_no)
   (void)interrupt_no;
 
   DEBUG_PIN_SPI_SET;
-  gSpiBtnPressed = true;
+  if (!gSpiCsAsserted)
+  {
+      gSpiCsAsserted = true;
+  }
+  else
+  {
+      gSpiError = true;
+  }
   DEBUG_PIN_SPI_RESET;
-//  sl_button_t *button = (sl_button_t *)ctx;
-//  sl_simple_button_context_t *simple_button = button->context;
-//
-//  if (simple_button->state != SL_SIMPLE_BUTTON_DISABLED) {
-//    simple_button->state = ((bool)GPIO_PinInGet(simple_button->port, simple_button->pin) == SL_SIMPLE_BUTTON_POLARITY);
-//    sl_button_on_change(button);
-//  }
 }
 
 static volatile uint32_t gTimeout = 1000000;
@@ -694,7 +695,7 @@ void app_init(void)
 //           spi_tmp126_getTemp(device0, gCnt);
 //           app_log_info("%d\n", gCnt);
 //           gCnt++;
-//           gSpiBtnPressed = false;
+//           gSpiCsAsserted = false;
 //           startTime = RAIL_GetTime();
 //       }
 //    }
@@ -723,7 +724,7 @@ void app_init(void)
 
     while (1)
     {
-        if (gSpiBtnPressed)
+        if (gSpiCsAsserted)
         {
             DEBUG_PIN_SPI_SET;
             LDMA_Start();
@@ -739,18 +740,27 @@ void app_init(void)
                 {
                     app_log_info("0x%x\n", val);
                     spi_tmp126_read(device0);
-                    DEBUG_PIN_SPI_RESET;
+                    gSpiCsAsserted= false;
                 }
                 else
                 {
                     app_log_info("Error\n");
+                    gSpiCsAsserted = false;
+                    break;
                 }
             }
 
             success = false;
             val = 0;
-            gSpiBtnPressed= false;
+            //gSpiCsAsserted= false;
             DEBUG_PIN_SPI_RESET;
+        }
+        else if (gSpiError)
+        {
+            app_log_info("Error CS ***** Reset DMA\r\n");
+            spi_tmp126_read(device0);
+            gSpiError = false;
+            gSpiCsAsserted = false;
         }
     }
 
