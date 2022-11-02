@@ -738,21 +738,23 @@ void app_init(void)
 
                 if (success)
                 {
-                    app_log_info("0x%x\n", val);
                     spi_tmp126_read(device0);
-                    gSpiCsAsserted= false;
+                    //gSpiCsAsserted= false;
+                    DEBUG_PIN_SPI_RESET;
+                    app_log_info("0x%x\n", val);
                 }
                 else
                 {
+                    //gSpiCsAsserted = false;
+                    DEBUG_PIN_SPI_RESET;
                     app_log_info("Error\n");
-                    gSpiCsAsserted = false;
                     break;
                 }
             }
 
             success = false;
             val = 0;
-            //gSpiCsAsserted= false;
+            gSpiCsAsserted= false;
             DEBUG_PIN_SPI_RESET;
         }
         else if (gSpiError)

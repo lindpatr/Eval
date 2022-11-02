@@ -54,6 +54,21 @@ void LDMA_Start()
 {
     LDMA_EnableChannelRequest(RX_LDMA_CHANNEL, true);
     LDMA_EnableChannelRequest(TX_LDMA_CHANNEL, true);
+
+    /* A critical region. */
+    uint32_t chMaskRx = 1UL << (uint8_t)RX_LDMA_CHANNEL;
+    uint32_t chMaskTx = 1UL << (uint8_t)TX_LDMA_CHANNEL;
+    CORE_irqState_t irqState;
+
+
+    CORE_ENTER_ATOMIC();
+    BUS_RegMaskedClear(&LDMA->CHDONE, chMaskRx);  /* Clear the done flag.     */
+    LDMA->LINKLOAD = chMaskRx;      /* Start a transfer by loading the descriptor.  */
+
+    BUS_RegMaskedClear(&LDMA->CHDONE, chMaskTx);  /* Clear the done flag.     */
+    LDMA->LINKLOAD = chMaskTx;      /* Start a transfer by loading the descriptor.  */
+    /* A critical region end. */
+    CORE_EXIT_ATOMIC();
 }
 
 void LDMA_Stop()
@@ -376,6 +391,7 @@ void common_SPIinitLDMA(void)
   // be able to change the buffer size dynamically (different size for different slave device)
   ldmaTXDescriptor.xfer.blockSize = ldmaCtrlBlockSizeUnit2;    // Transfers 2 units per arbitration
   ldmaTXDescriptor.xfer.ignoreSrec = 1;    // Ignores single requests
+  //ldmaTXDescriptor.xfer.linkAddr = &ldmaTXDescriptor;
 
   // Transfer 2 bytes on free space in the USART buffer
   ldmaTXConfig = (LDMA_TransferCfg_t)LDMA_TRANSFER_CFG_PERIPHERAL(ldmaPeripheralSignal_USART0_TXBL);
@@ -384,6 +400,7 @@ void common_SPIinitLDMA(void)
   // be able to change the buffer size dynamically (different size for different slave device)
   ldmaRXDescriptor.xfer.blockSize = ldmaCtrlBlockSizeUnit2;    // Transfers 2 units per arbitration
   ldmaRXDescriptor.xfer.ignoreSrec = 1;    // Ignores single requests
+  //ldmaRXDescriptor.xfer.linkAddr = &ldmaRXDescriptor;
 
   // Transfer 2 bytes on receive data valid
   ldmaRXConfig = (LDMA_TransferCfg_t)LDMA_TRANSFER_CFG_PERIPHERAL(ldmaPeripheralSignal_USART0_RXDATAV);
