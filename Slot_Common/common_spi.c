@@ -56,19 +56,19 @@ void LDMA_Start()
     LDMA_EnableChannelRequest(TX_LDMA_CHANNEL, true);
 
     /* A critical region. */
-    uint32_t chMaskRx = 1UL << (uint8_t)RX_LDMA_CHANNEL;
-    uint32_t chMaskTx = 1UL << (uint8_t)TX_LDMA_CHANNEL;
-    CORE_irqState_t irqState;
+    //uint32_t chMaskRx = 1UL << (uint8_t)RX_LDMA_CHANNEL;
+    //uint32_t chMaskTx = 1UL << (uint8_t)TX_LDMA_CHANNEL;
+    //CORE_irqState_t irqState;
 
 
-    CORE_ENTER_ATOMIC();
-    BUS_RegMaskedClear(&LDMA->CHDONE, chMaskRx);  /* Clear the done flag.     */
-    LDMA->LINKLOAD = chMaskRx;      /* Start a transfer by loading the descriptor.  */
+    ///CORE_ENTER_ATOMIC();
+    //BUS_RegMaskedClear(&LDMA->CHDONE, chMaskRx);  /* Clear the done flag.     */
+    //LDMA->LINKLOAD = chMaskRx;      /* Start a transfer by loading the descriptor.  */
 
-    BUS_RegMaskedClear(&LDMA->CHDONE, chMaskTx);  /* Clear the done flag.     */
-    LDMA->LINKLOAD = chMaskTx;      /* Start a transfer by loading the descriptor.  */
+    //BUS_RegMaskedClear(&LDMA->CHDONE, chMaskTx);  /* Clear the done flag.     */
+    //LDMA->LINKLOAD = chMaskTx;      /* Start a transfer by loading the descriptor.  */
     /* A critical region end. */
-    CORE_EXIT_ATOMIC();
+    //CORE_EXIT_ATOMIC();
 }
 
 void LDMA_Stop()
@@ -231,6 +231,101 @@ void LDMA_StartTransferNoIrq(int ch,
   CORE_EXIT_ATOMIC();
 }
 
+
+void RELDMA_StartTransferNoIrq(int ch,
+                        const LDMA_TransferCfg_t *transfer,
+                        const LDMA_Descriptor_t  *descriptor)
+{
+  CORE_DECLARE_IRQ_STATE;
+  uint32_t chMask = 1UL << (uint8_t)ch;
+
+  EFM_ASSERT(ch < (int)DMA_CHAN_COUNT);
+  EFM_ASSERT(transfer != NULL);
+
+//#if defined (_LDMAXBAR_CH_REQSEL_MASK)
+//  EFM_ASSERT(!(transfer->ldmaReqSel & ~_LDMAXBAR_CH_REQSEL_MASK));
+//#elif defined (_LDMA_CH_REQSEL_MASK)
+//  EFM_ASSERT(!(transfer->ldmaReqSel & ~_LDMA_CH_REQSEL_MASK));
+//#endif
+//
+//#if defined (_LDMA_SYNCHWEN_SYNCCLREN_SHIFT) && defined (_LDMA_SYNCHWEN_SYNCSETEN_SHIFT)
+//  EFM_ASSERT(!(((uint32_t)transfer->ldmaCtrlSyncPrsClrOff << _LDMA_SYNCHWEN_SYNCCLREN_SHIFT)
+//               & ~_LDMA_SYNCHWEN_SYNCCLREN_MASK));
+//  EFM_ASSERT(!(((uint32_t)transfer->ldmaCtrlSyncPrsClrOn << _LDMA_SYNCHWEN_SYNCCLREN_SHIFT)
+//               & ~_LDMA_SYNCHWEN_SYNCCLREN_MASK));
+//  EFM_ASSERT(!(((uint32_t)transfer->ldmaCtrlSyncPrsSetOff << _LDMA_SYNCHWEN_SYNCSETEN_SHIFT)
+//               & ~_LDMA_SYNCHWEN_SYNCSETEN_MASK));
+//  EFM_ASSERT(!(((uint32_t)transfer->ldmaCtrlSyncPrsSetOn << _LDMA_SYNCHWEN_SYNCSETEN_SHIFT)
+//               & ~_LDMA_SYNCHWEN_SYNCSETEN_MASK));
+//#elif defined (_LDMA_CTRL_SYNCPRSCLREN_SHIFT) && defined (_LDMA_CTRL_SYNCPRSSETEN_SHIFT)
+//  EFM_ASSERT(!(((uint32_t)transfer->ldmaCtrlSyncPrsClrOff << _LDMA_CTRL_SYNCPRSCLREN_SHIFT)
+//               & ~_LDMA_CTRL_SYNCPRSCLREN_MASK));
+//  EFM_ASSERT(!(((uint32_t)transfer->ldmaCtrlSyncPrsClrOn << _LDMA_CTRL_SYNCPRSCLREN_SHIFT)
+//               & ~_LDMA_CTRL_SYNCPRSCLREN_MASK));
+//  EFM_ASSERT(!(((uint32_t)transfer->ldmaCtrlSyncPrsSetOff << _LDMA_CTRL_SYNCPRSSETEN_SHIFT)
+//               & ~_LDMA_CTRL_SYNCPRSSETEN_MASK));
+//  EFM_ASSERT(!(((uint32_t)transfer->ldmaCtrlSyncPrsSetOn << _LDMA_CTRL_SYNCPRSSETEN_SHIFT)
+//               & ~_LDMA_CTRL_SYNCPRSSETEN_MASK));
+//#endif
+//
+//  EFM_ASSERT(!(((uint32_t)transfer->ldmaCfgArbSlots << _LDMA_CH_CFG_ARBSLOTS_SHIFT)
+//               & ~_LDMA_CH_CFG_ARBSLOTS_MASK));
+//  EFM_ASSERT(!(((uint32_t)transfer->ldmaCfgSrcIncSign << _LDMA_CH_CFG_SRCINCSIGN_SHIFT)
+//               & ~_LDMA_CH_CFG_SRCINCSIGN_MASK));
+//  EFM_ASSERT(!(((uint32_t)transfer->ldmaCfgDstIncSign << _LDMA_CH_CFG_DSTINCSIGN_SHIFT)
+//               & ~_LDMA_CH_CFG_DSTINCSIGN_MASK));
+//  EFM_ASSERT(!(((uint32_t)transfer->ldmaLoopCnt << _LDMA_CH_LOOP_LOOPCNT_SHIFT)
+//               & ~_LDMA_CH_LOOP_LOOPCNT_MASK));
+
+  /* Clear the pending channel interrupt. */
+//****  LDMA->IF_CLR = chMask;
+
+
+//****  LDMAXBAR->CH[ch].REQSEL = transfer->ldmaReqSel;
+
+//****  LDMA->CH[ch].LOOP = transfer->ldmaLoopCnt << _LDMA_CH_LOOP_LOOPCNT_SHIFT;
+//****  LDMA->CH[ch].CFG = (transfer->ldmaCfgArbSlots << _LDMA_CH_CFG_ARBSLOTS_SHIFT)
+//****                     | (transfer->ldmaCfgSrcIncSign << _LDMA_CH_CFG_SRCINCSIGN_SHIFT)
+//****                     | (transfer->ldmaCfgDstIncSign << _LDMA_CH_CFG_DSTINCSIGN_SHIFT)
+//****  ;
+
+  /* Set the descriptor address. */
+  /// 0
+  LDMA->CH[ch].LINK = (uint32_t)descriptor & _LDMA_CH_LINK_LINKADDR_MASK;
+
+  /* A critical region. */
+  CORE_ENTER_ATOMIC();
+
+  /* Enable the channel interrupt. */
+  /* (BELENOS LINPAT -> Disable IRQ to be able to manage SPI by polling */
+  //LDMA->IEN |= chMask;
+
+  /// 3
+//  if (transfer->ldmaReqDis) {
+//    LDMA->REQDIS |= chMask;
+//  }
+
+//  if (transfer->ldmaDbgHalt) {
+//    LDMA->DBGHALT |= chMask;
+//  }
+
+//  LDMA->SYNCHWEN_CLR =
+//    (((uint32_t)transfer->ldmaCtrlSyncPrsClrOff << _LDMA_SYNCHWEN_SYNCCLREN_SHIFT)
+//     | ((uint32_t)transfer->ldmaCtrlSyncPrsSetOff << _LDMA_SYNCHWEN_SYNCSETEN_SHIFT))
+//    & _LDMA_SYNCHWEN_MASK;
+//
+//  LDMA->SYNCHWEN_SET =
+//    (((uint32_t)transfer->ldmaCtrlSyncPrsClrOn << _LDMA_SYNCHWEN_SYNCCLREN_SHIFT)
+//     | ((uint32_t)transfer->ldmaCtrlSyncPrsSetOn << _LDMA_SYNCHWEN_SYNCSETEN_SHIFT))
+//    & _LDMA_SYNCHWEN_MASK;
+
+  /// 2
+  BUS_RegMaskedClear(&LDMA->CHDONE, chMask);  /* Clear the done flag.     */
+  LDMA->LINKLOAD = chMask;      /* Start a transfer by loading the descriptor.  */
+
+  /* A critical region end. */
+  CORE_EXIT_ATOMIC();
+}
 /**
  * Init SPI i/o pin.
  */
@@ -391,7 +486,9 @@ void common_SPIinitLDMA(void)
   // be able to change the buffer size dynamically (different size for different slave device)
   ldmaTXDescriptor.xfer.blockSize = ldmaCtrlBlockSizeUnit2;    // Transfers 2 units per arbitration
   ldmaTXDescriptor.xfer.ignoreSrec = 1;    // Ignores single requests
-  //ldmaTXDescriptor.xfer.linkAddr = &ldmaTXDescriptor;
+//  ldmaTXDescriptor.xfer.linkAddr = &ldmaTXDescriptor;
+//  ldmaTXDescriptor.xfer.link = 1;
+//  ldmaRXDescriptor.xfer.linkMode = 1;
 
   // Transfer 2 bytes on free space in the USART buffer
   ldmaTXConfig = (LDMA_TransferCfg_t)LDMA_TRANSFER_CFG_PERIPHERAL(ldmaPeripheralSignal_USART0_TXBL);
@@ -400,8 +497,9 @@ void common_SPIinitLDMA(void)
   // be able to change the buffer size dynamically (different size for different slave device)
   ldmaRXDescriptor.xfer.blockSize = ldmaCtrlBlockSizeUnit2;    // Transfers 2 units per arbitration
   ldmaRXDescriptor.xfer.ignoreSrec = 1;    // Ignores single requests
-  //ldmaRXDescriptor.xfer.linkAddr = &ldmaRXDescriptor;
-
+//  ldmaRXDescriptor.xfer.linkAddr = &ldmaRXDescriptor;
+//  ldmaRXDescriptor.xfer.link = 1;
+//  ldmaRXDescriptor.xfer.linkMode = 1;
   // Transfer 2 bytes on receive data valid
   ldmaRXConfig = (LDMA_TransferCfg_t)LDMA_TRANSFER_CFG_PERIPHERAL(ldmaPeripheralSignal_USART0_RXDATAV);
 }
@@ -476,9 +574,33 @@ void common_startSPItransfertSlave(DeviceIdentEnum_t device, uint8_t buffSize, u
     // TX channel
     LDMA_StartTransferNoIrq(TX_LDMA_CHANNEL, &ldmaTXConfig, &ldmaTXDescriptor);
 
-    LDMA_Stop(RX_LDMA_CHANNEL);
-    LDMA_Stop(TX_LDMA_CHANNEL);
+//    LDMA_Stop(RX_LDMA_CHANNEL);
+//    LDMA_Stop(TX_LDMA_CHANNEL);
 }
+
+void common_REstartSPItransfertSlave(DeviceIdentEnum_t device, uint8_t buffSize, uint8_t* txBuffer, uint8_t* rxBuffer)
+{
+    // Source is txBuffer, destination is USART0_TXDATA, and length is buffSize
+    //ldmaTXDescriptor = (LDMA_Descriptor_t)LDMA_DESCRIPTOR_SINGLE_M2P_BYTE(txBuffer, &(USART0->TXDATA), buffSize);
+    // Source is USART0_RXDATA, destination is rxBuffer, and length is buffSize
+    //ldmaRXDescriptor = (LDMA_Descriptor_t)LDMA_DESCRIPTOR_SINGLE_P2M_BYTE(&(USART0->RXDATA), rxBuffer, buffSize);
+
+    // attempt to calculate the timeout
+    gTimeOut = (((1.0 / (float)gBaudRate) * 8.0 * buffSize) * 1000000.0) + SPI_TIMEOUT_SECURITY;
+
+    // CS asserted
+    // GPIO_PinOutClear(ChipSelectTab[device].portNumber, ChipSelectTab[device].pinNumber);
+
+    // RX channel
+    RELDMA_StartTransferNoIrq(RX_LDMA_CHANNEL, &ldmaRXConfig, &ldmaRXDescriptor);
+
+    // TX channel
+    RELDMA_StartTransferNoIrq(TX_LDMA_CHANNEL, &ldmaTXConfig, &ldmaTXDescriptor);
+
+//    LDMA_Stop(RX_LDMA_CHANNEL);
+//    LDMA_Stop(TX_LDMA_CHANNEL);
+}
+
 
 /**
  * @brief

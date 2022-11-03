@@ -212,6 +212,19 @@ void spi_tmp126_read(DeviceIdentEnum_t device)
     common_startSPItransfertSlave(device, 4, (uint8_t*)txbuf, (uint8_t*)rxbuf);
 }
 
+void REspi_tmp126_read(DeviceIdentEnum_t device)
+{
+    txbuf[0] = 0x01;    // X - CRC - L4 L3 L2 L1 - A - R/W - ADDR
+    txbuf[1] = 0x02;    // x -  0  - 0  0  0  0  - 0 - 1   - 0x00   // Temp
+
+    txbuf[2] = 0x03;    // FF
+    txbuf[3] = 0x04;    // FF
+
+    common_REstartSPItransfertSlave(device, 4, (uint8_t*)txbuf, (uint8_t*)rxbuf);
+}
+
+
+
 uint16_t spi_tmp126_waitreceive(DeviceIdentEnum_t device)
 {
     bool success = common_waitSPITransfertDoneSlave(device);

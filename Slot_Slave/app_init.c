@@ -727,7 +727,7 @@ void app_init(void)
         if (gSpiCsAsserted)
         {
             DEBUG_PIN_SPI_SET;
-            LDMA_Start();
+            //LDMA_Start();
 
             //int16_t val = 0;
             while (success == false)
@@ -738,7 +738,8 @@ void app_init(void)
 
                 if (success)
                 {
-                    spi_tmp126_read(device0);
+                    REspi_tmp126_read(device0);
+                    //LDMA_Stop();
                     //gSpiCsAsserted= false;
                     DEBUG_PIN_SPI_RESET;
                     app_log_info("0x%x\n", val);
@@ -746,6 +747,7 @@ void app_init(void)
                 else
                 {
                     //gSpiCsAsserted = false;
+                    //LDMA_Stop();
                     DEBUG_PIN_SPI_RESET;
                     app_log_info("Error\n");
                     break;

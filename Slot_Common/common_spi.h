@@ -50,6 +50,7 @@ void common_startSPItransfert(DeviceIdentEnum_t device, uint8_t buffSize, uint8_
 
 void common_startSPItransfertSlave(DeviceIdentEnum_t device, uint8_t buffSize, uint8_t* txBuffer, uint8_t* rxBuffer);
 
+void common_REstartSPItransfertSlave(DeviceIdentEnum_t device, uint8_t buffSize, uint8_t* txBuffer, uint8_t* rxBuffer);
 /**
  * @brief
  * Wait for the end of the SPI transfer
