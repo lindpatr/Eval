@@ -249,7 +249,12 @@ static __INLINE void DisplayStat(void)
  * DisplayStat : LABVIEW BINARY FRAMED OUTPUT (Antenna test)
  *****************************************************************************/
 #if (qPrintStatLabView)
-#define MAX_LABVIEW_DATA 28
+// Number values always sent (1..MAX_LABVIEW_DATA).
+#define MAX_LABVIEW_DATA    28
+// Initial ID for dynamic events values
+#define EVENT_INITIAL_ID    128
+// Size of temporary buffer
+#define MAX_LABVIEW_BUFFER  (MAX_LABVIEW_DATA + SIZE_UINT64_IN_BITS)
 
 typedef enum
 {
@@ -267,12 +272,12 @@ typedef struct
 }SerialFrame;
 
 // Encoded buffer to send
-uint8_t buffer[(MAX_LABVIEW_DATA * sizeof(SerialFrame) * 2) + 5];
+uint8_t buffer[((MAX_LABVIEW_BUFFER) * sizeof(SerialFrame) * 2) + 5];
 
 // Frame structure
-static SerialFrame  statFrame[50];
+static SerialFrame  statFrame[MAX_LABVIEW_BUFFER];
 // stat data pointer
-static uint32_t* statDataPtr[50];
+static uint32_t* statDataPtr[MAX_LABVIEW_BUFFER];
 
 // Initialize Frame tab and data ptr tab
 #define setvalue(index, sframe, id, valtype, initdata, dataPtrTab, dataptr)    ({sframe[index].ID = id; sframe[index].valType =valtype; sframe[index].value = 0; dataPtrTab[index] = (uint32_t*)dataptr;})
@@ -341,13 +346,28 @@ static __INLINE void InitLabViewStat()
  *****************************************************************************/
 static __INLINE void DisplayStat(void)
 {
-    // Fill buffer
+    // Fill buffer with first MAX_LABVIEW_DATA static ID
     for (int idx = 0; idx < MAX_LABVIEW_DATA; idx++)
     {
         statFrame[idx].value = *statDataPtr[idx];
     }
 
-    uint32_t len = base252_encode((uint8_t*)statFrame, sizeof(SerialFrame) * MAX_LABVIEW_DATA, buffer);
+    // Fill buffer with dynamic events values, added only if greater than 0
+    uint8_t index = MAX_LABVIEW_DATA;
+    uint8_t eventAdded = 0;
+    for (int idx = 0; idx < SIZE_UINT64_IN_BITS; idx++)
+    {
+        if (gCB_tab[idx] >0)
+        {
+            statFrame[index].ID = EVENT_INITIAL_ID + index;
+            statFrame[index].valType = kUint32;
+            statFrame[index].value = gCB_tab[idx];
+            index++;
+            eventAdded++;
+        }
+    }
+
+    uint32_t len = base252_encode((uint8_t*)statFrame, sizeof(SerialFrame) * (MAX_LABVIEW_DATA + eventAdded), buffer);
 
     if (len != 0)
     {
