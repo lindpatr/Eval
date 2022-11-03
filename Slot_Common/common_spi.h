@@ -27,6 +27,9 @@ typedef struct
     int32_t pinNumber;
 } SpiCsStruct_t;
 
+extern volatile bool gSpiCsAsserted;
+extern volatile bool gSpiError;
+
 /**
  * @brief
  * Init SPI.
@@ -50,7 +53,8 @@ void common_startSPItransfert(DeviceIdentEnum_t device, uint8_t buffSize, uint8_
 
 void common_startSPItransfertSlave(DeviceIdentEnum_t device, uint8_t buffSize, uint8_t* txBuffer, uint8_t* rxBuffer);
 
-void common_REstartSPItransfertSlave(DeviceIdentEnum_t device, uint8_t buffSize, uint8_t* txBuffer, uint8_t* rxBuffer);
+void common_ContinueSPItransfertSlave(void);
+
 /**
  * @brief
  * Wait for the end of the SPI transfer
@@ -61,11 +65,5 @@ void common_REstartSPItransfertSlave(DeviceIdentEnum_t device, uint8_t buffSize,
 bool common_waitSPITransfertDone(DeviceIdentEnum_t device);
 
 bool common_waitSPITransfertDoneSlave(DeviceIdentEnum_t device);
-
-void LDMA_Start();
-
-void LDMA_Stop();
-
-
 
 #endif /* COMMON_SPI_H_ */

@@ -611,30 +611,7 @@ static void validation_check(void)
 //                          Public Function Definitions
 // -----------------------------------------------------------------------------
 
-static volatile bool gSpiCsAsserted = false;
-static volatile bool gSpiError = false;
-
-// CS port
-#define BSP_GPIO_PB0_PORT       gpioPortC
-#define BSP_GPIO_PB0_PIN        3
-
-static void test_spi_cs_detect(uint8_t interrupt_no)
-{
-  (void)interrupt_no;
-
-  DEBUG_PIN_SPI_SET;
-  if (!gSpiCsAsserted)
-  {
-      gSpiCsAsserted = true;
-  }
-  else
-  {
-      gSpiError = true;
-  }
-  DEBUG_PIN_SPI_RESET;
-}
-
-static volatile uint32_t gTimeout = 1000000;
+static volatile uint32_t gTimeout = 1000;
 static volatile uint8_t gCnt = 0;
 
 /******************************************************************************
@@ -693,7 +670,7 @@ void app_init(void)
 //       if (gap > gTimeout)
 //       {
 //           spi_tmp126_getTemp(device0, gCnt);
-//           app_log_info("%d\n", gCnt);
+//           //app_log_info("%d\n", gCnt);
 //           gCnt++;
 //           gSpiCsAsserted = false;
 //           startTime = RAIL_GetTime();
@@ -705,17 +682,9 @@ void app_init(void)
 
     app_log_info("Start slave mode\n\r");
 
-    GPIOINT_CallbackRegister(BSP_GPIO_PB0_PIN, (GPIOINT_IrqCallbackPtr_t)test_spi_cs_detect);
-
+    // réfléchir si il est possible d'avoir une device en master et une device en slave
+    // Une seul device possible en mode slave le CS est un input !! Par defaut on utilise toujours device 0
     common_initSPI(false, 1000000, usartClockMode0, ChipSelectTab);
-
-    // Catch CS falling edge
-    GPIO_ExtIntConfig(BSP_GPIO_PB0_PORT,
-                      BSP_GPIO_PB0_PIN,
-                      BSP_GPIO_PB0_PIN,
-                      false,
-                      true,
-                      true);
 
     spi_tmp126_read(device0);
 
@@ -727,7 +696,6 @@ void app_init(void)
         if (gSpiCsAsserted)
         {
             DEBUG_PIN_SPI_SET;
-            //LDMA_Start();
 
             //int16_t val = 0;
             while (success == false)
@@ -738,33 +706,34 @@ void app_init(void)
 
                 if (success)
                 {
-                    REspi_tmp126_read(device0);
-                    //LDMA_Stop();
-                    //gSpiCsAsserted= false;
+                    //common_ContinueSPItransfertSlave();
+                    //spi_tmp126_read(device0);
                     DEBUG_PIN_SPI_RESET;
                     app_log_info("0x%x\n", val);
                 }
                 else
                 {
-                    //gSpiCsAsserted = false;
-                    //LDMA_Stop();
+                    gSpiError = true;
                     DEBUG_PIN_SPI_RESET;
-                    app_log_info("Error\n");
+                    app_log_info("Error slv\n");
                     break;
                 }
             }
 
             success = false;
             val = 0;
-            gSpiCsAsserted= false;
+            //gSpiCsAsserted= false;
             DEBUG_PIN_SPI_RESET;
         }
-        else if (gSpiError)
+
+        if (gSpiError)
         {
-            app_log_info("Error CS ***** Reset DMA\r\n");
+            //common_ContinueSPItransfertSlave();
+            app_log_info("Error CS *********************************** Reset DMA\r\n");
             spi_tmp126_read(device0);
-            gSpiError = false;
             gSpiCsAsserted = false;
+            gSpiError = false;
+            //gSpiCsAsserted = false;
         }
     }
 

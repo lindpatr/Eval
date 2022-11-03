@@ -104,8 +104,6 @@ uint16_t spi_tmp126_waitreceive_special(DeviceIdentEnum_t device, uint32_t *resu
 
 void spi_tmp126_read(DeviceIdentEnum_t device);
 
-void REspi_tmp126_read(DeviceIdentEnum_t device);
-
 uint16_t spi_tmp126_waitreceive(DeviceIdentEnum_t device);
 
 #endif /* COMMON_TMP126_SPI_H_ */

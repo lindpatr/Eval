@@ -152,8 +152,8 @@ uint16_t spi_tmp126_getTemp(DeviceIdentEnum_t device, uint8_t val)
     txbuf[0] = cmd.bytes[1];    // X - CRC - L4 L3 L2 L1 - A - R/W - ADDR
     txbuf[1] = val;    // x -  0  - 0  0  0  0  - 0 - 1   - 0x00   // Temp
 
-    txbuf[2] = 0xFF;    // FF
-    txbuf[3] = 0xFF;    // FF
+    txbuf[2] = 0xAA;    // FF
+    txbuf[3] = 0x55;    // FF
 
     common_startSPItransfert(device, 4, (uint8_t*)txbuf, (uint8_t*)rxbuf);
 
@@ -212,19 +212,6 @@ void spi_tmp126_read(DeviceIdentEnum_t device)
     common_startSPItransfertSlave(device, 4, (uint8_t*)txbuf, (uint8_t*)rxbuf);
 }
 
-void REspi_tmp126_read(DeviceIdentEnum_t device)
-{
-    txbuf[0] = 0x01;    // X - CRC - L4 L3 L2 L1 - A - R/W - ADDR
-    txbuf[1] = 0x02;    // x -  0  - 0  0  0  0  - 0 - 1   - 0x00   // Temp
-
-    txbuf[2] = 0x03;    // FF
-    txbuf[3] = 0x04;    // FF
-
-    common_REstartSPItransfertSlave(device, 4, (uint8_t*)txbuf, (uint8_t*)rxbuf);
-}
-
-
-
 uint16_t spi_tmp126_waitreceive(DeviceIdentEnum_t device)
 {
     bool success = common_waitSPITransfertDoneSlave(device);
@@ -247,6 +234,12 @@ uint16_t spi_tmp126_waitreceive_special(DeviceIdentEnum_t device, uint32_t *resu
     {
         res = (rxbuf[0] << 24) + (rxbuf[1] << 16) + (rxbuf[2] << 8) + rxbuf[3];
         *result = res;
+
+        rxbuf[0] = 0;
+        rxbuf[1] = 0;
+        rxbuf[2] = 0;
+        rxbuf[3] = 0;
+
         return 1;
     }
 
