@@ -318,7 +318,7 @@ static __INLINE void SetState(StateEnum state)
  *****************************************************************************/
 static __INLINE void StopRadio(void)
 {
-//    RAIL_Idle(gRailHandle, RAIL_IDLE_FORCE_SHUTDOWN_CLEAR_FLAGS, true);
+    RAIL_Idle(gRailHandle, RAIL_IDLE_FORCE_SHUTDOWN_CLEAR_FLAGS, true);
 
     gRX_ok = false;
     gTX_ok = false;
@@ -333,7 +333,7 @@ static __INLINE void StopRadio(void)
  *****************************************************************************/
 static __INLINE void RestartRadio(void)
 {
-//    RAIL_Idle(gRailHandle, RAIL_IDLE, true);
+    RAIL_Idle(gRailHandle, RAIL_IDLE, true);
 }
 
 /******************************************************************************
