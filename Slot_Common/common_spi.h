@@ -53,7 +53,7 @@ void common_startSPItransfert(DeviceIdentEnum_t device, uint8_t buffSize, uint8_
  * Wait for the end of the SPI transfer
  *
  * @param[in] device Device number to select which cs is asserted
- * @return result TRUE sucessfull, FALSE timout.
+ * @return result TRUE successful, FALSE timeout.
 */
 bool common_waitSPITransfertDone(DeviceIdentEnum_t device);
 

@@ -23,6 +23,8 @@
     <file name="sl_rail_util_init.h" builtin="true" generated="true"/>
     <file name="sl_simple_button_instances.c" builtin="true" generated="true"/>
     <file name="sl_simple_button_instances.h" builtin="true" generated="true"/>
+    <file name="sl_spidrv_init.c" builtin="true" generated="true"/>
+    <file name="sl_spidrv_instances.h" builtin="true" generated="true"/>
     <file name="linkerfile.ld" builtin="true" generated="true"/>
   </folder>
   <includePath uri="studio:/project/autogen"/>
