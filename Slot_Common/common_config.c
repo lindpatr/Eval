@@ -53,9 +53,9 @@ PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
     /* ID                Pos    Enable  Addr    Slot time         Is master   Name          */
     {0x385B44FFFEC085D3, 0,     true,   0x7F,   0,                                              true,       "MASTER\0"},
     {0x385b44fffec0862b, 1,     true,   1,      (0*DELTA_TIME_SLOT)+SHIFT_TIME+FIRST_TIME_SLOT, false,      "SLAVE\0"},
-    {0x385b44fffe5f5af2, 2,     true,   2,      (3*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
-    {0x385b44fffe5f5b23, 3,     false,  3,      (1*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
-    {0x385b44fffec08638, 4,     false,  4,      (2*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+    {0x385b44fffe5f5af2, 2,     true,   2,      (1*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+    {0x385b44fffe5f5b23, 3,     true,   3,      (2*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+    {0x385b44fffec08638, 4,     true,   4,      (3*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
     {0x040D84FFFE88A3DF, 5,     true ,  5,      (4*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
     {0x040D84FFFE88A50A, 6,     true ,  6,      (5*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
     {0x040D84FFFE88A766, 7,     true ,  7,      (6*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
