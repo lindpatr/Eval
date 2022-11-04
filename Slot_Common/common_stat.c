@@ -256,7 +256,7 @@ static __INLINE void DisplayStat(void)
 // Size of temporary buffer
 #define MAX_LABVIEW_BUFFER  (MAX_LABVIEW_DATA + SIZE_UINT64_IN_BITS)
 
-typedef enum
+enum
 {
     kUint32 = 1,
     kFLoat = 2,
