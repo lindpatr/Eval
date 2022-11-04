@@ -14,6 +14,7 @@
 #include "sl_rail_util_rssi.h"
 #include "sl_rail_util_init.h"
 #include "sl_board_control.h"
+#include "sl_sleeptimer.h"
 #include "app_log.h"
 #include "sl_debug_swo.h"
 #include "gpiointerrupt.h"
@@ -22,6 +23,7 @@
 #include "sl_mpu.h"
 #include "nvm3_default.h"
 #include "sl_simple_button_instances.h"
+#include "sl_spidrv_instances.h"
 #include "sl_cli_instances.h"
 #include "sl_iostream_init_instances.h"
 #include "sl_cos.h"
@@ -45,12 +47,14 @@ void sl_driver_init(void)
   sl_debug_swo_init();
   GPIOINT_Init();
   sl_simple_button_init_instances();
+  sl_spidrv_init_instances();
   sl_cos_send_config();
 }
 
 void sl_service_init(void)
 {
   sl_board_configure_vcom();
+  sl_sleeptimer_init();
   sl_iostream_stdlib_disable_buffering();
   sl_mpu_disable_execute_from_ram();
   sl_iostream_init_instances();

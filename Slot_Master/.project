@@ -81,6 +81,16 @@
 			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_mbox.h</locationURI>
 		</link>
 		<link>
+			<name>Slot_Common/common_slave_spi.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_slave_spi.c</locationURI>
+		</link>
+		<link>
+			<name>Slot_Common/common_slave_spi.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_slave_spi.h</locationURI>
+		</link>
+		<link>
 			<name>Slot_Common/common_stat.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Slot_Common/common_stat.c</locationURI>
@@ -166,6 +176,11 @@
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_assert.h</locationURI>
 		</link>
 		<link>
+			<name>gecko_sdk_4.1.3/platform/emlib/inc/em_burtc.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_burtc.h</locationURI>
+		</link>
+		<link>
 			<name>gecko_sdk_4.1.3/platform/emlib/inc/em_bus.h</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_bus.h</locationURI>
@@ -241,6 +256,11 @@
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_ramfunc.h</locationURI>
 		</link>
 		<link>
+			<name>gecko_sdk_4.1.3/platform/emlib/inc/em_rtcc.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_rtcc.h</locationURI>
+		</link>
+		<link>
 			<name>gecko_sdk_4.1.3/platform/emlib/inc/em_syscfg.h</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_syscfg.h</locationURI>
@@ -259,6 +279,11 @@
 			<name>gecko_sdk_4.1.3/platform/emlib/inc/em_version.h</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/inc/em_version.h</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.3/platform/emlib/src/em_burtc.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_burtc.c</locationURI>
 		</link>
 		<link>
 			<name>gecko_sdk_4.1.3/platform/emlib/src/em_cmu.c</name>
@@ -299,6 +324,11 @@
 			<name>gecko_sdk_4.1.3/platform/emlib/src/em_prs.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_prs.c</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.3/platform/emlib/src/em_rtcc.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_rtcc.c</locationURI>
 		</link>
 		<link>
 			<name>gecko_sdk_4.1.3/platform/emlib/src/em_system.c</name>
@@ -504,6 +534,16 @@
 			<name>gecko_sdk_4.1.3/platform/emdrv/nvm3/src/nvm3_lock.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emdrv/nvm3/src/nvm3_lock.c</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.3/platform/emdrv/spidrv/inc/spidrv.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emdrv/spidrv/inc/spidrv.h</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.3/platform/emdrv/spidrv/src/spidrv.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emdrv/spidrv/src/spidrv.c</locationURI>
 		</link>
 		<link>
 			<name>gecko_sdk_4.1.3/platform/radio/rail_lib/common/rail.h</name>
@@ -719,6 +759,41 @@
 			<name>gecko_sdk_4.1.3/platform/service/mpu/src/sl_mpu.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/service/mpu/src/sl_mpu.c</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.3/platform/service/sleeptimer/inc/sl_sleeptimer.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/service/sleeptimer/inc/sl_sleeptimer.h</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.3/platform/service/sleeptimer/inc/sli_sleeptimer.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/service/sleeptimer/inc/sli_sleeptimer.h</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.3/platform/service/sleeptimer/src/sl_sleeptimer.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/service/sleeptimer/src/sl_sleeptimer.c</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.3/platform/service/sleeptimer/src/sl_sleeptimer_hal_burtc.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/service/sleeptimer/src/sl_sleeptimer_hal_burtc.c</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.3/platform/service/sleeptimer/src/sl_sleeptimer_hal_prortc.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/service/sleeptimer/src/sl_sleeptimer_hal_prortc.c</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.3/platform/service/sleeptimer/src/sl_sleeptimer_hal_rtcc.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/service/sleeptimer/src/sl_sleeptimer_hal_rtcc.c</locationURI>
+		</link>
+		<link>
+			<name>gecko_sdk_4.1.3/platform/service/sleeptimer/src/sli_sleeptimer_hal.h</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/service/sleeptimer/src/sli_sleeptimer_hal.h</locationURI>
 		</link>
 		<link>
 			<name>gecko_sdk_4.1.3/platform/service/system/inc/sl_system_init.h</name>
