@@ -16,8 +16,8 @@
 #include "sl_board_control.h"
 #include "app_log.h"
 #include "sl_debug_swo.h"
+#include "sl_iostream_init_eusart_instances.h"
 #include "sl_iostream_stdlib_config.h"
-#include "sl_iostream_swo.h"
 #include "sl_mpu.h"
 #include "nvm3_default.h"
 #include "sl_pwm_instances.h"
@@ -88,6 +88,6 @@ void sl_internal_app_process_action(void)
 
 void sl_iostream_init_instances(void)
 {
-  sl_iostream_swo_init();
+  sl_iostream_eusart_init_instances();
 }
 

@@ -32,6 +32,7 @@
 #include "em_cmu.h"
 #include "common_config.h"
 
+
 sl_status_t sl_device_init_clocks(void)
 {
 #if (FREQ768MHZ)
@@ -53,7 +54,6 @@ sl_status_t sl_device_init_clocks(void)
 #else
   CMU_ClockSelectSet(cmuClock_SYSCLK, cmuSelect_HFXO);
 #endif  // FREQ768MHZ
-
 #if defined(_CMU_EM01GRPACLKCTRL_MASK)
   CMU_ClockSelectSet(cmuClock_EM01GRPACLK, cmuSelect_HFXO);
 #endif
