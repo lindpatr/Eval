@@ -505,7 +505,7 @@ __INLINE void CalcStat(void)
     gCommonStat.SYNCErr = gRX_tab[me][TAB_POS_RX_SYNC_LOST];
     gCommonStat.RXGap = ((absRXGap > gCommonStat.RXErr) ? (absRXGap - gCommonStat.RXErr): 0);            // Frame error implies a gap -> compute gap delta due to other reasons
 
-    gCommonStat.RXErrInPercent = 100.0f * (float) (gCommonStat.RXErr + gCommonStat.RXTimeOut + gCommonStat.CRCErr + absRXGap) / (float) (isMaster ? gCB_tab[RAIL_EVENT_RX_PACKET_RECEIVED_SHIFT] : (gCB_tab[RAIL_EVENT_RX_PACKET_RECEIVED_SHIFT]-gCountPrintStat));
+    gCommonStat.RXErrInPercent = 100.0f * (float) (gCommonStat.RXErr + gCommonStat.RXTimeOut + gCommonStat.CRCErr + gCommonStat.RXGap) / (float) (isMaster ? gCB_tab[RAIL_EVENT_RX_PACKET_RECEIVED_SHIFT] : (gCB_tab[RAIL_EVENT_RX_PACKET_RECEIVED_SHIFT]-gCountPrintStat));
     if (gCommonStat.RXErrInPercent > 100.0f)
         gCommonStat.RXErrInPercent = 100.0f;
 
