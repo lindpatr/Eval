@@ -359,7 +359,7 @@ static __INLINE void DisplayStat(void)
     {
         if (gCB_tab[idx] >0)
         {
-            statFrame[index].ID = EVENT_INITIAL_ID + index;
+            statFrame[index].ID = EVENT_INITIAL_ID + idx;
             statFrame[index].valType = kUint32;
             statFrame[index].value = gCB_tab[idx];
             index++;
