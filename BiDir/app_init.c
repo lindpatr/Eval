@@ -100,6 +100,7 @@ SL_WEAK void print_sample_app_name(const char *app_name)
 void app_init(void)
 {
 	RAIL_Status_t status = RAIL_STATUS_NO_ERROR;
+    uint16_t channel;
 
 	validation_check();
 
@@ -178,6 +179,16 @@ void app_init(void)
 	}
 #endif	// qAutoTransition
 
+    // TX power
+    status = RAIL_SetTxPowerDbm(gRailHandle, (RAIL_TxPower_t)1);
+#if (qPrintErrorsL1)
+    if (status != RAIL_STATUS_NO_ERROR)
+    {
+        app_log_warning("Warning RAIL_SetTxPowerDbm (%d)\n", status);
+    }
+#endif  // qPrintErrorsL1
+
+
 #if (!qMaster)
 	// Enable Start reception (without timeout)
 	status = RAIL_StartRx(gRailHandle, CHANNEL, NULL);
@@ -200,9 +211,37 @@ void app_init(void)
 	const char string3[] = "BiDir";
 
 	// CLI info message
-	app_log_info("%s (%s) ID: 0x%llx\n", string2, string3, SYSTEM_GetUnique());
+	app_log_info("%s (%s)\n", string2, string3);
 	app_log_info("--------------------------------\n");
+    app_log_info("MCU ID     : 0x%llx\n", SYSTEM_GetUnique());
+    app_log_info("Sys Clock  : %0.3f MHz\n", SystemSYSCLKGet()/1000000.0f);
 
+	status = RAIL_IsValidChannel(gRailHandle, CHANNEL);
+#if (qPrintErrorsL1)
+    if (status != RAIL_STATUS_NO_ERROR)
+    {
+        app_log_warning("%d isn't a valid channel\n", CHANNEL);
+    }
+    else
+    {
+        status = RAIL_GetChannel(gRailHandle, &channel);
+
+        if (status != RAIL_STATUS_NO_ERROR)
+        {
+            app_log_warning("Warning RAIL_GetChannel (%d)\n", CHANNEL);
+        }
+        else
+        {
+            RAIL_ChannelMetadata_t channelMetadata;
+            uint16_t length = sizeof(RAIL_ChannelMetadata_t);
+            channel = (qMaster ? CHANNEL : channel);
+
+            status = RAIL_GetChannelMetadata(gRailHandle, &channelMetadata, &length, channel, channel);
+
+            app_log("Get channel: %d (%0.3f GHz)\n", channel, (channelMetadata.frequency/1000000000.0f));
+        }
+    }
+#endif  // qPrintErrorsL1
 	// Set up timers
 	RAIL_ConfigMultiTimer(true);
 }
