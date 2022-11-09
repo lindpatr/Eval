@@ -723,7 +723,7 @@ void DisplayStat(void)
         RAIL_Idle(gRailHandle, RAIL_IDLE_FORCE_SHUTDOWN_CLEAR_FLAGS, true);
 
         // Statistics
-        float time = (float) ((float) gCountPrintStat * STAT_PERIOD_s);
+        uint32_t time = gCountPrintStat * STAT_PERIOD_s;
         float localStat = (float) (gTxCount + gRxCount) / time;
         float localStat2 = (10.0f * 10100.0f) / localStat;
         float localStat3 = 1000000.0f * (float) (gTX_tab[kTX_Err] + gTX_tab[kTX_TimeOut] + gTX_tab[kTX_Invalid]) / (float) gTxCount;
@@ -734,7 +734,7 @@ void DisplayStat(void)
         app_log_info("Performance statistics\n");
         app_log_info("----------------------\n");
         app_log_info("#Stat              : %d\n", gCountPrintStat);
-        app_log_info("Elapsed time       : %0.2f sec\n", time);
+        app_log_info("Elapsed time       : %d sec\n", time);
 #if (qMaster)
         app_log_info("Count (#TX Master) : %d\n", gTxCount);
         app_log_info("Count (#TX Slave)  : %d\n", gRxCount);
@@ -744,10 +744,10 @@ void DisplayStat(void)
 #endif  // qMaster
         app_log_info("#TX OK             : %d\n", gTX_tab[kTX_Ok]);
         app_log_info("#RX OK             : %d\n", gRX_tab[kRX_Ok]);
-        app_log_info("TX Error see below : %0.0f ppm\n", localStat3);
+        app_log_info("TX Error see below : %d ppm\n", (uint32_t)localStat3);
         app_log_info("#Err/#TO/#Inv      : %d/%d/%d\n", gTX_tab[kTX_Err], gTX_tab[kTX_TimeOut], gTX_tab[kTX_Invalid]);
         app_log_info("TX retransmit count: %d\n", gTX_tab[kTX_Retransmit]);
-        app_log_info("RX Error see below : %0.0f ppm\n", localStat4);
+        app_log_info("RX Error see below : %d ppm\n", (uint32_t)localStat4);
         app_log_info("#Err/#TO/#Inv/#CRC : %d/%d/%d/%d\n", gRX_tab[kRX_Err], gRX_tab[kRX_TimeOut], gRX_tab[kRX_Invalid], gRX_tab[kRX_CRC_Err]);
 #if (qMaster)
         app_log_info("Slave counter #gap : %d (max:%d)\n", gRX_tab[kRX_GapCount], gRX_tab[kRX_MaxGap]);
