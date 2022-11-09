@@ -250,11 +250,17 @@ static __INLINE void DisplayStat(void)
  *****************************************************************************/
 #if (qPrintStatLabView)
 // Number values always sent (1..MAX_LABVIEW_DATA).
-#define MAX_LABVIEW_DATA    28
+#define MAX_LABVIEW_DATA             28
+// Max number of slaves (memory limitation)
+#define MAX_LABVIEW_SLAVE            10
+// Max number of slave stats (5 values per slave)
+#define MAX_SLAVE_DATA               (MAX_LABVIEW_SLAVE * 1)
+// Initial ID for dynamic slave stats
+#define SLAVE_INITIAL_ID             32
 // Initial ID for dynamic events values
-#define EVENT_INITIAL_ID    128
+#define EVENT_INITIAL_ID            128
 // Size of temporary buffer
-#define MAX_LABVIEW_BUFFER  (MAX_LABVIEW_DATA + SIZE_UINT64_IN_BITS)
+#define MAX_LABVIEW_BUFFER  (MAX_LABVIEW_DATA + SIZE_UINT64_IN_BITS + MAX_SLAVE_DATA)
 
 enum
 {
@@ -270,6 +276,9 @@ typedef struct
     uint16_t    valType;    // Data type (uint32_t, float...)
     uint32_t    value;      // Value cast in uint32_t
 }SerialFrame;
+
+// number of slaves added in monitoring frame
+uint8_t gNbrSlaveMon = 0;
 
 // Encoded buffer to send
 uint8_t buffer[((MAX_LABVIEW_BUFFER) * sizeof(SerialFrame) * 2) + 5];
@@ -288,7 +297,7 @@ static uint32_t* statDataPtr[MAX_LABVIEW_BUFFER];
 static __INLINE void InitLabViewStat()
 {
     setvalue(0, statFrame, 1, kUint32, 0, statDataPtr, &gCommonStat.CountPrintStat);  //uint32_t gCommonStat.CountPrintStat;    // Stat print #count
-    setvalue(1, statFrame, 2, 2,  0, statDataPtr, &gCommonStat.RelElapsedTime);  //float gCommonStat.RelElapsedTime;      // Elapsed time
+    setvalue(1, statFrame, 2, kFLoat,  0, statDataPtr, &gCommonStat.RelElapsedTime);  //float gCommonStat.RelElapsedTime;      // Elapsed time
 
     // TX
     setvalue(2, statFrame, 3, kUint32,  0, statDataPtr, &gCommonStat.TXCounter);       //uint32_t gCommonStat.TXCounter;         // Last counter Master to Slave
@@ -327,18 +336,28 @@ static __INLINE void InitLabViewStat()
     setvalue(26, statFrame, 27, kUint32,  0, statDataPtr, &gCommonStat.CalOk);           //uint32_t gCommonStat.CalOk;             // Num of calibraition requests
     setvalue(27, statFrame, 28, kUint32,  0, statDataPtr, &gCommonStat.CalErr);          //uint32_t gCommonStat.CalErr;            // Num of calibration errors
 
-    // NOT USED
-    //    // See commonStatSlaveDetail_t (Master only)
-    //    for (int i = 0; i < MAX_NODE; i++)
-    //    {
-    //        // RX
-    //        statFrame[x] = {1, 1, gCommonStat.RXCounter};   //uint32_t RXCounter;         // Sum of RX (from Slave) counters
-    //        statFrame[x] = {1, 1, gCommonStat.RXOk};        //uint32_t RXOk;              // Count of RX Ok
-    //        statFrame[x] = {1, 1, gCommonStat.RXTimeOut};   //uint32_t RXTimeOut;         // Count of RX timeout
-    //        statFrame[x] = {1, 1, gCommonStat.RXGap};       //uint32_t RXGap;             // Count of RX gap occurences
-    //        statFrame[x] = {1, 1, gCommonStat.GapMax};      //uint32_t GapMax;            // Max gap discovered
-    //        statFrame[x] = {1, 2, gCommonStat.RXErrInPpm};  //float RXErrInPpm;           // RX error rate [ppm]
-    //    }
+    uint32_t id = SLAVE_INITIAL_ID;         // First id in -> 32
+    uint32_t index = MAX_LABVIEW_DATA;      // First index in the tab -> 29
+
+    // slave table
+    for (int i = 1; i <= MAX_LABVIEW_SLAVE; i++)
+    {
+        PROT_AddrMap_t* device = common_getConfigTable(i);
+
+        if (device != NULL)
+        {
+            if (device->enable)
+            {
+                uint8_t pos = device->posTab;
+
+                setvalue(index, statFrame, id + 0, kFLoat,   0, statDataPtr, &gCommonStat.SlaveDetail[pos].RXErrInPpm);
+                index++;
+                gNbrSlaveMon++;
+            }
+
+            id++;
+        }
+    }
 }
 
 /******************************************************************************
@@ -347,13 +366,13 @@ static __INLINE void InitLabViewStat()
 static __INLINE void DisplayStat(void)
 {
     // Fill buffer with first MAX_LABVIEW_DATA static ID
-    for (int idx = 0; idx < MAX_LABVIEW_DATA; idx++)
+    for (int idx = 0; idx < (MAX_LABVIEW_DATA + gNbrSlaveMon); idx++)
     {
         statFrame[idx].value = *statDataPtr[idx];
     }
 
     // Fill buffer with dynamic events values, added only if greater than 0
-    uint8_t index = MAX_LABVIEW_DATA;
+    uint8_t index = MAX_LABVIEW_DATA + gNbrSlaveMon;
     uint8_t eventAdded = 0;
     for (int idx = 0; idx < SIZE_UINT64_IN_BITS; idx++)
     {
@@ -367,7 +386,7 @@ static __INLINE void DisplayStat(void)
         }
     }
 
-    uint32_t len = base252_encode((uint8_t*)statFrame, sizeof(SerialFrame) * (MAX_LABVIEW_DATA + eventAdded), buffer);
+    uint32_t len = base252_encode((uint8_t*)statFrame, sizeof(SerialFrame) * (MAX_LABVIEW_DATA + eventAdded + gNbrSlaveMon), buffer);
 
     if (len != 0)
     {
