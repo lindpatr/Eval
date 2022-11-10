@@ -20,8 +20,8 @@
 #if (FREQ768MHZ)
 #define TIME_SLOT_ACQ   (105U)                  // in us    // 210U with 38.4 MHz
 #define TIME_SLOT_MASTER_TX   (205U)            // in us    // 220U with 38.4 MHz
-#define TIME_SLOT_SLAVE (185U)                  // in us    // 190U with 38.4 MHz
-#define TIME_SLOT_CORR  (0)                     // in us     // -40  with 38.4 MHz
+#define TIME_SLOT_SLAVE (200U)                  // in us    // 190U with 38.4 MHz
+#define TIME_SLOT_CORR  (-290)                  // in us    // -40  with 38.4 MHz
 #else
 #define TIME_SLOT_ACQ   (210U)                  // in us    // 105U with 79.6 MHz
 #define TIME_SLOT_MASTER_TX   (220U)            // in us    // 205U with 79.6 MHz
