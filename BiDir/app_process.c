@@ -75,7 +75,7 @@
 /// State machine
 typedef enum
 {
-	kInit = 0, kStart, kStop, kIdle,
+	kInit = 0, kStart, kIdle,
 
 	kWaitRx, kMsgReceived, kErrorRx, kTimeOutRx, kSwitchRx,
 
@@ -541,6 +541,7 @@ static __INLINE void InitiateTX(void)
  *****************************************************************************/
 static __INLINE void StartTimerTO_Stat(void)
 {
+#if (qMaster)
 	RAIL_Status_t status = RAIL_SetMultiTimer(&gStatPeriodTimer, gSTAT_period, RAIL_TIME_DELAY, &timer_callback, NULL);
 	if (status != RAIL_STATUS_NO_ERROR)
 	{
@@ -548,6 +549,7 @@ static __INLINE void StartTimerTO_Stat(void)
 		app_log_warning("Warning RAIL_SetMultiTimer STAT (%d)\n", status);
 #endif	// qPrintErrorsL1
 	}
+#endif  // qMaster
 }
 
 /******************************************************************************
@@ -591,11 +593,7 @@ static __INLINE void DisplayRXMsg(const uint8_t *const rx_buffer, uint16_t lengt
 {
 #if (qPrintRX)
 	// Print received data on serial COM
-	app_log_info("RX: ");
-	for (uint16_t i = 0; i < length; i++) {
-		app_log_info("0x%02X, ", rx_buffer[i]);
-	}
-	app_log_info("\n");
+	app_log_info("RX: 0x%02x %d\n", start_of_packet[0], gRxCount);
 #else
     (void) rx_buffer;   // To avoid warnings
 	(void) length;		// To avoid warnings
@@ -609,7 +607,7 @@ static __INLINE void DisplayTXMsg(void)
 {
 #if (qPrintTX)
 	// Print sent data on serial COM
-	app_log_info("TX: %d\n",gTxCount);
+	app_log_info("TX: 0x%02x %d\n",gTX_fifo.fifo[0], gTxCount);
 #endif
 }
 
@@ -726,8 +724,14 @@ void DisplayStat(void)
         uint32_t time = gCountPrintStat * STAT_PERIOD_s;
         float localStat = (float) (gTxCount + gRxCount) / time;
         float localStat2 = (10.0f * 10100.0f) / localStat;
-        float localStat3 = 1000000.0f * (float) (gTX_tab[kTX_Err] + gTX_tab[kTX_TimeOut] + gTX_tab[kTX_Invalid]) / (float) gTxCount;
-        float localStat4 = 1000000.0f * (float) (gRX_tab[kRX_Err] + gRX_tab[kRX_TimeOut] + gTX_tab[kRX_Invalid] + gRX_tab[kRX_CRC_Err] + gRX_tab[kRX_GapCount]) / (float) gRxCount;
+        float localStat3 = 1000000.0f * (float) (gTX_tab[kTX_Err] +
+                                                 gTX_tab[kTX_TimeOut] +
+                                                 gTX_tab[kTX_Invalid]) / (float) gTxCount;
+        float localStat4 = 1000000.0f * (float) (gRX_tab[kRX_Err] +
+                                                 gRX_tab[kRX_TimeOut] +
+                                                 gRX_tab[kRX_Invalid] +
+                                                 gRX_tab[kRX_CRC_Err] +
+                                                 gRX_tab[kRX_GapCount]) / (float) gRxCount;
 
         // Print on serial COM
         app_log_info("\n");
@@ -745,10 +749,15 @@ void DisplayStat(void)
         app_log_info("#TX OK             : %d\n", gTX_tab[kTX_Ok]);
         app_log_info("#RX OK             : %d\n", gRX_tab[kRX_Ok]);
         app_log_info("TX Error see below : %d ppm\n", (uint32_t)localStat3);
-        app_log_info("#Err/#TO/#Inv      : %d/%d/%d\n", gTX_tab[kTX_Err], gTX_tab[kTX_TimeOut], gTX_tab[kTX_Invalid]);
+        app_log_info("#Err/#TO/#Inv      : %d/%d/%d\n", gTX_tab[kTX_Err],
+                                                        gTX_tab[kTX_TimeOut],
+                                                        gTX_tab[kTX_Invalid]);
         app_log_info("TX retransmit count: %d\n", gTX_tab[kTX_Retransmit]);
         app_log_info("RX Error see below : %d ppm\n", (uint32_t)localStat4);
-        app_log_info("#Err/#TO/#Inv/#CRC : %d/%d/%d/%d\n", gRX_tab[kRX_Err], gRX_tab[kRX_TimeOut], gRX_tab[kRX_Invalid], gRX_tab[kRX_CRC_Err]);
+        app_log_info("#Err/#TO/#Inv/#CRC : %d/%d/%d/%d\n", gRX_tab[kRX_Err],
+                                                           gRX_tab[kRX_TimeOut],
+                                                           gRX_tab[kRX_Invalid],
+                                                           gRX_tab[kRX_CRC_Err]);
 #if (qMaster)
         app_log_info("Slave counter #gap : %d (max:%d)\n", gRX_tab[kRX_GapCount], gRX_tab[kRX_MaxGap]);
 #else   // !qMaster
@@ -885,13 +894,13 @@ void app_process_action(void)
 	{
 		gPacketRecieved = false;
 
-#if (!qMaster)
-		if (gFirstMsg)
-		{
-			gFirstMsg = false;
-			StartTimerTO_Stat();
-		}
-#endif	// !qMaster
+//#if (!qMaster)
+//		if (gFirstMsg)
+//		{
+//			gFirstMsg = false;
+//			StartTimerTO_Stat();
+//		}
+//#endif	// !qMaster
 
 		SetState(kMsgReceived);
 	}
@@ -975,6 +984,7 @@ void app_process_action(void)
 #if (qMaster)
 		SetState(kIdle);
 #else	// !qMaster
+		// RAIL_StartRx(gRailHandle, CHANNEL, NULL) called in app_init()
 		SetState(kWaitRx);
 #if (qUseDisplay)
 		GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
@@ -1001,19 +1011,6 @@ void app_process_action(void)
 		DMD_updateDisplay();
 #endif  // qUseDisplay
 		StartTimerTO_Stat();
-		break;
-
-	case kStop:
-		// TX stopped by pressing BTN0
-		SetState(kIdle);
-		app_log_info("> Stop TX\n");
-		sl_led_turn_off(&sl_led_led1);
-#if (qUseDisplay)
-		GLIB_setFont(&gGlibContext, (GLIB_Font_t*) &GLIB_FontNarrow6x8);
-		GLIB_drawStringOnLine(&gGlibContext, "*** END ***", 12, GLIB_ALIGN_CENTER, 0, 0, true);
-		// Force a redraw
-		DMD_updateDisplay();
-#endif  // qUseDisplay
 		break;
 
 	case kIdle:

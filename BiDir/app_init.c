@@ -214,7 +214,7 @@ void app_init(void)
 	app_log_info("%s (%s)\n", string2, string3);
 	app_log_info("--------------------------------\n");
     app_log_info("MCU ID     : 0x%llx\n", SYSTEM_GetUnique());
-    app_log_info("Sys Clock  : %0.3f MHz\n", SystemSYSCLKGet()/1000000.0f);
+    app_log_info("Sys clock  : %0.3f MHz\n", SystemSYSCLKGet()/1000000.0f);
 
 	status = RAIL_IsValidChannel(gRailHandle, CHANNEL);
 #if (qPrintErrorsL1)
