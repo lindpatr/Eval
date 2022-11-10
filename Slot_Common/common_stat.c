@@ -360,7 +360,7 @@ static __INLINE void DisplayStat(void)
         }
     }
 
-    uint32_t id = SLAVE_INITIAL_ID;         // First id in -> 32
+    uint32_t id = SLAVE_INITIAL_ID - 1;         // First id in -> 32
     SerialFrame aStatFrame;
 
     // slave stat table
@@ -374,7 +374,7 @@ static __INLINE void DisplayStat(void)
             {
                 uint8_t pos = device->posTab;
 
-                aStatFrame.ID = id + 0;
+                aStatFrame.ID = id + device->internalAddr;
                 aStatFrame.valType = kFLoat;
                 aStatFrame.value = *(uint32_t*)&gCommonStat.SlaveDetail[pos].RXErrInPpm;
 
@@ -390,8 +390,6 @@ static __INLINE void DisplayStat(void)
                     }
                 }
             }
-
-            id++;
         }
     }
 
@@ -417,19 +415,6 @@ static __INLINE void DisplayStat(void)
             }
         }
     }
-
-//    uint32_t len = base252_encode((uint8_t*)statFrame, sizeof(SerialFrame) * (MAX_LABVIEW_DATA + eventAdded + gNbrSlaveMon), buffer);
-//
-//    if (len != 0)
-//    {
-//        sl_status_t status = sl_iostream_write(sl_iostream_vcom_handle, buffer, len);
-//
-//        if (status == SL_STATUS_IDLE)
-//        {
-//            status = 23;
-//        }
-//    }
-
 }
 
 #endif // qPrintStatLabView
