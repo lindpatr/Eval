@@ -253,14 +253,12 @@ static __INLINE void DisplayStat(void)
 #define MAX_LABVIEW_DATA             28
 // Max number of slaves (memory limitation)
 #define MAX_LABVIEW_SLAVE            10
-// Max number of slave stats (5 values per slave)
-#define MAX_SLAVE_DATA               (MAX_LABVIEW_SLAVE * 1)
 // Initial ID for dynamic slave stats
 #define SLAVE_INITIAL_ID             32
 // Initial ID for dynamic events values
 #define EVENT_INITIAL_ID            128
 // Size of temporary buffer
-#define MAX_LABVIEW_BUFFER  (MAX_LABVIEW_DATA + SIZE_UINT64_IN_BITS + MAX_SLAVE_DATA)
+#define MAX_LABVIEW_BUFFER  (MAX_LABVIEW_DATA)
 
 enum
 {
@@ -281,9 +279,10 @@ typedef struct
 uint8_t gNbrSlaveMon = 0;
 
 // Encoded buffer to send
-uint8_t buffer[((MAX_LABVIEW_BUFFER) * sizeof(SerialFrame) * 2) + 5];
+uint8_t buffer[(sizeof(SerialFrame) * 2) + 5];
 
-// Frame structure
+// Frame structure used only for static measures (MAX_LABVIEW_DATA)
+// Encoding is done frame by frame
 static SerialFrame  statFrame[MAX_LABVIEW_BUFFER];
 // stat data pointer
 static uint32_t* statDataPtr[MAX_LABVIEW_BUFFER];
@@ -335,11 +334,36 @@ static __INLINE void InitLabViewStat()
     // Radio Calibration
     setvalue(26, statFrame, 27, kUint32,  0, statDataPtr, &gCommonStat.CalOk);           //uint32_t gCommonStat.CalOk;             // Num of calibraition requests
     setvalue(27, statFrame, 28, kUint32,  0, statDataPtr, &gCommonStat.CalErr);          //uint32_t gCommonStat.CalErr;            // Num of calibration errors
+}
+
+/******************************************************************************
+ * DisplayStat : Format, encode and send statistics to LabView
+ *****************************************************************************/
+static __INLINE void DisplayStat(void)
+{
+    uint32_t len = 0;
+
+    // Fill buffer with first MAX_LABVIEW_DATA static ID
+    for (int idx = 0; idx < (MAX_LABVIEW_DATA); idx++)
+    {
+        statFrame[idx].value = *statDataPtr[idx];
+        len = base252_encode((uint8_t*)&statFrame[idx], sizeof(SerialFrame) * 1, buffer);
+
+        if (len != 0)
+        {
+            sl_status_t status = sl_iostream_write(sl_iostream_vcom_handle, buffer, len);
+
+            if (status == SL_STATUS_IDLE)
+            {
+                status = 23;
+            }
+        }
+    }
 
     uint32_t id = SLAVE_INITIAL_ID;         // First id in -> 32
-    uint32_t index = MAX_LABVIEW_DATA;      // First index in the tab -> 29
+    SerialFrame aStatFrame;
 
-    // slave table
+    // slave stat table
     for (int i = 1; i <= MAX_LABVIEW_SLAVE; i++)
     {
         PROT_AddrMap_t* device = common_getConfigTable(i);
@@ -350,53 +374,61 @@ static __INLINE void InitLabViewStat()
             {
                 uint8_t pos = device->posTab;
 
-                setvalue(index, statFrame, id + 0, kFLoat,   0, statDataPtr, &gCommonStat.SlaveDetail[pos].RXErrInPpm);
-                index++;
-                gNbrSlaveMon++;
+                aStatFrame.ID = id + 0;
+                aStatFrame.valType = kFLoat;
+                aStatFrame.value = *(uint32_t*)&gCommonStat.SlaveDetail[pos].RXErrInPpm;
+
+                len = base252_encode((uint8_t*)&aStatFrame, sizeof(SerialFrame) * 1, buffer);
+
+                if (len != 0)
+                {
+                    sl_status_t status = sl_iostream_write(sl_iostream_vcom_handle, buffer, len);
+
+                    if (status == SL_STATUS_IDLE)
+                    {
+                        status = 23;
+                    }
+                }
             }
 
             id++;
         }
     }
-}
-
-/******************************************************************************
- * DisplayStat : Format, encode and send statistics to LabView
- *****************************************************************************/
-static __INLINE void DisplayStat(void)
-{
-    // Fill buffer with first MAX_LABVIEW_DATA static ID
-    for (int idx = 0; idx < (MAX_LABVIEW_DATA + gNbrSlaveMon); idx++)
-    {
-        statFrame[idx].value = *statDataPtr[idx];
-    }
 
     // Fill buffer with dynamic events values, added only if greater than 0
-    uint8_t index = MAX_LABVIEW_DATA + gNbrSlaveMon;
-    uint8_t eventAdded = 0;
     for (int idx = 0; idx < SIZE_UINT64_IN_BITS; idx++)
     {
         if (gCB_tab[idx] >0)
         {
-            statFrame[index].ID = EVENT_INITIAL_ID + idx;
-            statFrame[index].valType = kUint32;
-            statFrame[index].value = gCB_tab[idx];
-            index++;
-            eventAdded++;
+            aStatFrame.ID = EVENT_INITIAL_ID + idx;
+            aStatFrame.valType = kUint32;
+            aStatFrame.value = gCB_tab[idx];
+
+            len = base252_encode((uint8_t*)&aStatFrame, sizeof(SerialFrame) * 1, buffer);
+
+            if (len != 0)
+            {
+                sl_status_t status = sl_iostream_write(sl_iostream_vcom_handle, buffer, len);
+
+                if (status == SL_STATUS_IDLE)
+                {
+                    status = 23;
+                }
+            }
         }
     }
 
-    uint32_t len = base252_encode((uint8_t*)statFrame, sizeof(SerialFrame) * (MAX_LABVIEW_DATA + eventAdded + gNbrSlaveMon), buffer);
-
-    if (len != 0)
-    {
-        sl_status_t status = sl_iostream_write(sl_iostream_vcom_handle, buffer, len);
-
-        if (status == SL_STATUS_IDLE)
-        {
-            status = 23;
-        }
-    }
+//    uint32_t len = base252_encode((uint8_t*)statFrame, sizeof(SerialFrame) * (MAX_LABVIEW_DATA + eventAdded + gNbrSlaveMon), buffer);
+//
+//    if (len != 0)
+//    {
+//        sl_status_t status = sl_iostream_write(sl_iostream_vcom_handle, buffer, len);
+//
+//        if (status == SL_STATUS_IDLE)
+//        {
+//            status = 23;
+//        }
+//    }
 
 }
 
@@ -557,7 +589,16 @@ __INLINE void CalcStat(void)
                     gCommonStat.SlaveDetail[pos].RXTimeOut = gRX_tab[pos][TAB_POS_TX_TIMEOUT];
                     gCommonStat.SlaveDetail[pos].RXGap = gRX_tab[pos][TAB_POS_RX_GAP];
                     gCommonStat.SlaveDetail[pos].GapMax = gRX_tab[pos][TAB_POS_RX_GAP_MAX];
-                    gCommonStat.SlaveDetail[pos].RXErrInPpm = (1000000.0f *(gRX_tab[pos][TAB_POS_TX_TIMEOUT]+gRX_tab[pos][TAB_POS_RX_GAP]))/(float)(gRX_tab[pos][TAB_POS_RX_OK]+gRX_tab[pos][TAB_POS_TX_TIMEOUT]+gRX_tab[pos][TAB_POS_RX_GAP]);
+
+                    uint32_t div = gRX_tab[pos][TAB_POS_RX_OK]+gRX_tab[pos][TAB_POS_TX_TIMEOUT]+gRX_tab[pos][TAB_POS_RX_GAP];
+                    if (div > 0)
+                    {
+                        gCommonStat.SlaveDetail[pos].RXErrInPpm = (1000000.0f *(gRX_tab[pos][TAB_POS_TX_TIMEOUT]+gRX_tab[pos][TAB_POS_RX_GAP]))/(float)(div);
+                    }
+                    else
+                    {
+                        gCommonStat.SlaveDetail[pos].RXErrInPpm = 1000000.0f;
+                    }
                 }
             }
         }

@@ -52,15 +52,15 @@ PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
 {
     /* ID                Pos    Enable  Addr    Slot time         Is master   Name          */
     {0x385B44FFFEC085D3, 0,     true,   0x7F,   0,                                              true,       "MASTER\0"},
-    {0x385b44fffec0862b, 8,     false,   1,      (0*DELTA_TIME_SLOT)+SHIFT_TIME+FIRST_TIME_SLOT, false,      "SLAVE\0"},
-    {0x385b44fffe5f5af2, 9,     false,   2,      (1*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
-    {0x385b44fffe5f5b23, 1,     true,   3,      (2*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
-    {0x385b44fffec08638, 2,     true,   4,      (3*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
-    {0x040D84FFFE88A3DF, 3,     true ,  5,      (4*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
-    {0x040D84FFFE88A50A, 4,     true ,  6,      (5*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
-    {0x040D84FFFE88A766, 5,     true ,  7,      (6*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
-    {0x040D84FFFE88AD13, 6,     true ,  8,      (7*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
-    {0x040D84FFFE88AB60, 7,     true ,  9,      (8*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+    {0x385b44fffec0862b, 1,     false,   1,      (8*DELTA_TIME_SLOT)+SHIFT_TIME+FIRST_TIME_SLOT, false,      "SLAVE\0"},
+    {0x385b44fffe5f5af2, 2,     false,   2,      (9*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+    {0x385b44fffe5f5b23, 3,     true,   3,      (0*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+    {0x385b44fffec08638, 4,     true,   4,      (1*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+    {0x040D84FFFE88A3DF, 5,     true ,  5,      (2*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+    {0x040D84FFFE88A50A, 6,     true ,  6,      (3*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+    {0x040D84FFFE88A766, 7,     true ,  7,      (4*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+    {0x040D84FFFE88AD13, 8,     true ,  8,      (5*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
+    {0x040D84FFFE88AB60, 9,     true ,  9,      (6*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},
 };
 
 /**
