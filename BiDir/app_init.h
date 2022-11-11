@@ -99,7 +99,7 @@
 #define TX_TIMEOUT	(2.05*RX_TIMEOUT)				// in us
 #endif	// qMaster
 
-#define TRANSITION_TIMING_BESTOF	1
+#define TRANSITION_TIMING_BESTOF	0
 
 // -----------------------------------------------------------------------------
 //                                Global Variables
