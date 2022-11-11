@@ -167,9 +167,9 @@ void app_init(void)
 
 	// State timings
 	gRailStateTimings.idleToRx = (TRANSITION_TIMING_BESTOF ? 0 : 100);
-	gRailStateTimings.txToRx = (TRANSITION_TIMING_BESTOF ? 0 : 182);
+	gRailStateTimings.txToRx = (TRANSITION_TIMING_BESTOF ? 0 : 130/*182*/);
 	gRailStateTimings.idleToTx = (TRANSITION_TIMING_BESTOF ? 0 : 100);
-	gRailStateTimings.rxToTx = (TRANSITION_TIMING_BESTOF ? 0 : 192);
+	gRailStateTimings.rxToTx = (TRANSITION_TIMING_BESTOF ? 0 : 130/*192*/);
 	status = RAIL_SetStateTiming(gRailHandle, &gRailStateTimings);
 	if (status != RAIL_STATUS_NO_ERROR)
 	{
@@ -214,7 +214,7 @@ void app_init(void)
 	app_log_info("%s (%s)\n", string2, string3);
 	app_log_info("--------------------------------\n");
     app_log_info("MCU ID     : 0x%llx\n", SYSTEM_GetUnique());
-    app_log_info("Sys Clock  : %0.3f MHz\n", SystemSYSCLKGet()/1000000.0f);
+    app_log_info("Sys clock  : %0.3f MHz\n", SystemSYSCLKGet()/1000000.0f);
 
 	status = RAIL_IsValidChannel(gRailHandle, CHANNEL);
 #if (qPrintErrorsL1)
@@ -242,6 +242,7 @@ void app_init(void)
         }
     }
 #endif  // qPrintErrorsL1
+    app_log_info("Timing RX->TX: %d us / TX->RX: %d us\n", gRailStateTimings.rxToTx, gRailStateTimings.txToRx);
 	// Set up timers
 	RAIL_ConfigMultiTimer(true);
 }

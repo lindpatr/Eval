@@ -569,12 +569,49 @@ void graphics_init(void)
  ******************************************************************************/
 void serial_init(void)
 {
+    RAIL_Status_t status = RAIL_STATUS_NO_ERROR;
+    uint16_t channel;
+
     // Print Id software
     char string[80] = "\nSlot Protocol";
 
     sprintf(string, "\nSlot Protocol - %s (Addr #%03d)", gDeviceCfgAddr->name, gDeviceCfgAddr->internalAddr);
     PrintInfo(string);
     PrintInfo("---------------------------------");
+    sprintf(string, "MCU ID     : 0x%llx", SYSTEM_GetUnique());
+    PrintInfo(string);
+    sprintf(string, "Sys clock  : %0.3f MHz", SystemSYSCLKGet()/1000000.0f);
+    PrintInfo(string);
+
+    status = RAIL_IsValidChannel(gRailHandle, CHANNEL);
+    if (status != RAIL_STATUS_NO_ERROR)
+    {
+        sprintf(string, "%d isn't a valid channel", CHANNEL);
+        PrintStatus(status, string);
+    }
+    else
+    {
+        status = RAIL_GetChannel(gRailHandle, &channel);
+
+        if (status != RAIL_STATUS_NO_ERROR)
+        {
+            sprintf(string, "Warning RAIL_GetChannel (%d)", CHANNEL);
+            PrintStatus(status, string);
+        }
+        else
+        {
+            RAIL_ChannelMetadata_t channelMetadata;
+            uint16_t length = sizeof(RAIL_ChannelMetadata_t);
+            channel = CHANNEL;
+
+            status = RAIL_GetChannelMetadata(gRailHandle, &channelMetadata, &length, channel, channel);
+            PrintStatus(status, "Warning RAIL_GetChannelMetadata");
+
+            sprintf(string, "Channel    : %d (%0.3f GHz)", channel, (channelMetadata.frequency/1000000000.0f));
+            PrintInfo(string);
+        }
+    }
+
     sprintf(string, "Protocol (slot = %d us, sync period = %d us, sync to = %d us)\n", gTimeSlot, gSyncPeriod, gSyncTimeOut);
     PrintInfo(string);
 }
