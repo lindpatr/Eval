@@ -358,7 +358,7 @@ static __INLINE void RestartRadio(void)
  *****************************************************************************/
 static __INLINE bool PrintStatistics(void)
 {
-#if (qPrintStat)
+#if (qComputeStat)
     gPauseCycleReq = true;      // Request to print stat
 
     if (gPauseCycleConf)        // Permission to print stat
@@ -420,7 +420,7 @@ static __INLINE bool PrintStatistics(void)
 
     return !gPauseCycleReq;
 
-#endif  // qPrintStat
+#endif  // qComputeStat
 }
 
 /******************************************************************************
@@ -664,7 +664,7 @@ static __INLINE void DoAllAcq(void)
 /******************************************************************************
  * Application state machine, called infinitely
  *****************************************************************************/
-static uint16_t pwm_count = 1;
+//static uint16_t pwm_count = 1;
 
 void app_process_action(void)
 {

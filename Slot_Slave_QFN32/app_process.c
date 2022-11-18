@@ -345,7 +345,7 @@ static __INLINE void RestartRadio(void)
  *****************************************************************************/
 static __INLINE bool PrintStatistics(void)
 {
-#if (qPrintStat)
+#if (qComputeStat)
     gPauseCycleReq = true;      // Request to print stat
 
     if (gPauseCycleConf)        // Permission to print stat
@@ -407,7 +407,7 @@ static __INLINE bool PrintStatistics(void)
 
     return !gPauseCycleReq;
 
-#endif  // qPrintStat
+#endif  // qComputeStat
 }
 
 /******************************************************************************
@@ -652,7 +652,7 @@ static __INLINE void DoAllAcq(void)
 /******************************************************************************
  * Application state machine, called infinitely
  *****************************************************************************/
-static uint16_t pwm_count = 1;
+//static uint16_t pwm_count = 1;
 
 void app_process_action(void)
 {
@@ -902,11 +902,11 @@ void app_process_action(void)
             DisplaySentMsg();
 
             // TODO BEGIN TEST PURPOSES
-            sl_pwm_set_duty_cycle_step(&sl_pwm_pwm0, pwm_count);
-            sl_pwm_set_duty_cycle_step(&sl_pwm_pwm1, pwm_count);
-
-            if (++pwm_count > sl_pwm_get_max_duty_cycle_step(&sl_pwm_pwm0))
-                pwm_count = 0;
+//            sl_pwm_set_duty_cycle_step(&sl_pwm_pwm0, pwm_count);
+//            sl_pwm_set_duty_cycle_step(&sl_pwm_pwm1, pwm_count);
+//
+//            if (++pwm_count > sl_pwm_get_max_duty_cycle_step(&sl_pwm_pwm0))
+//                pwm_count = 0;
             // TODO END TEST PURPOSES
         }
 
