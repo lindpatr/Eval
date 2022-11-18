@@ -63,11 +63,11 @@
 #define qPrintEvents    1     // Print out events on serial COM
 #define qPrintErrorsL1  1     // Print out RAIL errors on serial COM (generally return of RAIL_functions)
 #define qPrintErrorsL2  0     // Print out RAIL errors on serial COM (kTimeOutTx, kTimeOutRx, kErrorTx, kErrorRx)
-#define qPrintInfo      0     // Print out info serial COM
+#define qPrintInfo      1     // Print out info serial COM
 #define qComputeStat    1     // Generate statistics
-#define qPrintStat      0     // Print out statistics serial COM (only if qComputeStat = 1)
+#define qPrintStat      1     // Print out statistics serial COM (only if qComputeStat = 1)
 #define qPrintStatTiming    0 // Print out statistics timing serial COM
-#define qPrintStatLabView   1 // Print out statistics over serial COM to LabView (binary) (only if qComputeStat = 1)
+#define qPrintStatLabView   0 // Print out statistics over serial COM to LabView (binary) (only if qComputeStat = 1)
 
 #define TRANSITION_TIMING_BEST_EFFORT  1
                               // 1 = let the uC try to optimize the transition timings
