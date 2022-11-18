@@ -573,7 +573,7 @@ void serial_init(void)
     uint16_t channel;
 
     // Print Id software
-    char string[80] = "\nSlot Protocol";
+    char string[80];
 
     sprintf(string, "\nSlot Protocol - %s (Addr #%03d)", gDeviceCfgAddr->name, gDeviceCfgAddr->internalAddr);
     PrintInfo(string);
