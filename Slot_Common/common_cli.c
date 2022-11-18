@@ -176,6 +176,14 @@ void cli_info(sl_cli_command_arg_t *arguments)
 
     app_log_info("Info:\n");
     app_log_info("  MCU Id     : 0x%llx\n", SYSTEM_GetUnique());
+    app_log_info("  Sys clock  : %0.3f MHz\n", SystemSYSCLKGet()/1000000.0f);
+
+    RAIL_ChannelMetadata_t channelMetadata;
+    uint16_t length = sizeof(RAIL_ChannelMetadata_t);
+    uint16_t channel = CHANNEL;
+
+    RAIL_GetChannelMetadata(gRailHandle, &channelMetadata, &length, channel, channel);
+    app_log_info("  Channel    : %d (%0.3f GHz)\n", channel, (channelMetadata.frequency/1000000000.0f));
 
     app_log_info("Radio network:\n");
     app_log_info("  Enable     : %s\n", (gDeviceCfgAddr->enable ? "true" : "false"));
@@ -460,7 +468,7 @@ void cli_set_tx_power(sl_cli_command_arg_t *arguments)
             RAIL_Status_t status = RAIL_SetTxPowerDbm(gRailHandle, (RAIL_TxPower_t)gTxPower);
             PrintStatus(status, "Warning RAIL_SetTxPowerDbm");
 
-            app_log_info("Info Set TX_POWER to %d dBm (%s)\n", gTxPower, str);
+            app_log_info("Info Set TX_POWER to %0.2f dBm (%s)\n", (gTxPower/10.0f), str);
     }
     else
     {
