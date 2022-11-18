@@ -579,9 +579,9 @@ void serial_init(void)
     sprintf(string, "\nSlot Protocol - %s (Addr #%03d)", gDeviceCfgAddr->name, gDeviceCfgAddr->internalAddr);
     PrintInfo(string);
     PrintInfo("---------------------------------");
-    sprintf(string, "MCU ID     : 0x%llx\n", SYSTEM_GetUnique());
+    sprintf(string, "MCU ID     : 0x%llx", SYSTEM_GetUnique());
     PrintInfo(string);
-    sprintf(string, "Sys clock  : %0.3f MHz\n", SystemSYSCLKGet()/1000000.0f);
+    sprintf(string, "Sys clock  : %0.3f MHz", SystemSYSCLKGet()/1000000.0f);
     PrintInfo(string);
 
     status = RAIL_IsValidChannel(gRailHandle, CHANNEL);
