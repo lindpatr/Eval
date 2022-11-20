@@ -4,6 +4,7 @@
 # StackID: 23000000
 [296651666 576 16908329 Packet D65F] [000440263902] [FC FF AA 6B DD 0B 00 39 87 FD 00 00 01]
 
+Start: 0xFC
 Slot frame decoder
    - Addr_1: 0xFF
    - Cmd_1: 0xAA

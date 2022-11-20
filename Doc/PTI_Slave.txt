@@ -2,8 +2,9 @@
 # Decryption type: Real
 # Security level: 5
 # StackID: 23000000
-[327181159 576 16908329 Packet 4B56] [000440263902] [FC FF AA F1 11 0C 00 EE 6B FD 00 00 01]
+[327181159 576 16908329 Packet 4B56] [000440263902] [F8 01 00 03 4B 18 00 83 7B F9 0D 00 00 49]
 
+Start: 0xF8
 Slot frame decoder
    - Addr_1: 0x01
    - Reserved_1: 0x00
