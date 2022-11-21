@@ -227,6 +227,21 @@ static __INLINE void DisplayStat(void)
                     uint8_t pos = device->posTab;
                     uint8_t addr = device->internalAddr;
 
+#if (RSSI_LQI_MES)
+                    app_log_info("%03d Err (#OK/#TO/#gap/max): %03.1f ppm (%d/%d/%d/%d) - rssi (min/max): %d dbm (%d/%d) - lqi (min/max): %d (%d/%d)\n",
+                            addr,
+                            gCommonStat.SlaveDetail[pos].RXErrInPpm,
+                            gCommonStat.SlaveDetail[pos].RXOk,
+                            gCommonStat.SlaveDetail[pos].RXTimeOut,
+                            gCommonStat.SlaveDetail[pos].RXGap,
+                            gCommonStat.SlaveDetail[pos].GapMax,
+                            gCommonStat.SlaveDetail[pos].RssiMoy,
+                            gCommonStat.SlaveDetail[pos].RssiMin,
+                            gCommonStat.SlaveDetail[pos].RssiMax,
+                            gCommonStat.SlaveDetail[pos].LqiMoy,
+                            gCommonStat.SlaveDetail[pos].LqiMin,
+                            gCommonStat.SlaveDetail[pos].LqiMax);
+#else
                     app_log_info("%03d Err (#OK/#TO/#gap/max) : %03.1f ppm (%d/%d/%d/%d)\n",
                             addr,
                             gCommonStat.SlaveDetail[pos].RXErrInPpm,
@@ -234,6 +249,7 @@ static __INLINE void DisplayStat(void)
                             gCommonStat.SlaveDetail[pos].RXTimeOut,
                             gCommonStat.SlaveDetail[pos].RXGap,
                             gCommonStat.SlaveDetail[pos].GapMax);
+#endif  // RSSI_LQI_MES
                 }
             }
         }
@@ -574,6 +590,16 @@ __INLINE void CalcStat(void)
                     gCommonStat.SlaveDetail[pos].RXTimeOut = gRX_tab[pos][TAB_POS_TX_TIMEOUT];
                     gCommonStat.SlaveDetail[pos].RXGap = gRX_tab[pos][TAB_POS_RX_GAP];
                     gCommonStat.SlaveDetail[pos].GapMax = gRX_tab[pos][TAB_POS_RX_GAP_MAX];
+
+#if (RSSI_LQI_MES)
+                    // RX quality
+                    gCommonStat.SlaveDetail[pos].RssiMoy = (int8_t)gRX_tab[pos][TAB_POS_RX_RSSI_MOY];
+                    gCommonStat.SlaveDetail[pos].RssiMin = (int8_t)gRX_tab[pos][TAB_POS_RX_RSSI_MIN];
+                    gCommonStat.SlaveDetail[pos].RssiMax = (int8_t)gRX_tab[pos][TAB_POS_RX_RSSI_MAX];
+                    gCommonStat.SlaveDetail[pos].LqiMoy = (uint8_t)gRX_tab[pos][TAB_POS_RX_LQI_MOY];
+                    gCommonStat.SlaveDetail[pos].LqiMin = (uint8_t)gRX_tab[pos][TAB_POS_RX_LQI_MIN];
+                    gCommonStat.SlaveDetail[pos].LqiMax = (uint8_t)gRX_tab[pos][TAB_POS_RX_LQI_MAX];
+#endif  // RSSI_LQI_MES
 
                     uint32_t div = gRX_tab[pos][TAB_POS_RX_OK]+gRX_tab[pos][TAB_POS_TX_TIMEOUT]+gRX_tab[pos][TAB_POS_RX_GAP];
                     if (div > 0)

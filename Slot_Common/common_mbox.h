@@ -51,6 +51,12 @@ typedef struct
     uint32_t RXGap;             // Count of RX gap occurences
     uint32_t GapMax;            // Max gap discovered
     float RXErrInPpm;           // RX error rate [ppm]
+    int8_t RssiMoy;             // Average RSSI
+    int8_t RssiMin;             // Min RSSI
+    int8_t RssiMax;             // Max RSSI
+    uint8_t LqiMoy;             // Average LQI
+    uint8_t LqiMin;             // Min LQI
+    uint8_t LqiMax;             // Max LQI
 
 } commonStatSlaveDetail_t;
 

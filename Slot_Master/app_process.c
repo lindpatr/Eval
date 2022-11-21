@@ -468,9 +468,9 @@ static __INLINE void StartTransmit(void)
  * DecodeReceivedMsg : decode received data
  *****************************************************************************/
 #if (RSSI_LQI_MES)
-static uint32_t count_packet = 0U;
-static int64_t sum_rssi = 0;
-static uint64_t sum_lqi = 0U;
+static uint32_t count_packet[MAX_NODE] = {0U};
+static int64_t sum_rssi[MAX_NODE] = {0};
+static uint64_t sum_lqi[MAX_NODE] = {0U};
 #endif  // RSSI_LQI_MES
 
 static __INLINE bool DecodeReceivedMsg(void)
@@ -542,25 +542,36 @@ static __INLINE bool DecodeReceivedMsg(void)
                     status = RAIL_GetRxPacketDetailsAlt(gRailHandle, rx_packet_handle, &packet_info_detail);
                     PrintStatus(status, "Warning RAIL_GetRxPacketDetails");
 
-                    // Count received packet
-                    count_packet++;
-                    if (count_packet == UINT32_MAX)
+                    // i == 0: index = me (= calc for all slaves)
+                    // i == 1: index = pos (= calc for the specific slave)
+                    uint8_t who = me;
+                    for (int i = 0; i < 2; i++)
                     {
-                        count_packet = 1U;
-                        sum_rssi = 0;
-                        sum_lqi = 0U;
+                        if (i == 1)
+                            who = pos;
+
+                        // Count received packet
+                        count_packet[who]++;
+
+                        if (count_packet[who] == UINT32_MAX)
+                        {
+                            count_packet[who] = 1U;
+                            sum_rssi[who] = 0;
+                            sum_lqi[who] = 0U;
+                        }
+                        // Get quality information: rssi and lqi
+                        rssi = packet_info_detail.rssi;
+                        sum_rssi[who] += rssi;
+                        gRX_tab[who][TAB_POS_RX_RSSI_MOY] = (int8_t)(sum_rssi[who]/count_packet[who]);
+                        gRX_tab[who][TAB_POS_RX_RSSI_MIN] = (rssi < (int8_t)gRX_tab[who][TAB_POS_RX_RSSI_MIN] ? rssi : (int8_t)gRX_tab[who][TAB_POS_RX_RSSI_MIN]);
+                        gRX_tab[who][TAB_POS_RX_RSSI_MAX] = (rssi > (int8_t)gRX_tab[who][TAB_POS_RX_RSSI_MAX] ? rssi : (int8_t)gRX_tab[who][TAB_POS_RX_RSSI_MAX]);
+                        lqi = packet_info_detail.lqi;
+                        sum_lqi[who] += lqi;
+                        gRX_tab[who][TAB_POS_RX_LQI_MOY] = (uint8_t)(sum_lqi[who]/count_packet[who]);
+                        gRX_tab[who][TAB_POS_RX_LQI_MIN] = (lqi < (uint8_t)gRX_tab[who][TAB_POS_RX_LQI_MIN] ? lqi : gRX_tab[who][TAB_POS_RX_LQI_MIN]);
+                        gRX_tab[who][TAB_POS_RX_LQI_MAX] = (lqi > (uint8_t)gRX_tab[who][TAB_POS_RX_LQI_MAX] ? lqi : gRX_tab[who][TAB_POS_RX_LQI_MAX]);
                     }
-                    // Get quality information: rssi and lqi
-                    rssi = packet_info_detail.rssi;
-                    sum_rssi += rssi;
-                    gRX_tab[me][TAB_POS_RX_RSSI_MOY] = (int8_t)(sum_rssi/count_packet);
-                    gRX_tab[me][TAB_POS_RX_RSSI_MIN] = (rssi < (int8_t)gRX_tab[me][TAB_POS_RX_RSSI_MIN] ? rssi : (int8_t)gRX_tab[me][TAB_POS_RX_RSSI_MIN]);
-                    gRX_tab[me][TAB_POS_RX_RSSI_MAX] = (rssi > (int8_t)gRX_tab[me][TAB_POS_RX_RSSI_MAX] ? rssi : (int8_t)gRX_tab[me][TAB_POS_RX_RSSI_MAX]);
-                    lqi = packet_info_detail.lqi;
-                    sum_lqi += lqi;
-                    gRX_tab[me][TAB_POS_RX_LQI_MOY] = (uint8_t)(sum_lqi/count_packet);
-                    gRX_tab[me][TAB_POS_RX_LQI_MIN] = (lqi < (uint8_t)gRX_tab[me][TAB_POS_RX_LQI_MIN] ? lqi : gRX_tab[me][TAB_POS_RX_LQI_MIN]);
-                    gRX_tab[me][TAB_POS_RX_LQI_MAX] = (lqi > (uint8_t)gRX_tab[me][TAB_POS_RX_LQI_MAX] ? lqi : gRX_tab[me][TAB_POS_RX_LQI_MAX]);
+
 #endif  // RSSI_LQI_MES
                 }
                 // else if () --> currently, Slave don't handle other frame than data
