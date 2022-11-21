@@ -14,9 +14,20 @@
 #include <stddef.h>
 
 
-// Frequency
+// Benchtest
+#define DEV_BENCHTEST           1           // 0 = Radio benchtest (table with 1 master and 9 slaves, radio channel = 0)
+                                            // 1 = DEV benchtest (table with 1 master and 3 slaves, radio channel = 6)
+// CPU frequency
 #define FREQ768MHZ              1           // 0 = 38.4 MHz, 1 = 76.8 MHz
 
+// RAIL channel number
+#if (DEV_BENCHTEST)
+#define CHANNEL ((uint8_t) 6)
+#else
+#define CHANNEL ((uint8_t) 0)
+#endif  // DEV_BENCHTEST
+
+// Protocol
 #if (FREQ768MHZ)
 #define TIME_SLOT_ACQ   (105U)                  // in us    // 210U with 38.4 MHz
 #define TIME_SLOT_MASTER_TX   (205U)            // in us    // 220U with 38.4 MHz
