@@ -45,7 +45,7 @@ PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
     {0x8CF681FFFEB880E9, 3,     true,   3,      (2*DELTA_TIME_SLOT)+SHIFT_TIME,                 false,      "SLAVE\0"},     // NEW
 };
 #else
- Table for radio benchtest
+// Table for radio benchtest
 PROT_AddrMap_t addr_table[ADDR_TRANSLATION_TABLE_SIZE] =
 {
     /* ID                Pos    Enable  Addr    Slot time         Is master   Name          */
