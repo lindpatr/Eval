@@ -76,7 +76,7 @@
 
 #define TX_POWER_MIN    (-900)                  // in dBm (-90 dB)
 #define TX_POWER_MAX    (60)                    // in dBm (60 = 6 dB)
-#define TX_POWER_DEF    (-600)                  // -60 dB
+#define TX_POWER_DEF    (-300)                  // -30 dB
 #define TX_POWER        TX_POWER_DEF            // Default value
 
 #define RAD_BIT_SHIT    (7)
