@@ -29,15 +29,20 @@
 
 // Protocol
 #if (FREQ768MHZ)
-#define TIME_SLOT_ACQ   (105U)                  // in us    // 210U with 38.4 MHz
-#define TIME_SLOT_MASTER_TX   (205U)            // in us    // 220U with 38.4 MHz
+#define TIME_SLOT_ACQ   (105U)                 // in us    // 210U with 38.4 MHz
+#define TIME_SLOT_MASTER_TX   (205U)           // in us    // 220U with 38.4 MHz
+#if (DEV_BENCHTEST)
+#define TIME_SLOT_SLAVE (190U/*200U*/)         // in us    // 190U with 38.4 MHz
+#define TIME_SLOT_CORR  (0/*-290*/)            // in us    // -40  with 38.4 MHz
+#else
 #define TIME_SLOT_SLAVE (200U)                  // in us    // 190U with 38.4 MHz
 #define TIME_SLOT_CORR  (-290)                  // in us    // -40  with 38.4 MHz
+#endif  // DEV_BENCHTEST
 #else
-#define TIME_SLOT_ACQ   (210U)                  // in us    // 105U with 79.6 MHz
-#define TIME_SLOT_MASTER_TX   (220U)            // in us    // 205U with 79.6 MHz
-#define TIME_SLOT_SLAVE (190U)                  // in us    // 185U with 79.6 MHz
-#define TIME_SLOT_CORR  (-40)                   // in us    // 0  with 79.6 MHz
+#define TIME_SLOT_ACQ   (210U)                  // in us    // 105U with 76.8 MHz
+#define TIME_SLOT_MASTER_TX   (220U)            // in us    // 205U with 76.8 MHz
+#define TIME_SLOT_SLAVE (190U)                  // in us    // 185U with 76.8 MHz
+#define TIME_SLOT_CORR  (-40)                   // in us    // 0  with 76.8 MHz
 #endif  // FREQ768MHZ
 
 #define TIME_SLOT_MIN   (10U)                   // in us
@@ -76,7 +81,11 @@
 
 #define TX_POWER_MIN    (-900)                  // in dBm (-90 dB)
 #define TX_POWER_MAX    (60)                    // in dBm (60 = 6 dB)
-#define TX_POWER_DEF    (-300)                  // -30 dB
+#if (DEV_BENCHTEST)
+    #define TX_POWER_DEF    (0)                 // 0 dBm
+#else
+    #define TX_POWER_DEF    (-300)              // -30 dBm
+#endif  // DEV_BENCHTEST
 #define TX_POWER        TX_POWER_DEF            // Default value
 
 #define RAD_BIT_SHIT    (7)
