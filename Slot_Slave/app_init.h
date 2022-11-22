@@ -49,8 +49,8 @@
 // Assign the debug pins
 #define DEBUG_PIN_TX_SET                DEBUG_PIN_SET(DEBUG_PIN_H09)
 #define DEBUG_PIN_TX_RESET              DEBUG_PIN_RESET(DEBUG_PIN_H09)
-#define DEBUG_PIN_RX_SET                /*DEBUG_PIN_SET(DEBUG_PIN_H11)*/
-#define DEBUG_PIN_RX_RESET              /*DEBUG_PIN_RESET(DEBUG_PIN_H11)*/
+#define DEBUG_PIN_RX_SET                /*DEBUG_PIN_SET(DEBUG_PIN_H11)*//*DEBUG_PIN_SET(DEBUG_PIN_H13)*/
+#define DEBUG_PIN_RX_RESET              /*DEBUG_PIN_RESET(DEBUG_PIN_H11)*//*DEBUG_PIN_RESET(DEBUG_PIN_H13)*/
 #define DEBUG_PIN_CB_SET                /*DEBUG_PIN_SET(DEBUG_PIN_H13)*/DEBUG_PIN_SET(DEBUG_PIN_H11)
 #define DEBUG_PIN_CB_RESET              /*DEBUG_PIN_RESET(DEBUG_PIN_H13)*/DEBUG_PIN_RESET(DEBUG_PIN_H11)
 
@@ -63,8 +63,8 @@
 #define DEBUG_PIN_SPI_TMP_RESET         /*DEBUG_PIN_RESET(DEBUG_PIN_H13)*/
 
 // DoAllAcq time
-#define DEBUG_PIN_ACQ_SET               /*DEBUG_PIN_SET(DEBUG_PIN_H13)*/
-#define DEBUG_PIN_ACQ_RESET             /*DEBUG_PIN_RESET(DEBUG_PIN_H13)*/
+#define DEBUG_PIN_ACQ_SET               DEBUG_PIN_SET(DEBUG_PIN_H13)
+#define DEBUG_PIN_ACQ_RESET             DEBUG_PIN_RESET(DEBUG_PIN_H13)
 
 // ScheduleTX + timeout time
 #define DEBUG_PIN_SCHEDULE_SET          /*DEBUG_PIN_SET(DEBUG_PIN_H13)*/
@@ -75,8 +75,8 @@
 #define DEBUG_PIN_SPI_DAC_RESET         /*DEBUG_PIN_RESET(DEBUG_PIN_H13)*/
 
 // Test STAT
-#define DEBUG_PIN_STAT_REQ_SET          DEBUG_PIN_SET(DEBUG_PIN_H13)
-#define DEBUG_PIN_STAT_REQ_RESET        DEBUG_PIN_RESET(DEBUG_PIN_H13)
+#define DEBUG_PIN_STAT_REQ_SET          /*DEBUG_PIN_SET(DEBUG_PIN_H13)*/
+#define DEBUG_PIN_STAT_REQ_RESET        /*DEBUG_PIN_RESET(DEBUG_PIN_H13)*/
 
 
 #define qPrintTX        0     // Print out sent data on serial COM
