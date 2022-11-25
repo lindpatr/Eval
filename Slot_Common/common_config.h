@@ -33,7 +33,7 @@
 #define TIME_SLOT_MASTER_TX   (205U)           // in us    // 220U with 38.4 MHz
 #if (DEV_BENCHTEST)
 #define TIME_SLOT_SLAVE (190U/*200U*/)         // in us    // 190U with 38.4 MHz
-#define TIME_SLOT_CORR  (-10/*-290*/)            // in us    // -40  with 38.4 MHz
+#define TIME_SLOT_CORR  (-25/*-290*/)            // in us    // -40  with 38.4 MHz
 #else
 #define TIME_SLOT_SLAVE (200U)                  // in us    // 190U with 38.4 MHz
 #define TIME_SLOT_CORR  (-290)                  // in us    // -40  with 38.4 MHz
